@@ -98,7 +98,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS REVISADOS Y ALINEACIÓN PURE
+# 3. ESTILOS CSS REVISADOS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -159,19 +159,19 @@ st.markdown(f"""
         padding-right: 0.6rem !important;
     }}
 
-    /* ENCABEZADO CENTRADO PERFECTO EN MÓVIL Y ESCRITORIO */
+    /* ENCABEZADO CENTRADO PERFECTO Y COMPACTO */
     .header-logo-container {{
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 12px;
-        margin-bottom: 12px;
+        gap: 10px;
+        margin-bottom: 8px;
         width: 100%;
         text-align: center;
     }}
     
     .header-logo-img {{
-        height: 52px !important;
+        height: 44px !important;
         width: auto;
         object-fit: contain;
     }}
@@ -186,132 +186,93 @@ st.markdown(f"""
     .header-title {{
         color: #ffffff;
         font-weight: 900;
-        font-size: 22px;
+        font-size: 17px !important; /* Más chico para que no rompa la palabra */
         line-height: 1.1;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
         margin: 0;
         padding: 0;
         text-align: center;
+        white-space: nowrap;
     }}
 
-    /* MÉTRICAS COMPLETAMENTE CENTRADAS */
-    [data-testid="stMetric"] {{
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        text-align: center !important;
+    /* MÉTRICAS EN UNA SOLA LÍNEA HORIZONTAL */
+    .metrics-row {{
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        background-color: #1a1d24;
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-bottom: 10px;
+        border: 1px solid #2d3139;
     }}
 
-    [data-testid="stMetricValue"] {{
-        font-size: 28px !important;
-        font-weight: 800 !important;
-        color: #ffffff !important;
-        text-align: center !important;
-        width: 100% !important;
+    .metric-inline {{
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 15px;
+        font-weight: 700;
+        color: #ffffff;
     }}
 
-    [data-testid="stMetricLabel"] {{
-        font-size: 16px !important;
-        font-weight: 600 !important;
-        color: #e0e0e0 !important;
-        text-align: center !important;
-        width: 100% !important;
+    .metric-inline .val {{
+        font-size: 20px;
+        font-weight: 900;
+        color: #ff4b4b;
     }}
 
     /* BOTÓN REINICIAR */
     .btn-reiniciar-wrap button {{
-        height: 42px !important;
-        font-size: 14px !important;
+        height: 38px !important;
+        font-size: 13px !important;
         font-weight: 700 !important;
         background-color: #ffffff !important;
         color: #2c3e50 !important;
         border-radius: 8px !important;
         border: none !important;
+        margin-bottom: 10px !important;
     }}
 
-    /* BOTÓN-TARJETA INTEGRADO (UNA SOLA FILA ESTRICTA SIN BOTONES EXTRA) */
-    .item-card-btn {{
-        width: 100% !important;
-        background: transparent !important;
-        border: none !important;
-        padding: 0 !important;
-        margin: 0 0 10px 0 !important;
-        cursor: pointer !important;
+    /* TARJETAS DE PRODUCTO (BOTÓN ÚNICO Y LIMPIO) */
+    .prod-card-pending button {{
+        background-color: #ffffff !important;
+        color: #2c3e50 !important;
+        border-left: 6px solid #ff4b4b !important;
+        border-radius: 8px !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        text-align: left !important;
+        height: 52px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+        padding-left: 12px !important;
     }}
 
-    .item-card-btn button {{
-        width: 100% !important;
-        padding: 0 !important;
-        border: none !important;
-        background: transparent !important;
-        box-shadow: none !important;
-    }}
-
-    .item-card-flex {{
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        width: 100% !important;
-        height: 54px !important;
-    }}
-
-    .item-name-box {{
-        flex: 1 1 78% !important;
-        height: 54px !important;
-        background-color: #ffffff;
-        color: #2c3e50;
-        border-top-left-radius: 8px;
-        border-bottom-left-radius: 8px;
-        border-left: 6px solid #ff4b4b;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        font-weight: 700;
-        padding: 0 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }}
-
-    .item-name-box.completed {{
-        background-color: #d1fae5;
-        color: #065f46;
-        border-left: 6px solid #10b981;
-    }}
-
-    .item-qty-box {{
-        flex: 0 0 22% !important;
-        height: 54px !important;
-        background-color: #ff4b4b;
-        color: #ffffff;
-        border-top-right-radius: 8px;
-        border-bottom-right-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 22px;
-        font-weight: 900;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-        margin-left: 4px;
-    }}
-
-    .item-qty-box.completed {{
-        background-color: #10b981;
+    .prod-card-completed button {{
+        background-color: #d1fae5 !important;
+        color: #065f46 !important;
+        border-left: 6px solid #10b981 !important;
+        border-radius: 8px !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        text-align: left !important;
+        height: 52px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+        padding-left: 12px !important;
     }}
 
     @media (max-width: 768px) {{
-        .grid-3-cols > div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {{
-            width: 100% !important;
-            flex: 1 1 100% !important;
-        }}
         .header-title {{
-            font-size: 20px;
+            font-size: 15px !important;
         }}
         .header-logo-img {{
-            height: 46px !important;
+            height: 38px !important;
+        }}
+        .metric-inline {{
+            font-size: 13px;
+        }}
+        .metric-inline .val {{
+            font-size: 18px;
         }}
     }}
     </style>
@@ -398,21 +359,23 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # Encabezado Alinear y Centrar
+    # Encabezado centrado con tipografía más compacta
     st.markdown(f"""
         <div class="header-logo-container">
             <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
             <div class="header-text-group">
-                <h1 class="header-title">TABLA DE<br>PRODUCCIÓN</h1>
-                <span style="font-size:11px; color:#a0a0a0; margin-top:2px;">🔄 Sincronizado cada 10s | Última: {datetime.now().strftime('%H:%M:%S')}</span>
+                <h1 class="header-title">TABLA DE PRODUCCIÓN</h1>
+                <span style="font-size:10px; color:#a0a0a0; margin-top:1px;">🔄 Sincronizado cada 10s | {datetime.now().strftime('%H:%M:%S')}</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
+    # Botón de Reiniciar
     st.markdown('<div class="btn-reiniciar-wrap">', unsafe_allow_html=True)
     st.button("Reiniciar", use_container_width=True, on_click=reiniciar_contador)
     st.markdown('</div>', unsafe_allow_html=True)
 
+    # Cálculo de métricas
     piezas_pendientes = 0
     for prod, cant_total in conteo_productos.items():
         if prod in estado_global["completados"]:
@@ -422,16 +385,24 @@ def renderizar_tablero():
             cant_marcada = estado_global["cantidades_al_completar"].get(prod, 0)
             piezas_pendientes += (cant_total - cant_marcada)
 
-    m1, m2 = st.columns(2)
-    m1.metric("Tickets", len(recibos))
-    m2.metric("Pendientes", piezas_pendientes)
-
-    st.markdown("<br>", unsafe_allow_html=True)
+    # Métricas en una sola fila (horizontal)
+    st.markdown(f"""
+        <div class="metrics-row">
+            <div class="metric-inline">
+                <span>Tickets:</span>
+                <span class="val">{len(recibos)}</span>
+            </div>
+            <div style="border-left: 1px solid #3d424d; height: 18px;"></div>
+            <div class="metric-inline">
+                <span>Pendientes:</span>
+                <span class="val" style="color: {'#10b981' if piezas_pendientes == 0 else '#ff4b4b'};">{piezas_pendientes}</span>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
     if conteo_productos:
         productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1], reverse=True)
 
-        st.markdown('<div class="grid-3-cols">', unsafe_allow_html=True)
         col_a, col_b, col_c = st.columns(3)
         columnas = [col_a, col_b, col_c]
 
@@ -442,25 +413,19 @@ def renderizar_tablero():
             cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
             cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-            status_class = "completed" if es_completado else ""
-
-            html_card = f"""
-                <div class="item-card-flex">
-                    <div class="item-name-box {status_class}">{producto}</div>
-                    <div class="item-qty-box {status_class}">{cant_mostrar}</div>
-                </div>
-            """
+            card_class = "prod-card-completed" if es_completado else "prod-card-pending"
+            texto_boton = f"{producto} — [{cant_mostrar}]"
 
             with col_destino:
+                st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
                 st.button(
-                    label=html_card,
+                    label=texto_boton,
                     key=f"btn_{producto}",
                     use_container_width=True,
                     on_click=alternar_estado,
                     args=(producto, cant_total)
                 )
-
-        st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown('</div>', unsafe_allow_html=True)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
