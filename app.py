@@ -98,7 +98,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS GENERALES Y CENTRADO
+# 3. ESTILOS CSS REVISADOS Y ALINEACIÓN PURE
 # ==========================================
 st.markdown(f"""
     <style>
@@ -159,26 +159,34 @@ st.markdown(f"""
         padding-right: 0.6rem !important;
     }}
 
-    /* Encabezado totalmente centrado */
+    /* ENCABEZADO CENTRADO PERFECTO EN MÓVIL Y ESCRITORIO */
     .header-logo-container {{
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 16px;
+        gap: 12px;
         margin-bottom: 12px;
+        width: 100%;
         text-align: center;
     }}
     
     .header-logo-img {{
-        height: 58px !important;
+        height: 52px !important;
         width: auto;
         object-fit: contain;
+    }}
+
+    .header-text-group {{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
     }}
 
     .header-title {{
         color: #ffffff;
         font-weight: 900;
-        font-size: 26px;
+        font-size: 22px;
         line-height: 1.1;
         letter-spacing: 1px;
         margin: 0;
@@ -186,12 +194,21 @@ st.markdown(f"""
         text-align: center;
     }}
 
-    /* Métricas */
+    /* MÉTRICAS COMPLETAMENTE CENTRADAS */
+    [data-testid="stMetric"] {{
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+    }}
+
     [data-testid="stMetricValue"] {{
         font-size: 28px !important;
         font-weight: 800 !important;
         color: #ffffff !important;
         text-align: center !important;
+        width: 100% !important;
     }}
 
     [data-testid="stMetricLabel"] {{
@@ -199,10 +216,11 @@ st.markdown(f"""
         font-weight: 600 !important;
         color: #e0e0e0 !important;
         text-align: center !important;
+        width: 100% !important;
     }}
 
-    /* Botón Reiniciar */
-    div[data-testid="stColumn"] button {{
+    /* BOTÓN REINICIAR */
+    .btn-reiniciar-wrap button {{
         height: 42px !important;
         font-size: 14px !important;
         font-weight: 700 !important;
@@ -212,20 +230,30 @@ st.markdown(f"""
         border: none !important;
     }}
 
-    /* ====================================================
-       ESTILOS TARJETA HORIZONTAL DE PRODUCTO (UNA FILA ESTRICTA)
-       ==================================================== */
-    .item-row-btn {{
+    /* BOTÓN-TARJETA INTEGRADO (UNA SOLA FILA ESTRICTA SIN BOTONES EXTRA) */
+    .item-card-btn {{
+        width: 100% !important;
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 0 10px 0 !important;
+        cursor: pointer !important;
+    }}
+
+    .item-card-btn button {{
+        width: 100% !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }}
+
+    .item-card-flex {{
         display: flex !important;
         flex-direction: row !important;
         align-items: center !important;
         width: 100% !important;
         height: 54px !important;
-        margin-bottom: 10px !important;
-        background: transparent !important;
-        border: none !important;
-        padding: 0 !important;
-        cursor: pointer !important;
     }}
 
     .item-name-box {{
@@ -267,7 +295,7 @@ st.markdown(f"""
         font-size: 22px;
         font-weight: 900;
         box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-        margin-left: 6px;
+        margin-left: 4px;
     }}
 
     .item-qty-box.completed {{
@@ -280,7 +308,10 @@ st.markdown(f"""
             flex: 1 1 100% !important;
         }}
         .header-title {{
-            font-size: 22px;
+            font-size: 20px;
+        }}
+        .header-logo-img {{
+            height: 46px !important;
         }}
     }}
     </style>
@@ -367,18 +398,20 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # Encabezado Centrado
+    # Encabezado Alinear y Centrar
     st.markdown(f"""
         <div class="header-logo-container">
             <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
-            <div>
+            <div class="header-text-group">
                 <h1 class="header-title">TABLA DE<br>PRODUCCIÓN</h1>
-                <span style="font-size:11px; color:#a0a0a0;">🔄 Sincronizado cada 10s | Última: {datetime.now().strftime('%H:%M:%S')}</span>
+                <span style="font-size:11px; color:#a0a0a0; margin-top:2px;">🔄 Sincronizado cada 10s | Última: {datetime.now().strftime('%H:%M:%S')}</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
+    st.markdown('<div class="btn-reiniciar-wrap">', unsafe_allow_html=True)
     st.button("Reiniciar", use_container_width=True, on_click=reiniciar_contador)
+    st.markdown('</div>', unsafe_allow_html=True)
 
     piezas_pendientes = 0
     for prod, cant_total in conteo_productos.items():
@@ -411,18 +444,16 @@ def renderizar_tablero():
 
             status_class = "completed" if es_completado else ""
 
-            with col_destino:
-                # Renderizado HTML único por fila horizontal estricta
-                st.markdown(f"""
-                    <div class="item-row-btn">
-                        <div class="item-name-box {status_class}">{producto}</div>
-                        <div class="item-qty-box {status_class}">{cant_mostrar}</div>
-                    </div>
-                """, unsafe_allow_html=True)
+            html_card = f"""
+                <div class="item-card-flex">
+                    <div class="item-name-box {status_class}">{producto}</div>
+                    <div class="item-qty-box {status_class}">{cant_mostrar}</div>
+                </div>
+            """
 
-                # Botón de activación transparente/invisible para interactuar con el estado
+            with col_destino:
                 st.button(
-                    label=f"Marcar {producto}",
+                    label=html_card,
                     key=f"btn_{producto}",
                     use_container_width=True,
                     on_click=alternar_estado,
