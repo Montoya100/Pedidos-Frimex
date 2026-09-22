@@ -20,8 +20,6 @@ HEADERS_LOYVERSE = {
     "Content-Type": "application/json",
 }
 
-FIREBASE_URL = "https://pedidos-frimex-default-rtdb.firebaseio.com/estado_tablero.json"
-
 # ==========================================
 # CARGAR LOGO LOCAL O FALLBACK
 # ==========================================
@@ -35,55 +33,30 @@ def obtener_base64_imagen(ruta_imagen):
 LOGO_URL = obtener_base64_imagen("logo.png")
 
 # ==========================================
-# 2. BASE DE DATOS COMPARTIDA (SINCRONIZACIÓN)
+# 2. ESTADO GLOBAL EN MEMORIA
 # ==========================================
-def obtener_estado_remoto():
-    try:
-        res = requests.get(FIREBASE_URL, timeout=3)
-        if res.status_code == 200 and res.json():
-            data = res.json()
-            return {
-                "completados": set(data.get("completados", [])),
-                "cantidades_al_completar": data.get("cantidades_al_completar", {}),
-                "hora_corte_utc": data.get("hora_corte_utc", datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
-            }
-    except Exception:
-        pass
-    
+@st.cache_resource
+def obtener_estado_global():
     return {
         "completados": set(),
         "cantidades_al_completar": {},
-        "hora_corte_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     }
 
-def guardar_estado_remoto(estado):
-    payload = {
-        "completados": list(estado["completados"]),
-        "cantidades_al_completar": estado["cantidades_al_completar"],
-        "hora_corte_utc": estado["hora_corte_utc"]
-    }
-    try:
-        requests.put(FIREBASE_URL, json=payload, timeout=3)
-    except Exception:
-        pass
+estado_global = obtener_estado_global()
 
-def reiniciar_contador_global():
-    estado = {
-        "completados": set(),
-        "cantidades_al_completar": {},
-        "hora_corte_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    }
-    guardar_estado_remoto(estado)
+def reiniciar_contador():
+    estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
+    estado_global["completados"].clear()
+    estado_global["cantidades_al_completar"].clear()
 
-def alternar_estado_global(producto, cantidad_actual):
-    estado = obtener_estado_remoto()
-    if producto in estado["completados"]:
-        estado["completados"].remove(producto)
-        estado["cantidades_al_completar"].pop(producto, None)
+def alternar_estado(producto, cantidad_actual):
+    if producto in estado_global["completados"]:
+        estado_global["completados"].remove(producto)
+        estado_global["cantidades_al_completar"].pop(producto, None)
     else:
-        estado["completados"].add(producto)
-        estado["cantidades_al_completar"][producto] = cantidad_actual
-    guardar_estado_remoto(estado)
+        estado_global["completados"].add(producto)
+        estado_global["cantidades_al_completar"][producto] = cantidad_actual
 
 def reproducir_sonido_notificacion():
     sound_js = """
@@ -122,7 +95,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS REVISADOS
+# 3. ESTILOS CSS REVISADOS (FILA ÚNICA)
 # ==========================================
 st.markdown(f"""
     <style>
@@ -227,7 +200,7 @@ st.markdown(f"""
         background-color: #1a1d24;
         border-radius: 8px;
         padding: 8px 12px;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
         border: 1px solid #2d3139;
     }}
 
@@ -258,34 +231,49 @@ st.markdown(f"""
         margin-bottom: 10px !important;
     }}
 
-    /* ESTILOS DE BOTONES DE PRODUCTO (PENDIENTE Y COMPLETADO) */
+    /* FORZAR FILA ÚNICA PERFECTAMENTE ALINEADA */
+    div[data-testid="stHorizontalBlock"] {{
+        align-items: center !important;
+        gap: 6px !important;
+        margin-bottom: 8px !important;
+    }}
+
+    div[data-testid="column"] {{
+        padding: 0 !important;
+    }}
+
+    /* BOTONES PENDIENTE Y COMPLETADO */
     .prod-btn-pending button {{
         background-color: #ffffff !important;
         color: #2c3e50 !important;
         border-left: 6px solid #ff4b4b !important;
+        border-top: none !important;
+        border-right: none !important;
+        border-bottom: none !important;
         border-radius: 8px !important;
         font-size: 15px !important;
         font-weight: 700 !important;
         text-align: left !important;
         height: 48px !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-        padding-left: 10px !important;
+        margin: 0 !important;
     }}
 
     .prod-btn-completed button {{
         background-color: #d1fae5 !important;
         color: #065f46 !important;
         border-left: 6px solid #10b981 !important;
+        border-top: none !important;
+        border-right: none !important;
+        border-bottom: none !important;
         border-radius: 8px !important;
         font-size: 15px !important;
         font-weight: 700 !important;
         text-align: left !important;
         height: 48px !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-        padding-left: 10px !important;
+        margin: 0 !important;
     }}
 
-    /* RECUADRO ROJO Y VERDE PARA LA CANTIDAD */
+    /* RECUADROS ROJO Y VERDE A LA DERECHA */
     .qty-box-red {{
         background-color: #ff4b4b;
         color: #ffffff;
@@ -296,7 +284,7 @@ st.markdown(f"""
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        margin: 0 !important;
     }}
 
     .qty-box-green {{
@@ -309,7 +297,7 @@ st.markdown(f"""
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        margin: 0 !important;
     }}
 
     @media (max-width: 768px) {{
@@ -336,18 +324,19 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 4. CONSULTA A LA API DE LOYVERSE
+# 4. CONSULTA ESTABLE A LA API DE LOYVERSE
 # ==========================================
-def obtener_recibos_hoy(hora_corte_utc_str):
+def obtener_recibos_hoy():
+    created_at_min = estado_global["hora_corte_utc"].strftime("%Y-%m-%dT%H:%M:%SZ")
     url = "https://api.loyverse.com/v1.0/receipts"
-    params = {"created_at_min": hora_corte_utc_str, "limit": 250}
+    params = {"created_at_min": created_at_min, "limit": 250}
     todos_los_recibos = []
 
-    while True:
-        try:
+    try:
+        while True:
             response = requests.get(url, headers=HEADERS_LOYVERSE, params=params, timeout=5)
             if response.status_code != 200:
-                return []
+                break
 
             data = response.json()
             recibos = data.get("receipts", [])
@@ -357,19 +346,17 @@ def obtener_recibos_hoy(hora_corte_utc_str):
             if not cursor:
                 break
             params["cursor"] = cursor
-
-        except Exception:
-            return []
+    except Exception:
+        pass
 
     return todos_los_recibos
 
 # ==========================================
-# 5. FRAGMENTO AUTO-REGENERABLE (CADA 10s)
+# 5. TABLERO DE PEDIDOS EN TIEMPO REAL
 # ==========================================
 @st.fragment(run_every=10)
 def renderizar_tablero():
-    estado_remoto = obtener_estado_remoto()
-    recibos = obtener_recibos_hoy(estado_remoto["hora_corte_utc"])
+    recibos = obtener_recibos_hoy()
     conteo_productos = {}
 
     if recibos:
@@ -386,6 +373,13 @@ def renderizar_tablero():
 
                 cant_num = int(cantidad) if float(cantidad).is_integer() else cantidad
                 conteo_productos[nombre_completo] = conteo_productos.get(nombre_completo, 0) + cant_num
+
+    for prod, cant_total in conteo_productos.items():
+        if prod in estado_global["completados"]:
+            cant_marcada = estado_global["cantidades_al_completar"].get(prod, cant_total)
+            if cant_total > cant_marcada:
+                estado_global["completados"].remove(prod)
+                estado_global["cantidades_al_completar"].pop(prod, None)
 
     # Notificación de nuevo pedido
     if "ultimo_conteo" not in st.session_state:
@@ -404,7 +398,7 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # Encabezado Centrado
+    # Encabezado
     st.markdown(f"""
         <div class="header-logo-container">
             <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
@@ -417,19 +411,17 @@ def renderizar_tablero():
 
     # Botón de Reiniciar
     st.markdown('<div class="btn-reiniciar-wrap">', unsafe_allow_html=True)
-    if st.button("Reiniciar", use_container_width=True):
-        reiniciar_contador_global()
-        st.rerun()
+    st.button("Reiniciar", use_container_width=True, on_click=reiniciar_contador)
     st.markdown('</div>', unsafe_allow_html=True)
 
     # Cálculo de métricas
     piezas_pendientes = 0
     for prod, cant_total in conteo_productos.items():
-        if prod in estado_remoto["completados"]:
-            cant_marcada = estado_remoto["cantidades_al_completar"].get(prod, cant_total)
+        if prod in estado_global["completados"]:
+            cant_marcada = estado_global["cantidades_al_completar"].get(prod, cant_total)
             piezas_pendientes += max(0, cant_total - cant_marcada)
         else:
-            cant_marcada = estado_remoto["cantidades_al_completar"].get(prod, 0)
+            cant_marcada = estado_global["cantidades_al_completar"].get(prod, 0)
             piezas_pendientes += (cant_total - cant_marcada)
 
     # Métricas en una línea horizontal
@@ -451,25 +443,29 @@ def renderizar_tablero():
         productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1], reverse=True)
 
         for producto, cant_total in productos_ordenados:
-            es_completado = producto in estado_remoto["completados"]
+            es_completado = producto in estado_global["completados"]
             
-            cant_base = estado_remoto["cantidades_al_completar"].get(producto, 0)
+            cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
             cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
             btn_class = "prod-btn-completed" if es_completado else "prod-btn-pending"
             box_class = "qty-box-green" if es_completado else "qty-box-red"
 
-            # Fila por separado: Producto (Izquierda) + Recuadro Rojo/Verde (Derecha)
-            c1, c2 = st.columns([4, 1])
+            # Fila corrida: Producto (Izquierda) + Recuadro Rojo/Verde (Derecha)
+            col_prod, col_qty = st.columns([5, 1])
             
-            with c1:
+            with col_prod:
                 st.markdown(f'<div class="{btn_class}">', unsafe_allow_html=True)
-                if st.button(label=producto, key=f"btn_{producto}", use_container_width=True):
-                    alternar_estado_global(producto, cant_total)
-                    st.rerun()
+                st.button(
+                    label=producto,
+                    key=f"btn_{producto}",
+                    use_container_width=True,
+                    on_click=alternar_estado,
+                    args=(producto, cant_total)
+                )
                 st.markdown('</div>', unsafe_allow_html=True)
 
-            with c2:
+            with col_qty:
                 st.markdown(f'<div class="{box_class}">{cant_mostrar}</div>', unsafe_allow_html=True)
 
     else:
