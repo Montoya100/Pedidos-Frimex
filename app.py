@@ -98,7 +98,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS CORREGIDOS
+# 3. ESTILOS CSS FIDEDIGNOS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -144,65 +144,94 @@ st.markdown(f"""
         100% {{ transform: rotate(360deg); }}
     }}
 
+    /* Fondo general oscuro */
+    .stApp {{
+        background-color: #0e1117 !important;
+    }}
+
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     header {{visibility: hidden;}}
     
     .block-container {{
-        padding-top: 0.5rem !important;
+        padding-top: 0.8rem !important;
         padding-bottom: 0rem !important;
-        padding-left: 0.5rem !important;
-        padding-right: 0.5rem !important;
+        padding-left: 0.6rem !important;
+        padding-right: 0.6rem !important;
     }}
 
+    /* Encabezado */
     .header-logo-container {{
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 12px;
+        margin-bottom: 4px;
     }}
     
     .header-logo-img {{
-        height: 60px !important;
+        height: 52px !important;
         width: auto;
         object-fit: contain;
     }}
+
+    .header-title {{
+        color: #ffffff;
+        font-weight: 900;
+        font-size: 24px;
+        line-height: 1.1;
+        letter-spacing: 1px;
+        margin: 0;
+        padding: 0;
+    }}
     
     [data-testid="stMetricValue"] {{
-        font-size: 20px !important;
-        font-weight: bold;
+        font-size: 26px !important;
+        font-weight: 800 !important;
+        color: #ffffff !important;
     }}
 
-    /* Botón de producto (Alto fijo 48px) */
+    [data-testid="stMetricLabel"] {{
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        color: #e0e0e0 !important;
+    }}
+
+    /* Botón de producto principal (Tarjeta blanca de nombre) */
     div[data-testid="stColumn"] button {{
         width: 100% !important;
-        border-radius: 6px !important;
-        padding: 6px 10px !important;
+        border-radius: 8px !important;
+        padding: 4px 10px !important;
         margin-bottom: 0px !important;
-        height: 48px !important;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+        height: 52px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
         transition: all 0.15s ease-in-out !important;
     }}
 
     div[data-testid="stColumn"] button p {{
         font-size: 15px !important;
-        font-weight: 600 !important;
-        text-align: left !important;
+        font-weight: 700 !important;
+        text-align: center !important;
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
         margin: 0 !important;
     }}
 
+    /* Botón de Reiniciar */
     .btn-reiniciar button {{
-        height: 38px !important;
-        font-size: 13px !important;
-        padding: 2px 8px !important;
+        height: 42px !important;
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        background-color: #ffffff !important;
+        color: #2c3e50 !important;
+        border-radius: 8px !important;
+        border: none !important;
     }}
 
     /* ESTADO PENDIENTE */
     div[data-testid="stColumn"] button[kind="secondary"] {{
         background-color: #ffffff !important;
-        border: 2px solid #e0e0e0 !important;
+        border: none !important;
         border-left: 6px solid #ff4b4b !important;
         color: #2c3e50 !important;
     }}
@@ -210,70 +239,63 @@ st.markdown(f"""
     /* ESTADO COMPLETADO */
     div[data-testid="stColumn"] button[kind="primary"] {{
         background-color: #d1fae5 !important;
-        border: 2px solid #a7f3d0 !important;
+        border: none !important;
         border-left: 6px solid #10b981 !important;
         color: #065f46 !important;
     }}
 
-    /* Badge de cantidad a la misma altura en una sola línea */
+    /* Badge rojo/verde ajustado exactamente al alto del botón */
     .qty-badge {{
-        font-size: 18px;
-        font-weight: 800;
+        font-size: 22px;
+        font-weight: 900;
         color: #ffffff;
-        height: 48px;
-        line-height: 48px;
-        border-radius: 6px;
+        height: 52px;
+        line-height: 52px;
+        border-radius: 8px;
         width: 100%;
         text-align: center;
         display: block;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     }}
     .badge-pending {{ background-color: #ff4b4b; }}
     .badge-completed {{ background-color: #10b981; }}
 
-    /* REGLAS RESPONSIVAS PARA EVITAR APILADO EN MÓVIL */
-    .prod-row-container {{
-        margin-bottom: 6px;
+    /* FORZAR LÍNEA CONTINUA (Flex Row) EN CADA TARJETA DE PRODUCTO */
+    .item-card-row {{
+        margin-bottom: 10px;
     }}
 
-    .prod-row-container div[data-testid="stHorizontalBlock"] {{
+    .item-card-row div[data-testid="stHorizontalBlock"] {{
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        gap: 0.3rem !important;
+        gap: 0.5rem !important;
         align-items: center !important;
     }}
 
-    .prod-row-container div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(1) {{
+    /* Proporción 80% nombre - 20% contador */
+    .item-card-row div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(1) {{
         width: 78% !important;
         flex: 0 0 78% !important;
-        min-width: 78% !important;
+        max-width: 78% !important;
     }}
 
-    .prod-row-container div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(2) {{
+    .item-card-row div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(2) {{
         width: 22% !important;
         flex: 0 0 22% !important;
-        min-width: 22% !important;
+        max-width: 22% !important;
     }}
 
     @media (max-width: 768px) {{
-        /* Mantiene la rejilla principal de 1 columna vertical para productos */
         .main-grid > div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {{
             width: 100% !important;
             flex: 1 1 100% !important;
         }}
-        .block-container {{
-            padding-left: 0.25rem !important;
-            padding-right: 0.25rem !important;
-        }}
         .header-logo-img {{
-            height: 46px !important;
+            height: 48px !important;
         }}
-        div[data-testid="stColumn"] button {{ height: 48px !important; }}
-        .qty-badge {{
-            height: 48px;
-            line-height: 48px;
-            font-size: 17px;
+        .header-title {{
+            font-size: 20px;
         }}
     }}
     </style>
@@ -360,23 +382,20 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # Encabezado
-    col_tit, col_btn = st.columns([3.2, 0.8])
-    with col_tit:
-        st.markdown(f"""
-            <div class="header-logo-container">
-                <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
-                <div>
-                    <h3 style="margin:0; padding:0; line-height:1.1;">TABLA DE PRODUCCIÓN</h3>
-                    <span style="font-size:11px; color:#888;">🔄 Sincronizado cada 10s | Última: {datetime.now().strftime('%H:%M:%S')}</span>
-                </div>
+    # Encabezado igual a la imagen
+    st.markdown(f"""
+        <div class="header-logo-container">
+            <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
+            <div>
+                <h1 class="header-title">TABLA DE<br>PRODUCCIÓN</h1>
+                <span style="font-size:11px; color:#a0a0a0;">🔄 Sincronizado cada 10s | Última: {datetime.now().strftime('%H:%M:%S')}</span>
             </div>
-        """, unsafe_allow_html=True)
+        </div>
+    """, unsafe_allow_html=True)
 
-    with col_btn:
-        st.markdown('<div class="btn-reiniciar">', unsafe_allow_html=True)
-        st.button("Reiniciar", use_container_width=True, on_click=reiniciar_contador, help="Borra la pantalla y empieza a contar desde este instante")
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<div class="btn-reiniciar" style="margin-top:10px; margin-bottom:15px;">', unsafe_allow_html=True)
+    st.button("Reiniciar", use_container_width=True, on_click=reiniciar_contador)
+    st.markdown('</div>', unsafe_allow_html=True)
 
     piezas_pendientes = 0
     for prod, cant_total in conteo_productos.items():
@@ -391,7 +410,7 @@ def renderizar_tablero():
     m1.metric("Tickets", len(recibos))
     m2.metric("Pendientes", piezas_pendientes)
 
-    st.markdown("---")
+    st.markdown("<br>", unsafe_allow_html=True)
 
     if conteo_productos:
         productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1], reverse=True)
@@ -408,7 +427,7 @@ def renderizar_tablero():
             cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
             with col_destino:
-                st.markdown('<div class="prod-row-container">', unsafe_allow_html=True)
+                st.markdown('<div class="item-card-row">', unsafe_allow_html=True)
                 col_btn_prod, col_qty = st.columns([0.78, 0.22])
                 
                 with col_btn_prod:
