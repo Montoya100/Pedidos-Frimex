@@ -98,7 +98,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS REGLAS DE FILA ÚNICA EN MÓVIL
+# 3. ESTILOS CSS GENERALES Y CENTRADO
 # ==========================================
 st.markdown(f"""
     <style>
@@ -155,19 +155,22 @@ st.markdown(f"""
     .block-container {{
         padding-top: 0.8rem !important;
         padding-bottom: 0rem !important;
-        padding-left: 0.5rem !important;
-        padding-right: 0.5rem !important;
+        padding-left: 0.6rem !important;
+        padding-right: 0.6rem !important;
     }}
 
+    /* Encabezado totalmente centrado */
     .header-logo-container {{
         display: flex;
+        justify-content: center;
         align-items: center;
-        gap: 12px;
-        margin-bottom: 4px;
+        gap: 16px;
+        margin-bottom: 12px;
+        text-align: center;
     }}
     
     .header-logo-img {{
-        height: 52px !important;
+        height: 58px !important;
         width: auto;
         object-fit: contain;
     }}
@@ -175,26 +178,31 @@ st.markdown(f"""
     .header-title {{
         color: #ffffff;
         font-weight: 900;
-        font-size: 24px;
+        font-size: 26px;
         line-height: 1.1;
         letter-spacing: 1px;
         margin: 0;
         padding: 0;
+        text-align: center;
     }}
 
+    /* Métricas */
     [data-testid="stMetricValue"] {{
-        font-size: 26px !important;
+        font-size: 28px !important;
         font-weight: 800 !important;
         color: #ffffff !important;
+        text-align: center !important;
     }}
 
     [data-testid="stMetricLabel"] {{
         font-size: 16px !important;
         font-weight: 600 !important;
         color: #e0e0e0 !important;
+        text-align: center !important;
     }}
 
-    .btn-reiniciar button {{
+    /* Botón Reiniciar */
+    div[data-testid="stColumn"] button {{
         height: 42px !important;
         font-size: 14px !important;
         font-weight: 700 !important;
@@ -205,100 +213,74 @@ st.markdown(f"""
     }}
 
     /* ====================================================
-       REGLA PARA INHIBIR EL APILAMIENTO EN CELULAR
+       ESTILOS TARJETA HORIZONTAL DE PRODUCTO (UNA FILA ESTRICTA)
        ==================================================== */
-    .prod-card-wrapper {{
-        margin-bottom: 8px;
-    }}
-
-    /* Sobreescribe flexbox de Streamlit en móviles para mantener la fila horizontal */
-    .prod-card-wrapper div[data-testid="stHorizontalBlock"] {{
+    .item-row-btn {{
         display: flex !important;
         flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        gap: 8px !important;
         align-items: center !important;
-    }}
-
-    .prod-card-wrapper div[data-testid="column"] {{
-        width: auto !important;
-        min-width: 0 !important;
-    }}
-
-    .prod-card-wrapper div[data-testid="column"]:nth-child(1) {{
-        flex: 1 1 78% !important;
-        width: 78% !important;
-    }}
-
-    .prod-card-wrapper div[data-testid="column"]:nth-child(2) {{
-        flex: 0 0 22% !important;
-        width: 22% !important;
-    }}
-
-    /* Botón de producto (lado izquierdo) */
-    div[data-testid="stColumn"] button {{
         width: 100% !important;
-        border-radius: 8px !important;
-        padding: 4px 10px !important;
-        margin: 0px !important;
-        height: 52px !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
-    }}
-
-    div[data-testid="stColumn"] button p {{
-        font-size: 15px !important;
-        font-weight: 700 !important;
-        text-align: center !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        margin: 0 !important;
-    }}
-
-    /* Estado Pendiente */
-    div[data-testid="stColumn"] button[kind="secondary"] {{
-        background-color: #ffffff !important;
+        height: 54px !important;
+        margin-bottom: 10px !important;
+        background: transparent !important;
         border: none !important;
-        border-left: 6px solid #ff4b4b !important;
-        color: #2c3e50 !important;
+        padding: 0 !important;
+        cursor: pointer !important;
     }}
 
-    /* Estado Completado */
-    div[data-testid="stColumn"] button[kind="primary"] {{
-        background-color: #d1fae5 !important;
-        border: none !important;
-        border-left: 6px solid #10b981 !important;
-        color: #065f46 !important;
+    .item-name-box {{
+        flex: 1 1 78% !important;
+        height: 54px !important;
+        background-color: #ffffff;
+        color: #2c3e50;
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+        border-left: 6px solid #ff4b4b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 700;
+        padding: 0 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }}
 
-    /* Badge de cantidad (lado derecho) */
-    .qty-badge {{
+    .item-name-box.completed {{
+        background-color: #d1fae5;
+        color: #065f46;
+        border-left: 6px solid #10b981;
+    }}
+
+    .item-qty-box {{
+        flex: 0 0 22% !important;
+        height: 54px !important;
+        background-color: #ff4b4b;
+        color: #ffffff;
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         font-size: 22px;
         font-weight: 900;
-        color: #ffffff;
-        height: 52px;
-        line-height: 52px;
-        border-radius: 8px;
-        width: 100%;
-        text-align: center;
-        display: block;
         box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        margin-left: 6px;
     }}
-    .badge-pending {{ background-color: #ff4b4b; }}
-    .badge-completed {{ background-color: #10b981; }}
 
-    /* En escritorio/tablet usa 3 columnas. En celular, 1 columna vertical que contiene las tarjetas integradas horizontalmente */
+    .item-qty-box.completed {{
+        background-color: #10b981;
+    }}
+
     @media (max-width: 768px) {{
         .grid-3-cols > div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {{
             width: 100% !important;
             flex: 1 1 100% !important;
-            min-width: 100% !important;
-        }}
-        .header-logo-img {{
-            height: 48px !important;
         }}
         .header-title {{
-            font-size: 20px;
+            font-size: 22px;
         }}
     }}
     </style>
@@ -385,7 +367,7 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # Encabezado
+    # Encabezado Centrado
     st.markdown(f"""
         <div class="header-logo-container">
             <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
@@ -396,9 +378,7 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="btn-reiniciar" style="margin-top:10px; margin-bottom:15px;">', unsafe_allow_html=True)
     st.button("Reiniciar", use_container_width=True, on_click=reiniciar_contador)
-    st.markdown('</div>', unsafe_allow_html=True)
 
     piezas_pendientes = 0
     for prod, cant_total in conteo_productos.items():
@@ -429,27 +409,26 @@ def renderizar_tablero():
             cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
             cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
+            status_class = "completed" if es_completado else ""
+
             with col_destino:
-                st.markdown('<div class="prod-card-wrapper">', unsafe_allow_html=True)
-                col_btn_prod, col_qty = st.columns([0.78, 0.22])
-                
-                with col_btn_prod:
-                    st.button(
-                        label=producto,
-                        key=f"btn_{producto}",
-                        type="primary" if es_completado else "secondary",
-                        use_container_width=True,
-                        on_click=alternar_estado,
-                        args=(producto, cant_total)
-                    )
-                
-                with col_qty:
-                    badge_style = "badge-completed" if es_completado else "badge-pending"
-                    st.markdown(
-                        f'<span class="qty-badge {badge_style}">{cant_mostrar}</span>', 
-                        unsafe_allow_html=True
-                    )
-                st.markdown('</div>', unsafe_allow_html=True)
+                # Renderizado HTML único por fila horizontal estricta
+                st.markdown(f"""
+                    <div class="item-row-btn">
+                        <div class="item-name-box {status_class}">{producto}</div>
+                        <div class="item-qty-box {status_class}">{cant_mostrar}</div>
+                    </div>
+                """, unsafe_allow_html=True)
+
+                # Botón de activación transparente/invisible para interactuar con el estado
+                st.button(
+                    label=f"Marcar {producto}",
+                    key=f"btn_{producto}",
+                    use_container_width=True,
+                    on_click=alternar_estado,
+                    args=(producto, cant_total)
+                )
+
         st.markdown('</div>', unsafe_allow_html=True)
 
     else:
