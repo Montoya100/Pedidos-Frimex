@@ -98,7 +98,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS REFINADOS
+# 3. ESTILOS CSS CON BADGE UNIFICADO EN UNA SOLA LÍNEA
 # ==========================================
 st.markdown(f"""
     <style>
@@ -156,7 +156,6 @@ st.markdown(f"""
         padding-right: 0.5rem !important;
     }}
 
-    /* Logo más grande en encabezado */
     .header-logo-container {{
         display: flex;
         align-items: center;
@@ -164,7 +163,7 @@ st.markdown(f"""
     }}
     
     .header-logo-img {{
-        height: 68px !important; /* Tamaño aumentado */
+        height: 68px !important;
         width: auto;
         object-fit: contain;
     }}
@@ -174,36 +173,31 @@ st.markdown(f"""
         font-weight: bold;
     }}
 
-    /* Contenedor compacto sin separación entre botón y badge */
-    div[data-testid="stHorizontalBlock"] {{
-        gap: 0.2rem !important;
-    }}
-
-    /* Botón de producto principal (Alto fijo 48px) */
+    /* Botón de producto que contiene la cantidad en la misma fila */
     div[data-testid="stColumn"] button {{
         width: 100% !important;
-        border-radius: 6px !important;
-        padding: 6px 10px !important;
-        margin-bottom: 4px !important;
-        height: 48px !important;
+        border-radius: 8px !important;
+        padding: 6px 14px !important;
+        margin-bottom: 6px !important;
+        height: 52px !important;
         display: flex !important;
         justify-content: space-between !important;
         align-items: center !important;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.06) !important;
         transition: all 0.15s ease-in-out !important;
     }}
 
     div[data-testid="stColumn"] button p {{
-        font-size: 15px !important;
-        font-weight: 600 !important;
-        text-align: left !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        width: 100% !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
         margin: 0 !important;
     }}
 
-    /* Botón de Reiniciar (Más chico y discreto) */
+    /* Botón de Reiniciar */
     .btn-reiniciar button {{
         height: 38px !important;
         font-size: 13px !important;
@@ -233,23 +227,21 @@ st.markdown(f"""
         background-color: #a7f3d0 !important;
     }}
 
-    /* Badge de cantidad a la par del recuadro (Misma altura: 48px) */
-    .qty-badge {{
-        font-size: 20px;
+    /* Badge dentro del texto del botón */
+    .in-btn-badge {{
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 17px;
         font-weight: 800;
         color: #ffffff;
-        height: 48px;
-        line-height: 48px;
-        border-radius: 6px;
-        width: 100%;
+        display: inline-block;
+        min-width: 36px;
         text-align: center;
-        display: block;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }}
-    .badge-pending {{ background-color: #ff4b4b; }}
-    .badge-completed {{ background-color: #10b981; }}
+    .badge-bg-pending {{ background-color: #ff4b4b; }}
+    .badge-bg-completed {{ background-color: #10b981; }}
 
-    /* Reglas móviles */
+    /* Reglas móviles para pantalla vertical */
     @media (max-width: 768px) {{
         div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {{
             width: 100% !important;
@@ -260,14 +252,9 @@ st.markdown(f"""
             padding-right: 0.25rem !important;
         }}
         .header-logo-img {{
-            height: 50px !important;
+            height: 52px !important;
         }}
-        div[data-testid="stColumn"] button {{ height: 50px !important; }}
-        .qty-badge {{
-            height: 50px;
-            line-height: 50px;
-            font-size: 18px;
-        }}
+        div[data-testid="stColumn"] button {{ height: 54px !important; }}
     }}
     </style>
 
@@ -353,7 +340,7 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # Encabezado con proporción optimizada para el botón chico
+    # Encabezado
     col_tit, col_btn = st.columns([3.2, 0.8])
     with col_tit:
         st.markdown(f"""
@@ -399,25 +386,19 @@ def renderizar_tablero():
             cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
             cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
+            # Badge integrado directamente en la etiqueta en una sola línea
+            badge_class = "badge-bg-completed" if es_completado else "badge-bg-pending"
+            label_texto = f"{producto} :raw-html:`<span class='in-btn-badge {badge_class}'>{cant_mostrar}</span>`"
+
             with col_destino:
-                col_btn_prod, col_qty = st.columns([0.82, 0.18])
-                
-                with col_btn_prod:
-                    st.button(
-                        label=producto,
-                        key=f"btn_{producto}",
-                        type="primary" if es_completado else "secondary",
-                        use_container_width=True,
-                        on_click=alternar_estado,
-                        args=(producto, cant_total)
-                    )
-                
-                with col_qty:
-                    badge_style = "badge-completed" if es_completado else "badge-pending"
-                    st.markdown(
-                        f'<span class="qty-badge {badge_style}">{cant_mostrar}</span>', 
-                        unsafe_allow_html=True
-                    )
+                st.button(
+                    label=label_texto,
+                    key=f"btn_{producto}",
+                    type="primary" if es_completado else "secondary",
+                    use_container_width=True,
+                    on_click=alternar_estado,
+                    args=(producto, cant_total)
+                )
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
