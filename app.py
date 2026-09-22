@@ -98,7 +98,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS ADAPTATIVOS
+# 3. ESTILOS CSS REGLAS DE FILA ÚNICA EN MÓVIL
 # ==========================================
 st.markdown(f"""
     <style>
@@ -155,8 +155,8 @@ st.markdown(f"""
     .block-container {{
         padding-top: 0.8rem !important;
         padding-bottom: 0rem !important;
-        padding-left: 0.6rem !important;
-        padding-right: 0.6rem !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
     }}
 
     .header-logo-container {{
@@ -205,13 +205,14 @@ st.markdown(f"""
     }}
 
     /* ====================================================
-       CONTENEDOR DE PRODUCTO EN UNA SOLA LÍNEA HORIZONTAL
+       REGLA PARA INHIBIR EL APILAMIENTO EN CELULAR
        ==================================================== */
     .prod-card-wrapper {{
         margin-bottom: 8px;
     }}
 
-    .prod-card-wrapper [data-testid="stHorizontalBlock"] {{
+    /* Sobreescribe flexbox de Streamlit en móviles para mantener la fila horizontal */
+    .prod-card-wrapper div[data-testid="stHorizontalBlock"] {{
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
@@ -219,19 +220,22 @@ st.markdown(f"""
         align-items: center !important;
     }}
 
-    .prod-card-wrapper [data-testid="column"]:nth-child(1) {{
-        width: 80% !important;
-        flex: 0 0 80% !important;
-        max-width: 80% !important;
+    .prod-card-wrapper div[data-testid="column"] {{
+        width: auto !important;
+        min-width: 0 !important;
     }}
 
-    .prod-card-wrapper [data-testid="column"]:nth-child(2) {{
-        width: 20% !important;
-        flex: 0 0 20% !important;
-        max-width: 20% !important;
+    .prod-card-wrapper div[data-testid="column"]:nth-child(1) {{
+        flex: 1 1 78% !important;
+        width: 78% !important;
     }}
 
-    /* Botón del Producto */
+    .prod-card-wrapper div[data-testid="column"]:nth-child(2) {{
+        flex: 0 0 22% !important;
+        width: 22% !important;
+    }}
+
+    /* Botón de producto (lado izquierdo) */
     div[data-testid="stColumn"] button {{
         width: 100% !important;
         border-radius: 8px !important;
@@ -267,7 +271,7 @@ st.markdown(f"""
         color: #065f46 !important;
     }}
 
-    /* Badge rojo/verde a la derecha */
+    /* Badge de cantidad (lado derecho) */
     .qty-badge {{
         font-size: 22px;
         font-weight: 900;
@@ -283,11 +287,12 @@ st.markdown(f"""
     .badge-pending {{ background-color: #ff4b4b; }}
     .badge-completed {{ background-color: #10b981; }}
 
-    /* REGLA RESPONSIVA: 3 Columnas en Pantalla Ancha, 1 Columna en Celular Vertical */
+    /* En escritorio/tablet usa 3 columnas. En celular, 1 columna vertical que contiene las tarjetas integradas horizontalmente */
     @media (max-width: 768px) {{
-        .grid-3-cols > [data-testid="stHorizontalBlock"] > [data-testid="column"] {{
+        .grid-3-cols > div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {{
             width: 100% !important;
             flex: 1 1 100% !important;
+            min-width: 100% !important;
         }}
         .header-logo-img {{
             height: 48px !important;
@@ -413,7 +418,6 @@ def renderizar_tablero():
     if conteo_productos:
         productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1], reverse=True)
 
-        # Rejilla principal de 3 columnas para Horizontal/Desktop
         st.markdown('<div class="grid-3-cols">', unsafe_allow_html=True)
         col_a, col_b, col_c = st.columns(3)
         columnas = [col_a, col_b, col_c]
@@ -426,9 +430,8 @@ def renderizar_tablero():
             cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
             with col_destino:
-                # Wrapper para forzar que el producto y la cantidad estén en la misma línea
                 st.markdown('<div class="prod-card-wrapper">', unsafe_allow_html=True)
-                col_btn_prod, col_qty = st.columns([0.80, 0.20])
+                col_btn_prod, col_qty = st.columns([0.78, 0.22])
                 
                 with col_btn_prod:
                     st.button(
