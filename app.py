@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 # 1. CONFIGURACIÓN DE PÁGINA
 # ==========================================
 st.set_page_config(
-    page_title="Mostacho Botanas", 
+    page_title="MOSTACHO BOTANAS", 
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="collapsed"
