@@ -98,7 +98,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS FIDEDIGNOS
+# 3. ESTILOS CSS REGLAS CONTINUAS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -144,7 +144,6 @@ st.markdown(f"""
         100% {{ transform: rotate(360deg); }}
     }}
 
-    /* Fondo general oscuro */
     .stApp {{
         background-color: #0e1117 !important;
     }}
@@ -156,11 +155,10 @@ st.markdown(f"""
     .block-container {{
         padding-top: 0.8rem !important;
         padding-bottom: 0rem !important;
-        padding-left: 0.6rem !important;
-        padding-right: 0.6rem !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
     }}
 
-    /* Encabezado */
     .header-logo-container {{
         display: flex;
         align-items: center;
@@ -196,15 +194,56 @@ st.markdown(f"""
         color: #e0e0e0 !important;
     }}
 
-    /* Botón de producto principal (Tarjeta blanca de nombre) */
+    .btn-reiniciar button {{
+        height: 42px !important;
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        background-color: #ffffff !important;
+        color: #2c3e50 !important;
+        border-radius: 8px !important;
+        border: none !important;
+    }}
+
+    /* ====================================================
+       UNIFICACIÓN VISUAL (BOTÓN + BADGE EN UN SOLO BLOQUE)
+       ==================================================== */
+    .item-card-row {{
+        margin-bottom: 10px;
+    }}
+
+    .item-card-row div[data-testid="stHorizontalBlock"] {{
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 0px !important; /* Elimina separación entre botón y badge */
+        align-items: center !important;
+    }}
+
+    .item-card-row div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(1) {{
+        width: 80% !important;
+        flex: 0 0 80% !important;
+        max-width: 80% !important;
+        padding-right: 0px !important;
+    }}
+
+    .item-card-row div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(2) {{
+        width: 20% !important;
+        flex: 0 0 20% !important;
+        max-width: 20% !important;
+        padding-left: 0px !important;
+    }}
+
+    /* Estilos del botón (parte izquierda del bloque) */
     div[data-testid="stColumn"] button {{
         width: 100% !important;
-        border-radius: 8px !important;
+        border-top-left-radius: 8px !important;
+        border-bottom-left-radius: 8px !important;
+        border-top-right-radius: 0px !important;
+        border-bottom-right-radius: 0px !important;
         padding: 4px 10px !important;
-        margin-bottom: 0px !important;
+        margin: 0px !important;
         height: 52px !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
-        transition: all 0.15s ease-in-out !important;
+        box-shadow: none !important;
     }}
 
     div[data-testid="stColumn"] button p {{
@@ -217,18 +256,7 @@ st.markdown(f"""
         margin: 0 !important;
     }}
 
-    /* Botón de Reiniciar */
-    .btn-reiniciar button {{
-        height: 42px !important;
-        font-size: 14px !important;
-        font-weight: 700 !important;
-        background-color: #ffffff !important;
-        color: #2c3e50 !important;
-        border-radius: 8px !important;
-        border: none !important;
-    }}
-
-    /* ESTADO PENDIENTE */
+    /* Pendiente */
     div[data-testid="stColumn"] button[kind="secondary"] {{
         background-color: #ffffff !important;
         border: none !important;
@@ -236,7 +264,7 @@ st.markdown(f"""
         color: #2c3e50 !important;
     }}
 
-    /* ESTADO COMPLETADO */
+    /* Completado */
     div[data-testid="stColumn"] button[kind="primary"] {{
         background-color: #d1fae5 !important;
         border: none !important;
@@ -244,47 +272,23 @@ st.markdown(f"""
         color: #065f46 !important;
     }}
 
-    /* Badge rojo/verde ajustado exactamente al alto del botón */
+    /* Estilos del badge de cantidad (parte derecha del bloque) */
     .qty-badge {{
         font-size: 22px;
         font-weight: 900;
         color: #ffffff;
         height: 52px;
         line-height: 52px;
-        border-radius: 8px;
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+        border-top-left-radius: 0px;
+        border-bottom-left-radius: 0px;
         width: 100%;
         text-align: center;
         display: block;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     }}
     .badge-pending {{ background-color: #ff4b4b; }}
     .badge-completed {{ background-color: #10b981; }}
-
-    /* FORZAR LÍNEA CONTINUA (Flex Row) EN CADA TARJETA DE PRODUCTO */
-    .item-card-row {{
-        margin-bottom: 10px;
-    }}
-
-    .item-card-row div[data-testid="stHorizontalBlock"] {{
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        gap: 0.5rem !important;
-        align-items: center !important;
-    }}
-
-    /* Proporción 80% nombre - 20% contador */
-    .item-card-row div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(1) {{
-        width: 78% !important;
-        flex: 0 0 78% !important;
-        max-width: 78% !important;
-    }}
-
-    .item-card-row div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(2) {{
-        width: 22% !important;
-        flex: 0 0 22% !important;
-        max-width: 22% !important;
-    }}
 
     @media (max-width: 768px) {{
         .main-grid > div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {{
@@ -382,7 +386,7 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # Encabezado igual a la imagen
+    # Encabezado
     st.markdown(f"""
         <div class="header-logo-container">
             <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
@@ -428,7 +432,7 @@ def renderizar_tablero():
 
             with col_destino:
                 st.markdown('<div class="item-card-row">', unsafe_allow_html=True)
-                col_btn_prod, col_qty = st.columns([0.78, 0.22])
+                col_btn_prod, col_qty = st.columns([0.80, 0.20])
                 
                 with col_btn_prod:
                     st.button(
