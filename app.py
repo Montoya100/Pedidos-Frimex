@@ -98,7 +98,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS REVISADOS
+# 3. ESTILOS CSS AVANZADOS Y TARJETAS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -159,7 +159,7 @@ st.markdown(f"""
         padding-right: 0.6rem !important;
     }}
 
-    /* ENCABEZADO CENTRADO PERFECTO Y COMPACTO */
+    /* ENCABEZADO CENTRADO Y COMPACTO */
     .header-logo-container {{
         display: flex;
         justify-content: center;
@@ -186,7 +186,7 @@ st.markdown(f"""
     .header-title {{
         color: #ffffff;
         font-weight: 900;
-        font-size: 17px !important; /* Más chico para que no rompa la palabra */
+        font-size: 17px !important;
         line-height: 1.1;
         letter-spacing: 0.5px;
         margin: 0;
@@ -234,31 +234,79 @@ st.markdown(f"""
         margin-bottom: 10px !important;
     }}
 
-    /* TARJETAS DE PRODUCTO (BOTÓN ÚNICO Y LIMPIO) */
+    /* ESTILIZADO DE TARJETAS CON RECUADRO ROJO/VERDE DERECHO PARA LA CANTIDAD */
+    .prod-card-pending button, .prod-card-completed button {{
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        height: 52px !important;
+        border-radius: 8px !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        padding: 0 0 0 14px !important;
+        overflow: hidden !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+        margin-bottom: 8px !important;
+    }}
+
+    /* Estado Pendiente */
     .prod-card-pending button {{
         background-color: #ffffff !important;
         color: #2c3e50 !important;
         border-left: 6px solid #ff4b4b !important;
-        border-radius: 8px !important;
-        font-size: 15px !important;
-        font-weight: 700 !important;
-        text-align: left !important;
-        height: 52px !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-        padding-left: 12px !important;
+        border-top: none !important;
+        border-right: none !important;
+        border-bottom: none !important;
     }}
 
+    /* Estado Completado */
     .prod-card-completed button {{
         background-color: #d1fae5 !important;
         color: #065f46 !important;
         border-left: 6px solid #10b981 !important;
-        border-radius: 8px !important;
-        font-size: 15px !important;
-        font-weight: 700 !important;
-        text-align: left !important;
-        height: 52px !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-        padding-left: 12px !important;
+        border-top: none !important;
+        border-right: none !important;
+        border-bottom: none !important;
+    }}
+
+    /* Estilo del recuadro del contador (Pendiente -> Rojo) */
+    .prod-card-pending button div p {{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+    }}
+
+    /* Genera la caja independiente en el botón */
+    .prod-card-pending button p::after {{
+        content: attr(data-qty);
+        background-color: #ff4b4b;
+        color: #ffffff;
+        font-weight: 900;
+        font-size: 18px;
+        height: 52px;
+        min-width: 55px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 10px;
+        padding: 0 10px;
+    }}
+
+    /* Genera la caja independiente cuando está completado (Verde) */
+    .prod-card-completed button p::after {{
+        content: attr(data-qty);
+        background-color: #10b981;
+        color: #ffffff;
+        font-weight: 900;
+        font-size: 18px;
+        height: 52px;
+        min-width: 55px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 10px;
+        padding: 0 10px;
     }}
 
     @media (max-width: 768px) {{
@@ -282,6 +330,23 @@ st.markdown(f"""
         <img src="{LOGO_URL}" class="splash-logo-img" alt="Logo">
         <div class="splash-loader"></div>
     </div>
+""", unsafe_allow_html=True)
+
+# Script inyectado para pasar el valor del contador al CSS dinámico
+st.markdown("""
+    <script>
+    function aplicarRecuadros() {
+        const buttons = window.parent.document.querySelectorAll('.prod-card-pending button p, .prod-card-completed button p');
+        buttons.forEach(p => {
+            const match = p.innerText.match(/(.*) /// (\\d+)/);
+            if (match) {
+                p.innerText = match[1];
+                p.setAttribute('data-qty', match[2]);
+            }
+        });
+    }
+    setInterval(aplicarRecuadros, 300);
+    </script>
 """, unsafe_allow_html=True)
 
 # ==========================================
@@ -359,7 +424,7 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # Encabezado centrado con tipografía más compacta
+    # Encabezado
     st.markdown(f"""
         <div class="header-logo-container">
             <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
@@ -385,7 +450,7 @@ def renderizar_tablero():
             cant_marcada = estado_global["cantidades_al_completar"].get(prod, 0)
             piezas_pendientes += (cant_total - cant_marcada)
 
-    # Métricas en una sola fila (horizontal)
+    # Métricas en una fila horizontal
     st.markdown(f"""
         <div class="metrics-row">
             <div class="metric-inline">
@@ -414,7 +479,9 @@ def renderizar_tablero():
             cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
             card_class = "prod-card-completed" if es_completado else "prod-card-pending"
-            texto_boton = f"{producto} — [{cant_mostrar}]"
+            
+            # Formato sin corchetes parseado mediante el script cliente
+            texto_boton = f"{producto} /// {cant_mostrar}"
 
             with col_destino:
                 st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
