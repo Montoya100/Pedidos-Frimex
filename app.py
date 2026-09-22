@@ -20,7 +20,6 @@ HEADERS_LOYVERSE = {
     "Content-Type": "application/json",
 }
 
-# Configuración de Firebase REST para Sincronización Global
 FIREBASE_URL = "https://pedidos-frimex-default-rtdb.firebaseio.com/estado_tablero.json"
 
 # ==========================================
@@ -36,7 +35,7 @@ def obtener_base64_imagen(ruta_imagen):
 LOGO_URL = obtener_base64_imagen("logo.png")
 
 # ==========================================
-# 2. BASE DE DATOS COMPARTIDA (SINCRONIZACIÓN REAL)
+# 2. BASE DE DATOS COMPARTIDA (SINCRONIZACIÓN)
 # ==========================================
 def obtener_estado_remoto():
     try:
@@ -259,13 +258,58 @@ st.markdown(f"""
         margin-bottom: 10px !important;
     }}
 
-    /* BOTONES-TARJETA INTEGRADOS */
-    .prod-card-wrap button {{
-        background: transparent !important;
-        border: none !important;
-        padding: 0 !important;
-        margin-bottom: 8px !important;
-        box-shadow: none !important;
+    /* ESTILOS DE BOTONES DE PRODUCTO (PENDIENTE Y COMPLETADO) */
+    .prod-btn-pending button {{
+        background-color: #ffffff !important;
+        color: #2c3e50 !important;
+        border-left: 6px solid #ff4b4b !important;
+        border-radius: 8px !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        text-align: left !important;
+        height: 48px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+        padding-left: 10px !important;
+    }}
+
+    .prod-btn-completed button {{
+        background-color: #d1fae5 !important;
+        color: #065f46 !important;
+        border-left: 6px solid #10b981 !important;
+        border-radius: 8px !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        text-align: left !important;
+        height: 48px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+        padding-left: 10px !important;
+    }}
+
+    /* RECUADRO ROJO Y VERDE PARA LA CANTIDAD */
+    .qty-box-red {{
+        background-color: #ff4b4b;
+        color: #ffffff;
+        font-weight: 900;
+        font-size: 18px;
+        height: 48px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }}
+
+    .qty-box-green {{
+        background-color: #10b981;
+        color: #ffffff;
+        font-weight: 900;
+        font-size: 18px;
+        height: 48px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }}
 
     @media (max-width: 768px) {{
@@ -366,7 +410,7 @@ def renderizar_tablero():
             <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
             <div class="header-text-group">
                 <h1 class="header-title">TABLA DE PRODUCCIÓN</h1>
-                <span style="font-size:10px; color:#a0a0a0; margin-top:1px;">🔄 Sincronizado globalmente | {datetime.now().strftime('%H:%M:%S')}</span>
+                <span style="font-size:10px; color:#a0a0a0; margin-top:1px;">🔄 Sincronizado | {datetime.now().strftime('%H:%M:%S')}</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -406,50 +450,27 @@ def renderizar_tablero():
     if conteo_productos:
         productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1], reverse=True)
 
-        col_a, col_b, col_c = st.columns(3)
-        columnas = [col_a, col_b, col_c]
-
-        for idx, (producto, cant_total) in enumerate(productos_ordenados):
-            col_destino = columnas[idx % 3]
+        for producto, cant_total in productos_ordenados:
             es_completado = producto in estado_remoto["completados"]
             
             cant_base = estado_remoto["cantidades_al_completar"].get(producto, 0)
             cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-            border_color = "#10b981" if es_completado else "#ff4b4b"
-            bg_left = "#d1fae5" if es_completado else "#ffffff"
-            text_color = "#065f46" if es_completado else "#2c3e50"
-            bg_box = "#10b981" if es_completado else "#ff4b4b"
+            btn_class = "prod-btn-completed" if es_completado else "prod-btn-pending"
+            box_class = "qty-box-green" if es_completado else "qty-box-red"
 
-            # Tarjeta estilizada con el recuadro rojo/verde perfecto a la derecha
-            card_html = f"""
-                <div style="display: flex; align-items: center; justify-content: space-between; height: 52px; background-color: {bg_left}; border-left: 6px solid {border_color}; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.2); width: 100%; font-family: sans-serif;">
-                    <div style="padding-left: 12px; font-weight: 700; font-size: 15px; color: {text_color}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">
-                        {producto}
-                    </div>
-                    <div style="background-color: {bg_box}; color: #ffffff; font-weight: 900; font-size: 18px; height: 52px; min-width: 55px; display: flex; align-items: center; justify-content: center; padding: 0 10px;">
-                        {cant_mostrar}
-                    </div>
-                </div>
-            """
-
-            with col_destino:
-                st.markdown('<div class="prod-card-wrap">', unsafe_allow_html=True)
-                if st.button(label=f"btn_card_{idx}", key=f"btn_{producto}", use_container_width=True):
+            # Fila por separado: Producto (Izquierda) + Recuadro Rojo/Verde (Derecha)
+            c1, c2 = st.columns([4, 1])
+            
+            with c1:
+                st.markdown(f'<div class="{btn_class}">', unsafe_allow_html=True)
+                if st.button(label=producto, key=f"btn_{producto}", use_container_width=True):
                     alternar_estado_global(producto, cant_total)
                     st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
-                
-                # Inyección visual directa sobre el botón nativo
-                st.components.v1.html(f"""
-                    <script>
-                    const parentDoc = window.parent.document;
-                    const btn = parentDoc.querySelector('button[key="btn_{producto}"]');
-                    if (btn) {{
-                        btn.innerHTML = `{card_html}`;
-                    }}
-                    </script>
-                """, height=0, width=0)
+
+            with c2:
+                st.markdown(f'<div class="{box_class}">{cant_mostrar}</div>', unsafe_allow_html=True)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
