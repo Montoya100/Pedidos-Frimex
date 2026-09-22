@@ -98,7 +98,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS
+# 3. ESTILOS CSS CORREGIDOS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -144,7 +144,6 @@ st.markdown(f"""
         100% {{ transform: rotate(360deg); }}
     }}
 
-    /* Limpieza UI Streamlit */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     header {{visibility: hidden;}}
@@ -163,7 +162,7 @@ st.markdown(f"""
     }}
     
     .header-logo-img {{
-        height: 68px !important;
+        height: 60px !important;
         width: auto;
         object-fit: contain;
     }}
@@ -173,16 +172,12 @@ st.markdown(f"""
         font-weight: bold;
     }}
 
-    div[data-testid="stHorizontalBlock"] {{
-        gap: 0.2rem !important;
-    }}
-
-    /* Estilos del botón de producto */
+    /* Botón de producto (Alto fijo 48px) */
     div[data-testid="stColumn"] button {{
         width: 100% !important;
         border-radius: 6px !important;
         padding: 6px 10px !important;
-        margin-bottom: 4px !important;
+        margin-bottom: 0px !important;
         height: 48px !important;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
         transition: all 0.15s ease-in-out !important;
@@ -198,7 +193,6 @@ st.markdown(f"""
         margin: 0 !important;
     }}
 
-    /* Botón de Reiniciar */
     .btn-reiniciar button {{
         height: 38px !important;
         font-size: 13px !important;
@@ -212,10 +206,6 @@ st.markdown(f"""
         border-left: 6px solid #ff4b4b !important;
         color: #2c3e50 !important;
     }}
-    div[data-testid="stColumn"] button[kind="secondary"]:hover {{
-        border-color: #ff4b4b !important;
-        background-color: #fff5f5 !important;
-    }}
 
     /* ESTADO COMPLETADO */
     div[data-testid="stColumn"] button[kind="primary"] {{
@@ -224,11 +214,8 @@ st.markdown(f"""
         border-left: 6px solid #10b981 !important;
         color: #065f46 !important;
     }}
-    div[data-testid="stColumn"] button[kind="primary"]:hover {{
-        background-color: #a7f3d0 !important;
-    }}
 
-    /* Badge de cantidad alineado a la misma altura */
+    /* Badge de cantidad a la misma altura en una sola línea */
     .qty-badge {{
         font-size: 18px;
         font-weight: 800;
@@ -244,8 +231,34 @@ st.markdown(f"""
     .badge-pending {{ background-color: #ff4b4b; }}
     .badge-completed {{ background-color: #10b981; }}
 
+    /* REGLAS RESPONSIVAS PARA EVITAR APILADO EN MÓVIL */
+    .prod-row-container {{
+        margin-bottom: 6px;
+    }}
+
+    .prod-row-container div[data-testid="stHorizontalBlock"] {{
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 0.3rem !important;
+        align-items: center !important;
+    }}
+
+    .prod-row-container div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(1) {{
+        width: 78% !important;
+        flex: 0 0 78% !important;
+        min-width: 78% !important;
+    }}
+
+    .prod-row-container div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(2) {{
+        width: 22% !important;
+        flex: 0 0 22% !important;
+        min-width: 22% !important;
+    }}
+
     @media (max-width: 768px) {{
-        div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {{
+        /* Mantiene la rejilla principal de 1 columna vertical para productos */
+        .main-grid > div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {{
             width: 100% !important;
             flex: 1 1 100% !important;
         }}
@@ -254,13 +267,13 @@ st.markdown(f"""
             padding-right: 0.25rem !important;
         }}
         .header-logo-img {{
-            height: 50px !important;
+            height: 46px !important;
         }}
-        div[data-testid="stColumn"] button {{ height: 50px !important; }}
+        div[data-testid="stColumn"] button {{ height: 48px !important; }}
         .qty-badge {{
-            height: 50px;
-            line-height: 50px;
-            font-size: 18px;
+            height: 48px;
+            line-height: 48px;
+            font-size: 17px;
         }}
     }}
     </style>
@@ -354,8 +367,8 @@ def renderizar_tablero():
             <div class="header-logo-container">
                 <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
                 <div>
-                    <h2 style="margin:0; padding:0; line-height:1.1;">TABLA DE PRODUCCIÓN</h2>
-                    <span style="font-size:12px; color:#888;">🔄 Sincronizado cada 10s | Última: {datetime.now().strftime('%H:%M:%S')}</span>
+                    <h3 style="margin:0; padding:0; line-height:1.1;">TABLA DE PRODUCCIÓN</h3>
+                    <span style="font-size:11px; color:#888;">🔄 Sincronizado cada 10s | Última: {datetime.now().strftime('%H:%M:%S')}</span>
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -383,6 +396,7 @@ def renderizar_tablero():
     if conteo_productos:
         productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1], reverse=True)
 
+        st.markdown('<div class="main-grid">', unsafe_allow_html=True)
         col_a, col_b, col_c = st.columns(3)
         columnas = [col_a, col_b, col_c]
 
@@ -394,7 +408,8 @@ def renderizar_tablero():
             cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
             with col_destino:
-                col_btn_prod, col_qty = st.columns([0.80, 0.20])
+                st.markdown('<div class="prod-row-container">', unsafe_allow_html=True)
+                col_btn_prod, col_qty = st.columns([0.78, 0.22])
                 
                 with col_btn_prod:
                     st.button(
@@ -412,6 +427,8 @@ def renderizar_tablero():
                         f'<span class="qty-badge {badge_style}">{cant_mostrar}</span>', 
                         unsafe_allow_html=True
                     )
+                st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
