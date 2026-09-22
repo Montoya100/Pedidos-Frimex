@@ -98,7 +98,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS REGLAS CONTINUAS
+# 3. ESTILOS CSS CON SOBREESCRITURA PARA MÓVIL
 # ==========================================
 st.markdown(f"""
     <style>
@@ -205,45 +205,45 @@ st.markdown(f"""
     }}
 
     /* ====================================================
-       UNIFICACIÓN VISUAL (BOTÓN + BADGE EN UN SOLO BLOQUE)
+       DESACTIVAR APILADO VERTICAL DE COLUMNAS EN CELULARES
        ==================================================== */
     .item-card-row {{
         margin-bottom: 10px;
     }}
 
-    .item-card-row div[data-testid="stHorizontalBlock"] {{
+    /* Desactiva la regla responsive que rompe st.columns en pantallas chicas */
+    .item-card-row [data-testid="stHorizontalBlock"] {{
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        gap: 0px !important; /* Elimina separación entre botón y badge */
+        gap: 8px !important;
         align-items: center !important;
     }}
 
-    .item-card-row div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(1) {{
-        width: 80% !important;
-        flex: 0 0 80% !important;
-        max-width: 80% !important;
-        padding-right: 0px !important;
+    .item-card-row [data-testid="column"] {{
+        width: auto !important;
+        min-width: 0 !important;
+        flex-direction: row !important;
     }}
 
-    .item-card-row div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(2) {{
-        width: 20% !important;
-        flex: 0 0 20% !important;
-        max-width: 20% !important;
-        padding-left: 0px !important;
+    .item-card-row [data-testid="column"]:nth-child(1) {{
+        flex: 1 1 78% !important;
+        width: 78% !important;
     }}
 
-    /* Estilos del botón (parte izquierda del bloque) */
+    .item-card-row [data-testid="column"]:nth-child(2) {{
+        flex: 0 0 22% !important;
+        width: 22% !important;
+    }}
+
+    /* Botón de producto (lado izquierdo) */
     div[data-testid="stColumn"] button {{
         width: 100% !important;
-        border-top-left-radius: 8px !important;
-        border-bottom-left-radius: 8px !important;
-        border-top-right-radius: 0px !important;
-        border-bottom-right-radius: 0px !important;
+        border-radius: 8px !important;
         padding: 4px 10px !important;
         margin: 0px !important;
         height: 52px !important;
-        box-shadow: none !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
     }}
 
     div[data-testid="stColumn"] button p {{
@@ -272,26 +272,24 @@ st.markdown(f"""
         color: #065f46 !important;
     }}
 
-    /* Estilos del badge de cantidad (parte derecha del bloque) */
+    /* Badge rojo/verde a la derecha en la misma fila */
     .qty-badge {{
         font-size: 22px;
         font-weight: 900;
         color: #ffffff;
         height: 52px;
         line-height: 52px;
-        border-top-right-radius: 8px;
-        border-bottom-right-radius: 8px;
-        border-top-left-radius: 0px;
-        border-bottom-left-radius: 0px;
+        border-radius: 8px;
         width: 100%;
         text-align: center;
         display: block;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     }}
     .badge-pending {{ background-color: #ff4b4b; }}
     .badge-completed {{ background-color: #10b981; }}
 
     @media (max-width: 768px) {{
-        .main-grid > div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {{
+        .main-grid > [data-testid="stHorizontalBlock"] > [data-testid="column"] {{
             width: 100% !important;
             flex: 1 1 100% !important;
         }}
@@ -432,7 +430,7 @@ def renderizar_tablero():
 
             with col_destino:
                 st.markdown('<div class="item-card-row">', unsafe_allow_html=True)
-                col_btn_prod, col_qty = st.columns([0.80, 0.20])
+                col_btn_prod, col_qty = st.columns([0.78, 0.22])
                 
                 with col_btn_prod:
                     st.button(
