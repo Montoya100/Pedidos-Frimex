@@ -98,7 +98,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS CON BADGE UNIFICADO EN UNA SOLA LÍNEA
+# 3. ESTILOS CSS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -144,7 +144,7 @@ st.markdown(f"""
         100% {{ transform: rotate(360deg); }}
     }}
 
-    /* Limpieza UI de Streamlit */
+    /* Limpieza UI Streamlit */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     header {{visibility: hidden;}}
@@ -173,27 +173,28 @@ st.markdown(f"""
         font-weight: bold;
     }}
 
-    /* Botón de producto que contiene la cantidad en la misma fila */
+    div[data-testid="stHorizontalBlock"] {{
+        gap: 0.2rem !important;
+    }}
+
+    /* Estilos del botón de producto */
     div[data-testid="stColumn"] button {{
         width: 100% !important;
-        border-radius: 8px !important;
-        padding: 6px 14px !important;
-        margin-bottom: 6px !important;
-        height: 52px !important;
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.06) !important;
+        border-radius: 6px !important;
+        padding: 6px 10px !important;
+        margin-bottom: 4px !important;
+        height: 48px !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
         transition: all 0.15s ease-in-out !important;
     }}
 
     div[data-testid="stColumn"] button p {{
-        font-size: 16px !important;
-        font-weight: 700 !important;
-        width: 100% !important;
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
+        font-size: 15px !important;
+        font-weight: 600 !important;
+        text-align: left !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
         margin: 0 !important;
     }}
 
@@ -227,21 +228,22 @@ st.markdown(f"""
         background-color: #a7f3d0 !important;
     }}
 
-    /* Badge dentro del texto del botón */
-    .in-btn-badge {{
-        padding: 3px 10px;
-        border-radius: 6px;
-        font-size: 17px;
+    /* Badge de cantidad alineado a la misma altura */
+    .qty-badge {{
+        font-size: 18px;
         font-weight: 800;
         color: #ffffff;
-        display: inline-block;
-        min-width: 36px;
+        height: 48px;
+        line-height: 48px;
+        border-radius: 6px;
+        width: 100%;
         text-align: center;
+        display: block;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }}
-    .badge-bg-pending {{ background-color: #ff4b4b; }}
-    .badge-bg-completed {{ background-color: #10b981; }}
+    .badge-pending {{ background-color: #ff4b4b; }}
+    .badge-completed {{ background-color: #10b981; }}
 
-    /* Reglas móviles para pantalla vertical */
     @media (max-width: 768px) {{
         div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {{
             width: 100% !important;
@@ -252,9 +254,14 @@ st.markdown(f"""
             padding-right: 0.25rem !important;
         }}
         .header-logo-img {{
-            height: 52px !important;
+            height: 50px !important;
         }}
-        div[data-testid="stColumn"] button {{ height: 54px !important; }}
+        div[data-testid="stColumn"] button {{ height: 50px !important; }}
+        .qty-badge {{
+            height: 50px;
+            line-height: 50px;
+            font-size: 18px;
+        }}
     }}
     </style>
 
@@ -386,19 +393,25 @@ def renderizar_tablero():
             cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
             cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-            # Badge integrado directamente en la etiqueta en una sola línea
-            badge_class = "badge-bg-completed" if es_completado else "badge-bg-pending"
-            label_texto = f"{producto} :raw-html:`<span class='in-btn-badge {badge_class}'>{cant_mostrar}</span>`"
-
             with col_destino:
-                st.button(
-                    label=label_texto,
-                    key=f"btn_{producto}",
-                    type="primary" if es_completado else "secondary",
-                    use_container_width=True,
-                    on_click=alternar_estado,
-                    args=(producto, cant_total)
-                )
+                col_btn_prod, col_qty = st.columns([0.80, 0.20])
+                
+                with col_btn_prod:
+                    st.button(
+                        label=producto,
+                        key=f"btn_{producto}",
+                        type="primary" if es_completado else "secondary",
+                        use_container_width=True,
+                        on_click=alternar_estado,
+                        args=(producto, cant_total)
+                    )
+                
+                with col_qty:
+                    badge_style = "badge-completed" if es_completado else "badge-pending"
+                    st.markdown(
+                        f'<span class="qty-badge {badge_style}">{cant_mostrar}</span>', 
+                        unsafe_allow_html=True
+                    )
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
