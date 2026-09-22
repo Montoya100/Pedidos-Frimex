@@ -15,11 +15,13 @@ st.set_page_config(
 )
 
 LOYVERSE_TOKEN = "13d9288fbc264fb88a8112094407486a"
-
-HEADERS = {
+HEADERS_LOYVERSE = {
     "Authorization": f"Bearer {LOYVERSE_TOKEN}",
     "Content-Type": "application/json",
 }
+
+# Configuración de Firebase REST para Sincronización Global
+FIREBASE_URL = "https://pedidos-frimex-default-rtdb.firebaseio.com/estado_tablero.json"
 
 # ==========================================
 # CARGAR LOGO LOCAL O FALLBACK
@@ -34,30 +36,55 @@ def obtener_base64_imagen(ruta_imagen):
 LOGO_URL = obtener_base64_imagen("logo.png")
 
 # ==========================================
-# 2. ESTADO GLOBAL COMPARTIDO
+# 2. BASE DE DATOS COMPARTIDA (SINCRONIZACIÓN REAL)
 # ==========================================
-@st.cache_resource
-def obtener_estado_global():
+def obtener_estado_remoto():
+    try:
+        res = requests.get(FIREBASE_URL, timeout=3)
+        if res.status_code == 200 and res.json():
+            data = res.json()
+            return {
+                "completados": set(data.get("completados", [])),
+                "cantidades_al_completar": data.get("cantidades_al_completar", {}),
+                "hora_corte_utc": data.get("hora_corte_utc", datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
+            }
+    except Exception:
+        pass
+    
     return {
         "completados": set(),
         "cantidades_al_completar": {},
-        "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        "hora_corte_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     }
 
-estado_global = obtener_estado_global()
+def guardar_estado_remoto(estado):
+    payload = {
+        "completados": list(estado["completados"]),
+        "cantidades_al_completar": estado["cantidades_al_completar"],
+        "hora_corte_utc": estado["hora_corte_utc"]
+    }
+    try:
+        requests.put(FIREBASE_URL, json=payload, timeout=3)
+    except Exception:
+        pass
 
-def reiniciar_contador():
-    estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
-    estado_global["completados"].clear()
-    estado_global["cantidades_al_completar"].clear()
+def reiniciar_contador_global():
+    estado = {
+        "completados": set(),
+        "cantidades_al_completar": {},
+        "hora_corte_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    }
+    guardar_estado_remoto(estado)
 
-def alternar_estado(producto, cantidad_actual):
-    if producto in estado_global["completados"]:
-        estado_global["completados"].remove(producto)
-        estado_global["cantidades_al_completar"].pop(producto, None)
+def alternar_estado_global(producto, cantidad_actual):
+    estado = obtener_estado_remoto()
+    if producto in estado["completados"]:
+        estado["completados"].remove(producto)
+        estado["cantidades_al_completar"].pop(producto, None)
     else:
-        estado_global["completados"].add(producto)
-        estado_global["cantidades_al_completar"][producto] = cantidad_actual
+        estado["completados"].add(producto)
+        estado["cantidades_al_completar"][producto] = cantidad_actual
+    guardar_estado_remoto(estado)
 
 def reproducir_sonido_notificacion():
     sound_js = """
@@ -89,16 +116,14 @@ def reproducir_sonido_notificacion():
             gain2.connect(ctx.destination);
             osc2.start(ctx.currentTime + 0.12);
             osc2.stop(ctx.currentTime + 0.4);
-        } catch(e) {
-            console.log(e);
-        }
+        } catch(e) {}
     })();
     </script>
     """
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS AVANZADOS Y TARJETAS
+# 3. ESTILOS CSS REVISADOS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -234,79 +259,13 @@ st.markdown(f"""
         margin-bottom: 10px !important;
     }}
 
-    /* ESTILIZADO DE TARJETAS CON RECUADRO ROJO/VERDE DERECHO PARA LA CANTIDAD */
-    .prod-card-pending button, .prod-card-completed button {{
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        height: 52px !important;
-        border-radius: 8px !important;
-        font-size: 15px !important;
-        font-weight: 700 !important;
-        padding: 0 0 0 14px !important;
-        overflow: hidden !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+    /* BOTONES-TARJETA INTEGRADOS */
+    .prod-card-wrap button {{
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
         margin-bottom: 8px !important;
-    }}
-
-    /* Estado Pendiente */
-    .prod-card-pending button {{
-        background-color: #ffffff !important;
-        color: #2c3e50 !important;
-        border-left: 6px solid #ff4b4b !important;
-        border-top: none !important;
-        border-right: none !important;
-        border-bottom: none !important;
-    }}
-
-    /* Estado Completado */
-    .prod-card-completed button {{
-        background-color: #d1fae5 !important;
-        color: #065f46 !important;
-        border-left: 6px solid #10b981 !important;
-        border-top: none !important;
-        border-right: none !important;
-        border-bottom: none !important;
-    }}
-
-    /* Estilo del recuadro del contador (Pendiente -> Rojo) */
-    .prod-card-pending button div p {{
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-    }}
-
-    /* Genera la caja independiente en el botón */
-    .prod-card-pending button p::after {{
-        content: attr(data-qty);
-        background-color: #ff4b4b;
-        color: #ffffff;
-        font-weight: 900;
-        font-size: 18px;
-        height: 52px;
-        min-width: 55px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        margin-left: 10px;
-        padding: 0 10px;
-    }}
-
-    /* Genera la caja independiente cuando está completado (Verde) */
-    .prod-card-completed button p::after {{
-        content: attr(data-qty);
-        background-color: #10b981;
-        color: #ffffff;
-        font-weight: 900;
-        font-size: 18px;
-        height: 52px;
-        min-width: 55px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        margin-left: 10px;
-        padding: 0 10px;
+        box-shadow: none !important;
     }}
 
     @media (max-width: 768px) {{
@@ -332,35 +291,17 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# Script inyectado para pasar el valor del contador al CSS dinámico
-st.markdown("""
-    <script>
-    function aplicarRecuadros() {
-        const buttons = window.parent.document.querySelectorAll('.prod-card-pending button p, .prod-card-completed button p');
-        buttons.forEach(p => {
-            const match = p.innerText.match(/(.*) /// (\\d+)/);
-            if (match) {
-                p.innerText = match[1];
-                p.setAttribute('data-qty', match[2]);
-            }
-        });
-    }
-    setInterval(aplicarRecuadros, 300);
-    </script>
-""", unsafe_allow_html=True)
-
 # ==========================================
 # 4. CONSULTA A LA API DE LOYVERSE
 # ==========================================
-def obtener_recibos_hoy():
-    created_at_min = estado_global["hora_corte_utc"].strftime("%Y-%m-%dT%H:%M:%SZ")
+def obtener_recibos_hoy(hora_corte_utc_str):
     url = "https://api.loyverse.com/v1.0/receipts"
-    params = {"created_at_min": created_at_min, "limit": 250}
+    params = {"created_at_min": hora_corte_utc_str, "limit": 250}
     todos_los_recibos = []
 
     while True:
         try:
-            response = requests.get(url, headers=HEADERS, params=params, timeout=5)
+            response = requests.get(url, headers=HEADERS_LOYVERSE, params=params, timeout=5)
             if response.status_code != 200:
                 return []
 
@@ -383,7 +324,8 @@ def obtener_recibos_hoy():
 # ==========================================
 @st.fragment(run_every=10)
 def renderizar_tablero():
-    recibos = obtener_recibos_hoy()
+    estado_remoto = obtener_estado_remoto()
+    recibos = obtener_recibos_hoy(estado_remoto["hora_corte_utc"])
     conteo_productos = {}
 
     if recibos:
@@ -401,13 +343,7 @@ def renderizar_tablero():
                 cant_num = int(cantidad) if float(cantidad).is_integer() else cantidad
                 conteo_productos[nombre_completo] = conteo_productos.get(nombre_completo, 0) + cant_num
 
-    for prod, cant_total in conteo_productos.items():
-        if prod in estado_global["completados"]:
-            cant_marcada = estado_global["cantidades_al_completar"].get(prod, cant_total)
-            if cant_total > cant_marcada:
-                estado_global["completados"].remove(prod)
-                estado_global["cantidades_al_completar"].pop(prod, None)
-
+    # Notificación de nuevo pedido
     if "ultimo_conteo" not in st.session_state:
         st.session_state.ultimo_conteo = conteo_productos.copy()
     else:
@@ -424,33 +360,35 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # Encabezado
+    # Encabezado Centrado
     st.markdown(f"""
         <div class="header-logo-container">
             <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
             <div class="header-text-group">
                 <h1 class="header-title">TABLA DE PRODUCCIÓN</h1>
-                <span style="font-size:10px; color:#a0a0a0; margin-top:1px;">🔄 Sincronizado cada 10s | {datetime.now().strftime('%H:%M:%S')}</span>
+                <span style="font-size:10px; color:#a0a0a0; margin-top:1px;">🔄 Sincronizado globalmente | {datetime.now().strftime('%H:%M:%S')}</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
     # Botón de Reiniciar
     st.markdown('<div class="btn-reiniciar-wrap">', unsafe_allow_html=True)
-    st.button("Reiniciar", use_container_width=True, on_click=reiniciar_contador)
+    if st.button("Reiniciar", use_container_width=True):
+        reiniciar_contador_global()
+        st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
     # Cálculo de métricas
     piezas_pendientes = 0
     for prod, cant_total in conteo_productos.items():
-        if prod in estado_global["completados"]:
-            cant_marcada = estado_global["cantidades_al_completar"].get(prod, cant_total)
+        if prod in estado_remoto["completados"]:
+            cant_marcada = estado_remoto["cantidades_al_completar"].get(prod, cant_total)
             piezas_pendientes += max(0, cant_total - cant_marcada)
         else:
-            cant_marcada = estado_global["cantidades_al_completar"].get(prod, 0)
+            cant_marcada = estado_remoto["cantidades_al_completar"].get(prod, 0)
             piezas_pendientes += (cant_total - cant_marcada)
 
-    # Métricas en una fila horizontal
+    # Métricas en una línea horizontal
     st.markdown(f"""
         <div class="metrics-row">
             <div class="metric-inline">
@@ -473,26 +411,45 @@ def renderizar_tablero():
 
         for idx, (producto, cant_total) in enumerate(productos_ordenados):
             col_destino = columnas[idx % 3]
-            es_completado = producto in estado_global["completados"]
+            es_completado = producto in estado_remoto["completados"]
             
-            cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
+            cant_base = estado_remoto["cantidades_al_completar"].get(producto, 0)
             cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-            card_class = "prod-card-completed" if es_completado else "prod-card-pending"
-            
-            # Formato sin corchetes parseado mediante el script cliente
-            texto_boton = f"{producto} /// {cant_mostrar}"
+            border_color = "#10b981" if es_completado else "#ff4b4b"
+            bg_left = "#d1fae5" if es_completado else "#ffffff"
+            text_color = "#065f46" if es_completado else "#2c3e50"
+            bg_box = "#10b981" if es_completado else "#ff4b4b"
+
+            # Tarjeta estilizada con el recuadro rojo/verde perfecto a la derecha
+            card_html = f"""
+                <div style="display: flex; align-items: center; justify-content: space-between; height: 52px; background-color: {bg_left}; border-left: 6px solid {border_color}; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.2); width: 100%; font-family: sans-serif;">
+                    <div style="padding-left: 12px; font-weight: 700; font-size: 15px; color: {text_color}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">
+                        {producto}
+                    </div>
+                    <div style="background-color: {bg_box}; color: #ffffff; font-weight: 900; font-size: 18px; height: 52px; min-width: 55px; display: flex; align-items: center; justify-content: center; padding: 0 10px;">
+                        {cant_mostrar}
+                    </div>
+                </div>
+            """
 
             with col_destino:
-                st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
-                st.button(
-                    label=texto_boton,
-                    key=f"btn_{producto}",
-                    use_container_width=True,
-                    on_click=alternar_estado,
-                    args=(producto, cant_total)
-                )
+                st.markdown('<div class="prod-card-wrap">', unsafe_allow_html=True)
+                if st.button(label=f"btn_card_{idx}", key=f"btn_{producto}", use_container_width=True):
+                    alternar_estado_global(producto, cant_total)
+                    st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
+                
+                # Inyección visual directa sobre el botón nativo
+                st.components.v1.html(f"""
+                    <script>
+                    const parentDoc = window.parent.document;
+                    const btn = parentDoc.querySelector('button[key="btn_{producto}"]');
+                    if (btn) {{
+                        btn.innerHTML = `{card_html}`;
+                    }}
+                    </script>
+                """, height=0, width=0)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
