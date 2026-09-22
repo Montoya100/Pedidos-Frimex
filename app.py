@@ -98,7 +98,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS CON SOBREESCRITURA PARA MÓVIL
+# 3. ESTILOS CSS REFINADOS PARA MÓVIL
 # ==========================================
 st.markdown(f"""
     <style>
@@ -181,9 +181,10 @@ st.markdown(f"""
         margin: 0;
         padding: 0;
     }}
-    
+
+    /* Métricas principales */
     [data-testid="stMetricValue"] {{
-        font-size: 26px !important;
+        font-size: 28px !important;
         font-weight: 800 !important;
         color: #ffffff !important;
     }}
@@ -204,40 +205,36 @@ st.markdown(f"""
         border: none !important;
     }}
 
-    /* ====================================================
-       DESACTIVAR APILADO VERTICAL DE COLUMNAS EN CELULARES
-       ==================================================== */
-    .item-card-row {{
-        margin-bottom: 10px;
+    /* ESTRUCTURA RIGIDA EN FILA PARA CADA PRODUCTO */
+    div[data-testid="stElementContainer"]:has(.prod-container-marker) {{
+        margin-bottom: -10px !important;
     }}
 
-    /* Desactiva la regla responsive que rompe st.columns en pantallas chicas */
-    .item-card-row [data-testid="stHorizontalBlock"] {{
+    /* Fuerza a que el contenedor sea siempre Flex Row sin importar la pantalla */
+    div[data-testid="stHorizontalBlock"]:has(.prod-container-marker) {{
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        gap: 8px !important;
+        gap: 10px !important;
         align-items: center !important;
+        margin-bottom: 10px !important;
     }}
 
-    .item-card-row [data-testid="column"] {{
-        width: auto !important;
-        min-width: 0 !important;
-        flex-direction: row !important;
-    }}
-
-    .item-card-row [data-testid="column"]:nth-child(1) {{
-        flex: 1 1 78% !important;
+    /* Fija el tamaño exacto: 78% para la caja del producto y 22% para la cantidad */
+    div[data-testid="stHorizontalBlock"]:has(.prod-container-marker) > div[data-testid="column"]:nth-child(1) {{
         width: 78% !important;
+        flex: 0 0 78% !important;
+        max-width: 78% !important;
     }}
 
-    .item-card-row [data-testid="column"]:nth-child(2) {{
-        flex: 0 0 22% !important;
+    div[data-testid="stHorizontalBlock"]:has(.prod-container-marker) > div[data-testid="column"]:nth-child(2) {{
         width: 22% !important;
+        flex: 0 0 22% !important;
+        max-width: 22% !important;
     }}
 
-    /* Botón de producto (lado izquierdo) */
-    div[data-testid="stColumn"] button {{
+    /* Botón blanco / verde de producto */
+    div[data-testid="stHorizontalBlock"]:has(.prod-container-marker) button {{
         width: 100% !important;
         border-radius: 8px !important;
         padding: 4px 10px !important;
@@ -246,7 +243,7 @@ st.markdown(f"""
         box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
     }}
 
-    div[data-testid="stColumn"] button p {{
+    div[data-testid="stHorizontalBlock"]:has(.prod-container-marker) button p {{
         font-size: 15px !important;
         font-weight: 700 !important;
         text-align: center !important;
@@ -257,7 +254,7 @@ st.markdown(f"""
     }}
 
     /* Pendiente */
-    div[data-testid="stColumn"] button[kind="secondary"] {{
+    div[data-testid="stHorizontalBlock"]:has(.prod-container-marker) button[kind="secondary"] {{
         background-color: #ffffff !important;
         border: none !important;
         border-left: 6px solid #ff4b4b !important;
@@ -265,14 +262,14 @@ st.markdown(f"""
     }}
 
     /* Completado */
-    div[data-testid="stColumn"] button[kind="primary"] {{
+    div[data-testid="stHorizontalBlock"]:has(.prod-container-marker) button[kind="primary"] {{
         background-color: #d1fae5 !important;
         border: none !important;
         border-left: 6px solid #10b981 !important;
         color: #065f46 !important;
     }}
 
-    /* Badge rojo/verde a la derecha en la misma fila */
+    /* Caja de número a la derecha */
     .qty-badge {{
         font-size: 22px;
         font-weight: 900;
@@ -289,10 +286,6 @@ st.markdown(f"""
     .badge-completed {{ background-color: #10b981; }}
 
     @media (max-width: 768px) {{
-        .main-grid > [data-testid="stHorizontalBlock"] > [data-testid="column"] {{
-            width: 100% !important;
-            flex: 1 1 100% !important;
-        }}
         .header-logo-img {{
             height: 48px !important;
         }}
@@ -417,39 +410,32 @@ def renderizar_tablero():
     if conteo_productos:
         productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1], reverse=True)
 
-        st.markdown('<div class="main-grid">', unsafe_allow_html=True)
-        col_a, col_b, col_c = st.columns(3)
-        columnas = [col_a, col_b, col_c]
-
-        for idx, (producto, cant_total) in enumerate(productos_ordenados):
-            col_destino = columnas[idx % 3]
+        for producto, cant_total in productos_ordenados:
             es_completado = producto in estado_global["completados"]
             
             cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
             cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-            with col_destino:
-                st.markdown('<div class="item-card-row">', unsafe_allow_html=True)
-                col_btn_prod, col_qty = st.columns([0.78, 0.22])
-                
-                with col_btn_prod:
-                    st.button(
-                        label=producto,
-                        key=f"btn_{producto}",
-                        type="primary" if es_completado else "secondary",
-                        use_container_width=True,
-                        on_click=alternar_estado,
-                        args=(producto, cant_total)
-                    )
-                
-                with col_qty:
-                    badge_style = "badge-completed" if es_completado else "badge-pending"
-                    st.markdown(
-                        f'<span class="qty-badge {badge_style}">{cant_mostrar}</span>', 
-                        unsafe_allow_html=True
-                    )
-                st.markdown('</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+            # Marcador HTML para que el CSS aplique de forma estricta por fila horizontal
+            st.markdown('<div class="prod-container-marker"></div>', unsafe_allow_html=True)
+            col_btn_prod, col_qty = st.columns([0.78, 0.22])
+            
+            with col_btn_prod:
+                st.button(
+                    label=producto,
+                    key=f"btn_{producto}",
+                    type="primary" if es_completado else "secondary",
+                    use_container_width=True,
+                    on_click=alternar_estado,
+                    args=(producto, cant_total)
+                )
+            
+            with col_qty:
+                badge_style = "badge-completed" if es_completado else "badge-pending"
+                st.markdown(
+                    f'<span class="qty-badge {badge_style}">{cant_mostrar}</span>', 
+                    unsafe_allow_html=True
+                )
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
