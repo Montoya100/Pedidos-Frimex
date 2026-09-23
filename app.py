@@ -96,7 +96,7 @@ def reproducir_sonido_notificacion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS CON MAYOR CONTRASTE EN BOTONES
+# 3. ESTILOS CSS CON RESPONSIVIDAD Y CONTRASTES
 # ==========================================
 st.markdown(f"""
     <style>
@@ -167,7 +167,7 @@ st.markdown(f"""
         border-radius: 6px !important; border: none !important; margin-bottom: 6px !important;
     }}
 
-    /* TARJETA DE TEXTO */
+    /* TARJETA DE TEXTO (NOMBRE DEL PRODUCTO) */
     .card-box-img {{
         background-color: #ffffff;
         border-radius: 10px;
@@ -175,6 +175,7 @@ st.markdown(f"""
         display: flex;
         align-items: center;
         padding-left: 12px;
+        padding-right: 8px;
         font-size: 13px;
         font-weight: 800;
         color: #111827;
@@ -184,11 +185,13 @@ st.markdown(f"""
         text-overflow: ellipsis;
         margin-bottom: 6px;
         border: 1px solid #e5e7eb;
+        transition: background-color 0.2s ease, color 0.2s ease;
     }}
 
+    /* TARJETA TEXTO EN ESTADO COMPLETADO */
     .card-box-img.completed {{
-        background-color: #d1fae5;
-        color: #064e3b;
+        background-color: #d1fae5; /* Verde pastel suave */
+        color: #064e3b;            /* Texto verde oscuro */
         border-color: #a7f3d0;
     }}
 
@@ -205,26 +208,26 @@ st.markdown(f"""
         font-size: 20px !important;
         font-weight: 900 !important;
         box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
-        transition: transform 0.1s ease-in-out;
+        transition: transform 0.1s ease-in-out, background-color 0.2s ease;
     }}
 
     div[data-testid="stElementContainer"] button[key^="num_btn_"]:active {{
         transform: scale(0.95);
     }}
 
-    /* COLOR ROJO INTENSO (PENDIENTE) */
+    /* COLOR ROJO INTENSO (BOTÓN PENDIENTE) */
     div[data-testid="stElementContainer"] button[key^="num_btn_"].btn-pending {{
-        background-color: #dc2626 !important; /* Rojo fuerte e intenso */
+        background-color: #dc2626 !important; /* Rojo vibrante con alto contraste */
         color: #ffffff !important;
     }}
 
-    /* COLOR VERDE OSCURO / ESMERALDA (COMPLETADO) */
+    /* COLOR VERDE OSCURO / ESMERALDA (BOTÓN COMPLETADO) */
     div[data-testid="stElementContainer"] button[key^="num_btn_"].btn-completed {{
-        background-color: #059669 !important; /* Verde esmeralda fuerte */
+        background-color: #059669 !important; /* Verde esmeralda intenso */
         color: #ffffff !important;
     }}
 
-    /* MÓVIL / VERTICAL */
+    /* MÓVIL / PANTALLA VERTICAL (AJUSTE Y CENTRADO DE ANCHO COMPLETO) */
     @media (max-width: 768px) {{
         div[data-testid="stHorizontalBlock"] {{
             flex-direction: column !important;
@@ -232,6 +235,10 @@ st.markdown(f"""
         }}
         div[data-testid="column"] {{
             width: 100% !important;
+        }}
+        .card-box-img {{
+            justify-content: center !important; /* Centra el texto del producto en móvil */
+            padding-left: 8px !important;
         }}
     }}
     </style>
@@ -362,7 +369,7 @@ def renderizar_tablero():
     if conteo_productos:
         productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1], reverse=True)
 
-        # RENDERIZADO EN GRILLA
+        # RENDERIZADO EN GRILLA DE 3 COLUMNAS
         for i in range(0, len(productos_ordenados), 3):
             grupo = productos_ordenados[i:i+3]
             cols = st.columns(3)
@@ -373,6 +380,7 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
+                    # Clases CSS para dinamismo de color en ambas tarjetas
                     clase_card = "completed" if es_completado else ""
                     clase_btn = "btn-completed" if es_completado else "btn-pending"
 
@@ -394,6 +402,7 @@ def renderizar_tablero():
                             use_container_width=True
                         )
 
+                        # Inyección JavaScript para el color exacto del botón numérico
                         st.markdown(f"""
                             <script>
                             var btn = window.parent.document.querySelector('button[key="num_btn_{producto}"]');
