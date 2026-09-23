@@ -95,7 +95,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS REVISADOS Y CORREGIDOS
+# 3. ESTILOS CSS REVISADOS (BOTÓN INVISIBLE)
 # ==========================================
 st.markdown(f"""
     <style>
@@ -299,18 +299,37 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* BOTÓN TRANSPARENTE ENCIMA PARA CAPTURAR EL CLICK */
-    .card-wrap div[data-testid="stButton"] button {{
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 40px !important;
+    /* SUPERPOSICIÓN DE BOTÓN STREAMLIT (TOTALMENTE INVISIBLE) */
+    .btn-invisible-overlay {{
+        margin-top: -46px !important;
+        position: relative !important;
+        z-index: 20 !important;
+    }}
+
+    .btn-invisible-overlay button {{
         background: transparent !important;
+        background-color: transparent !important;
         border: none !important;
         color: transparent !important;
-        z-index: 10 !important;
+        box-shadow: none !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        max-height: 40px !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
         cursor: pointer !important;
+    }}
+
+    .btn-invisible-overlay button:hover,
+    .btn-invisible-overlay button:focus,
+    .btn-invisible-overlay button:active {{
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        color: transparent !important;
+        box-shadow: none !important;
+        outline: none !important;
     }}
 
     /* MÓVIL / VERTICAL: APILAR 3 COLUMNAS EN 1 SOLA FILA VERTICAL */
@@ -464,7 +483,7 @@ def renderizar_tablero():
 
                     card_class = "card-completed" if es_completado else "card-pending"
 
-                    # HTML unificado + Botón invisible superior
+                    # 1. Tarjeta visual perfecta
                     st.markdown(f"""
                         <div class="card-wrap">
                             <div class="card-body {card_class}">
@@ -474,12 +493,16 @@ def renderizar_tablero():
                         </div>
                     """, unsafe_allow_html=True)
 
+                    # 2. Botón clickeable totalmente transparente encimado
+                    st.markdown('<div class="btn-invisible-overlay">', unsafe_allow_html=True)
                     st.button(
-                        label=f"btn_{producto}",
+                        label=" ",
                         key=f"btn_{producto}",
+                        use_container_width=True,
                         on_click=alternar_estado,
                         args=(producto, cant_total)
                     )
+                    st.markdown('</div>', unsafe_allow_html=True)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
