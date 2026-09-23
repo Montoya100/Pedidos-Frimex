@@ -96,7 +96,7 @@ def reproducir_sonido_notificacion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS CON TÉCNICA DE ALTURA CERO
+# 3. ESTILOS CSS PARCIALES
 # ==========================================
 st.markdown(f"""
     <style>
@@ -124,10 +124,7 @@ st.markdown(f"""
         width: 30px; height: 30px; animation: spin 1s linear infinite;
     }}
 
-    @keyframes spin {{
-        0% {{ transform: rotate(0deg); }}
-        100% {{ transform: rotate(360deg); }}
-    }}
+    @keyframes spin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}
 
     .stApp {{ background-color: #0e1117 !important; }}
     #MainMenu {{visibility: hidden;}}
@@ -170,82 +167,81 @@ st.markdown(f"""
         border-radius: 6px !important; border: none !important; margin-bottom: 6px !important;
     }}
 
-    /* TARJETA VISUAL BASE */
-    .product-card-box {{
+    /* ESTRUCTURA DE TARJETA DIVIDIDA (50% TEXTO / 50% BOTÓN ACCIÓN) */
+    .split-card {{
+        display: flex;
+        align-items: center;
         width: 100%;
         height: 42px;
         border-radius: 6px;
         overflow: hidden;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
+        margin-bottom: 6px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }}
 
-    .product-card-box.pending {{
+    .split-card.pending {{
         background-color: #ffffff;
         border-left: 5px solid #ff4b4b;
     }}
 
-    .product-card-box.completed {{
+    .split-card.completed {{
         background-color: #d1fae5;
         border-left: 5px solid #10b981;
     }}
 
-    .product-card-box .title-text {{
-        padding-left: 10px;
-        padding-right: 6px;
-        font-size: 13px;
+    /* LADO IZQUIERDO: NOMBRE DEL PRODUCTO (50% DEL ANCHO) */
+    .split-card .card-info {{
+        width: 50%;
+        padding-left: 8px;
+        padding-right: 4px;
+        font-size: 12px;
         font-weight: 800;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }}
 
-    .product-card-box.pending .title-text {{ color: #1f2937; }}
-    .product-card-box.completed .title-text {{ color: #065f46; }}
+    .split-card.pending .card-info {{ color: #1f2937; }}
+    .split-card.completed .card-info {{ color: #065f46; }}
 
-    .product-card-box .qty-badge {{
-        width: 44px;
-        height: 42px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        font-weight: 900;
-        color: #ffffff;
+    /* LADO DERECHO: CONTENEDOR DEL BOTÓN DE ACCIÓN (50% DEL ANCHO) */
+    .split-card .card-action {{
+        width: 50%;
+        height: 100%;
     }}
 
-    .product-card-box.pending .qty-badge {{ background-color: #ff4b4b; }}
-    .product-card-box.completed .qty-badge {{ background-color: #10b981; }}
-
-    /* ELIMINACIÓN DEL ESPACIO EXTRA DE STREAMLIT */
-    div[data-testid="stElementContainer"]:has(button[key^="btn_"]) {{
-        height: 0px !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }}
-
-    /* EL BOTÓN FLOTA -42PX SOBRE LA TARJETA SUPERIOR */
-    div[data-testid="stElementContainer"] button[key^="btn_"] {{
-        position: relative !important;
-        top: -42px !important;
+    /* ESTILO DEL BOTÓN SEGÚN EL ESTADO */
+    .split-card .card-action button {{
         width: 100% !important;
-        height: 42px !important;
+        height: 100% !important;
         min-height: 42px !important;
-        max-height: 42px !important;
-        opacity: 0 !important;
-        z-index: 10 !important;
-        cursor: pointer !important;
-        margin: 0 !important;
-        padding: 0 !important;
+        border-radius: 0px !important;
         border: none !important;
+        font-size: 12px !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.5px !important;
+        padding: 0 4px !important;
+        transition: background-color 0.2s ease, color 0.2s ease;
     }}
 
-    /* MARGEN INFERIOR DE CADA TARJETA EN GRILLA */
-    div[data-testid="column"] > div {{
-        margin-bottom: 6px;
+    /* BOTÓN PENDIENTE (ROJO) */
+    .split-card.pending .card-action button {{
+        background-color: #ff4b4b !important;
+        color: #ffffff !important;
+    }}
+
+    .split-card.pending .card-action button:hover {{
+        background-color: #e03e3e !important;
+    }}
+
+    /* BOTÓN COMPLETADO (VERDE) */
+    .split-card.completed .card-action button {{
+        background-color: #10b981 !important;
+        color: #ffffff !important;
+    }}
+
+    .split-card.completed .card-action button:hover {{
+        background-color: #059669 !important;
     }}
 
     /* MÓVIL / VERTICAL */
@@ -398,22 +394,26 @@ def renderizar_tablero():
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
                     clase_estado = "completed" if es_completado else "pending"
+                    texto_boton = f"✓ LISTO ({cant_mostrar})" if es_completado else f"LISTO: {cant_mostrar}"
 
-                    # 1. Dibujamos la tarjeta visual de 42px de alto
+                    # CONTENEDOR DIVIDIDO: 50% NOMBRE DEL PRODUCTO / 50% BOTÓN VISIBLE
                     st.markdown(f"""
-                        <div class="product-card-box {clase_estado}">
-                            <div class="title-text">{producto}</div>
-                            <div class="qty-badge">{cant_mostrar}</div>
-                        </div>
+                        <div class="split-card {clase_estado}">
+                            <div class="card-info">{producto}</div>
+                            <div class="card-action">
                     """, unsafe_allow_html=True)
                     
-                    # 2. Botón invisible desplazado exactos -42px
                     st.button(
-                        " ", 
+                        texto_boton, 
                         key=f"btn_{producto}", 
                         on_click=alternar_estado, 
                         args=(producto, cant_total)
                     )
+
+                    st.markdown("""
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
