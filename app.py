@@ -96,7 +96,7 @@ def reproducir_sonido_notificacion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS REFORZADOS
+# 3. ESTILOS CSS (CAMBIO GARANTIZADO)
 # ==========================================
 st.markdown(f"""
     <style>
@@ -188,17 +188,13 @@ st.markdown(f"""
     }}
 
     .card-box-img.completed {{
-        background-color: #d1fae5 !important; /* Verde claro pastel */
+        background-color: #d1fae5 !important; /* Verde pastel claro */
         color: #064e3b !important;            /* Texto verde oscuro */
         border-color: #a7f3d0 !important;
     }}
 
-    /* TARJETA DE LA CANTIDAD (BOTÓN DE NÚMERO) */
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
-        margin-bottom: 6px !important;
-    }}
-
-    div[data-testid="stElementContainer"] button[key^="num_btn_"] {{
+    /* ESTILO BASE DE TARJETA DE NÚMERO */
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
         height: 46px !important;
         min-height: 46px !important;
         border-radius: 10px !important;
@@ -206,28 +202,32 @@ st.markdown(f"""
         font-size: 20px !important;
         font-weight: 900 !important;
         box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
-        transition: transform 0.1s ease-in-out;
+        transition: all 0.2s ease-in-out !important;
     }}
 
-    div[data-testid="stElementContainer"] button[key^="num_btn_"]:active {{
-        transform: scale(0.95);
-    }}
-
-    /* ESTADO PENDIENTE: ROJO INTENSO */
-    div[data-testid="stElementContainer"] button[key^="num_btn_"].btn-pending,
-    div[data-testid="stElementContainer"] button[key^="num_btn_"].btn-pending:hover {{
+    /* COLOR POR DEFECTO: ROJO POTENTE (PENDIENTE) */
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
         background-color: #dc2626 !important;
         color: #ffffff !important;
     }}
 
-    /* ESTADO COMPLETADO: VERDE OSCURO / ESMERALDA FUERTE */
-    div[data-testid="stElementContainer"] button[key^="num_btn_"].btn-completed,
-    div[data-testid="stElementContainer"] button[key^="num_btn_"].btn-completed:hover {{
-        background-color: #047857 !important;
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button:hover {{
+        background-color: #b91c1c !important;
         color: #ffffff !important;
     }}
 
-    /* VERSIÓN MÓVIL / VERTICAL */
+    /* COLOR CUANDO ESTÁ COMPLETADO: VERDE ESMERALDA INTENSO (CONTRASTE) */
+    div[data-testid="stElementContainer"]:has(button[key^="btn_done_"]) button {{
+        background-color: #047857 !important; /* Verde obscuro/fuerte */
+        color: #ffffff !important;
+    }}
+
+    div[data-testid="stElementContainer"]:has(button[key^="btn_done_"]) button:hover {{
+        background-color: #065f46 !important;
+        color: #ffffff !important;
+    }}
+
+    /* MÓVIL / VERTICAL */
     @media (max-width: 768px) {{
         div[data-testid="stHorizontalBlock"] {{
             flex-direction: column !important;
@@ -381,7 +381,9 @@ def renderizar_tablero():
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
                     clase_card = "completed" if es_completado else ""
-                    clase_btn = "btn-completed" if es_completado else "btn-pending"
+                    
+                    # Cambiamos la 'key' del botón según el estado para enganchar el selector CSS
+                    prefijo_key = "btn_done_" if es_completado else "num_btn_"
 
                     col_txt, col_btn = st.columns([0.76, 0.24], gap="small")
 
@@ -395,23 +397,11 @@ def renderizar_tablero():
                     with col_btn:
                         st.button(
                             f"{cant_mostrar}", 
-                            key=f"num_btn_{producto}", 
+                            key=f"{prefijo_key}{producto}", 
                             on_click=alternar_estado, 
                             args=(producto, cant_total),
                             use_container_width=True
                         )
-
-                        # Forzar la clase CSS directamente mediante JavaScript en cada renderizado
-                        st.components.v1.html(f"""
-                            <script>
-                            var doc = window.parent.document;
-                            var btn = doc.querySelector('button[key="num_btn_{producto}"]');
-                            if (btn) {{
-                                btn.classList.remove('btn-pending', 'btn-completed');
-                                btn.classList.add('{clase_btn}');
-                            }}
-                            </script>
-                        """, height=0, width=0)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
