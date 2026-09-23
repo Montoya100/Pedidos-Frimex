@@ -371,8 +371,9 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    # TIPO DE BOTÓN NATIVO DE STREAMLIT
-                    # completado -> "secondary" (Verde), pendiente -> "primary" (Rojo)
+                    # TIPO DE BOTÓN NATIVO DE STREAMLIT:
+                    # completado -> "secondary" (Verde esmeralda)
+                    # pendiente -> "primary" (Rojo brillante)
                     tipo_boton = "secondary" if es_completado else "primary"
 
                     col_txt, col_btn = st.columns([0.74, 0.26], gap="small")
