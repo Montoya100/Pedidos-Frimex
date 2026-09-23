@@ -95,7 +95,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS COMPACTOS & RESPONSIVOS
+# 3. ESTILOS CSS (RESPONSIVO REAL: 1 COL EN VERTICAL, 3 EN HORIZONTAL)
 # ==========================================
 st.markdown(f"""
     <style>
@@ -121,18 +121,18 @@ st.markdown(f"""
     }}
 
     .splash-logo-img {{
-        max-width: 140px;
-        max-height: 140px;
+        max-width: 130px;
+        max-height: 130px;
         object-fit: contain;
-        margin-bottom: 15px;
+        margin-bottom: 12px;
     }}
 
     .splash-loader {{
         border: 3px solid #262730;
         border-top: 3px solid #ff4b4b;
         border-radius: 50%;
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
         animation: spin 1s linear infinite;
     }}
 
@@ -156,7 +156,7 @@ st.markdown(f"""
         padding-right: 0.4rem !important;
     }}
 
-    /* ENCABEZADO CENTRADO Y ULTRA COMPACTO */
+    /* ENCABEZADO ULTRA COMPACTO */
     .header-logo-container {{
         display: flex;
         justify-content: center;
@@ -168,7 +168,7 @@ st.markdown(f"""
     }}
     
     .header-logo-img {{
-        height: 32px !important;
+        height: 30px !important;
         width: auto;
         object-fit: contain;
     }}
@@ -192,7 +192,7 @@ st.markdown(f"""
         white-space: nowrap;
     }}
 
-    /* MÉTRICAS EN UNA SOLA LÍNEA */
+    /* MÉTRICAS */
     .metrics-row {{
         display: flex;
         justify-content: space-around;
@@ -231,28 +231,42 @@ st.markdown(f"""
         margin-bottom: 6px !important;
     }}
 
-    /* ESTRUCTURA HORIZONTAL DEL PRODUCTO + NÚMERO (INVARIABLE) */
-    div[data-testid="stHorizontalBlock"] {{
+    /* REGLAS DE GRID RESPONSIVO PARA LA LISTA DE PRODUCTOS */
+    /* Por defecto (pantallas anchas / horizontal): 3 columnas */
+    div[data-testid="stHorizontalBlock"]:has(.prod-btn-pending, .prod-btn-completed) {{
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 6px !important;
+        width: 100% !important;
+    }}
+
+    /* Si la pantalla es vertical / móvil (menos de 768px): 1 columna */
+    @media (max-width: 768px) {{
+        div[data-testid="stHorizontalBlock"]:has(.prod-btn-pending, .prod-btn-completed) {{
+            grid-template-columns: 1fr !important;
+        }}
+    }}
+
+    /* CONTENEDOR DE CADA ITEM DE PRODUCTO (BOTÓN + CANTIDAD EN LA MISMA LÍNEA) */
+    .product-item-container {{
         display: flex !important;
         flex-direction: row !important;
-        flex-wrap: nowrap !important;
         align-items: center !important;
         gap: 4px !important;
-        margin-bottom: 4px !important;
+        width: 100% !important;
     }}
 
-    div[data-testid="column"] {{
-        width: auto !important;
-        min-width: 0 !important;
+    .product-item-container > div:first-child {{
         flex: 1 1 auto !important;
+        min-width: 0 !important;
     }}
 
-    div[data-testid="column"]:last-child {{
-        flex: 0 0 45px !important;
-        max-width: 45px !important;
+    .product-item-container > div:last-child {{
+        flex: 0 0 42px !important;
+        width: 42px !important;
     }}
 
-    /* ESTADO PENDIENTE: BLANCO + BORDE ROJO */
+    /* ESTADO PENDIENTE (BLANCO CON BORDE ROJO + RECUADRO ROJO) */
     .prod-btn-pending button {{
         background-color: #ffffff !important;
         color: #1f2937 !important;
@@ -264,7 +278,7 @@ st.markdown(f"""
         font-size: 13px !important;
         font-weight: 700 !important;
         text-align: left !important;
-        height: 40px !important;
+        height: 38px !important;
         margin: 0 !important;
         white-space: nowrap !important;
         overflow: hidden !important;
@@ -276,9 +290,9 @@ st.markdown(f"""
         background-color: #ff4b4b;
         color: #ffffff;
         font-weight: 900;
-        font-size: 16px;
-        height: 40px;
-        width: 45px;
+        font-size: 15px;
+        height: 38px;
+        width: 42px;
         border-radius: 6px;
         display: flex;
         align-items: center;
@@ -286,7 +300,7 @@ st.markdown(f"""
         margin: 0 !important;
     }}
 
-    /* ESTADO COMPLETADO: TODO VERDE */
+    /* ESTADO COMPLETADO (TODO EL BLOQUE CAMBIA A VERDE VIBRANTE) */
     .prod-btn-completed button {{
         background-color: #d1fae5 !important;
         color: #065f46 !important;
@@ -298,7 +312,7 @@ st.markdown(f"""
         font-size: 13px !important;
         font-weight: 700 !important;
         text-align: left !important;
-        height: 40px !important;
+        height: 38px !important;
         margin: 0 !important;
         white-space: nowrap !important;
         overflow: hidden !important;
@@ -310,29 +324,14 @@ st.markdown(f"""
         background-color: #10b981;
         color: #ffffff;
         font-weight: 900;
-        font-size: 16px;
-        height: 40px;
-        width: 45px;
+        font-size: 15px;
+        height: 38px;
+        width: 42px;
         border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 0 !important;
-    }}
-
-    @media (max-width: 768px) {{
-        .header-title {{
-            font-size: 14px !important;
-        }}
-        .header-logo-img {{
-            height: 28px !important;
-        }}
-        .metric-inline {{
-            font-size: 12px;
-        }}
-        .metric-inline .val {{
-            font-size: 15px;
-        }}
     }}
     </style>
 
@@ -462,12 +461,8 @@ def renderizar_tablero():
     if conteo_productos:
         productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1], reverse=True)
 
-        # 3 COLUMNAS EN PANTALLAS HORIZONTALES / 1 EN VERTICAL
-        columnas_principales = st.columns([1, 1, 1])
-
-        for idx, (producto, cant_total) in enumerate(productos_ordenados):
-            col_target = columnas_principales[idx % 3]
-
+        # Generador dinámico en la misma estructura horizontal con Grid CSS
+        for producto, cant_total in productos_ordenados:
             es_completado = producto in estado_global["completados"]
             cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
             cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
@@ -475,23 +470,22 @@ def renderizar_tablero():
             btn_class = "prod-btn-completed" if es_completado else "prod-btn-pending"
             box_class = "qty-box-green" if es_completado else "qty-box-red"
 
-            with col_target:
-                # Fila horizontal que jamás se rompe
-                col_prod, col_qty = st.columns([5, 1])
-                
-                with col_prod:
-                    st.markdown(f'<div class="{btn_class}">', unsafe_allow_html=True)
-                    st.button(
-                        label=producto,
-                        key=f"btn_{producto}",
-                        use_container_width=True,
-                        on_click=alternar_estado,
-                        args=(producto, cant_total)
-                    )
-                    st.markdown('</div>', unsafe_allow_html=True)
+            # Las 2 piezas juntas mantenidas en 1 fila inseparable
+            col_prod, col_qty = st.columns([5, 1])
+            
+            with col_prod:
+                st.markdown(f'<div class="{btn_class}">', unsafe_allow_html=True)
+                st.button(
+                    label=producto,
+                    key=f"btn_{producto}",
+                    use_container_width=True,
+                    on_click=alternar_estado,
+                    args=(producto, cant_total)
+                )
+                st.markdown('</div>', unsafe_allow_html=True)
 
-                with col_qty:
-                    st.markdown(f'<div class="{box_class}">{cant_mostrar}</div>', unsafe_allow_html=True)
+            with col_qty:
+                st.markdown(f'<div class="{box_class}">{cant_mostrar}</div>', unsafe_allow_html=True)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
