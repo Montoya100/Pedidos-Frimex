@@ -96,7 +96,7 @@ def reproducir_sonido_notificacion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS CON TÉCNICA Y ESTRUCTURA FIJA
+# 3. ESTILOS CSS CON TÉCNICA DE ALTURA CERO
 # ==========================================
 st.markdown(f"""
     <style>
@@ -146,7 +146,6 @@ st.markdown(f"""
     }}
     
     .header-logo-img {{ height: 30px !important; width: auto; object-fit: contain; }}
-
     .header-text-group {{ display: flex; flex-direction: column; align-items: center; justify-content: center; }}
 
     .header-title {{
@@ -171,12 +170,10 @@ st.markdown(f"""
         border-radius: 6px !important; border: none !important; margin-bottom: 6px !important;
     }}
 
-    /* CONTENEDOR DE TARJETA ESTILIZADO CON BOTÓN INVISIBLE ENCIMA */
+    /* TARJETA VISUAL BASE */
     .product-card-box {{
-        position: relative;
         width: 100%;
         height: 42px;
-        margin-bottom: 6px;
         border-radius: 6px;
         overflow: hidden;
         display: flex;
@@ -209,7 +206,6 @@ st.markdown(f"""
     .product-card-box.pending .title-text {{ color: #1f2937; }}
     .product-card-box.completed .title-text {{ color: #065f46; }}
 
-    /* RECUADRO DEL CONTADOR TOTALMENTE SEPARADO Y DESTACADO */
     .product-card-box .qty-badge {{
         width: 44px;
         height: 42px;
@@ -224,24 +220,35 @@ st.markdown(f"""
     .product-card-box.pending .qty-badge {{ background-color: #ff4b4b; }}
     .product-card-box.completed .qty-badge {{ background-color: #10b981; }}
 
-    /* BOTÓN INVISIBLE INTEGRADO EN LA MISMA CAJA QUE NO GENERA ESPACIO EXTRA */
-    .product-card-box button[kind="secondary"], 
-    .product-card-box button[kind="primary"],
-    .product-card-box button {{
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
+    /* ELIMINACIÓN DEL ESPACIO EXTRA DE STREAMLIT */
+    div[data-testid="stElementContainer"]:has(button[key^="btn_"]) {{
+        height: 0px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }}
+
+    /* EL BOTÓN FLOTA -42PX SOBRE LA TARJETA SUPERIOR */
+    div[data-testid="stElementContainer"] button[key^="btn_"] {{
+        position: relative !important;
+        top: -42px !important;
         width: 100% !important;
-        height: 100% !important;
+        height: 42px !important;
+        min-height: 42px !important;
+        max-height: 42px !important;
         opacity: 0 !important;
-        z-index: 5 !important;
+        z-index: 10 !important;
         cursor: pointer !important;
         margin: 0 !important;
         padding: 0 !important;
         border: none !important;
     }}
 
-    /* MÓVIL / VERTICAL: APILAR 3 COLUMNAS EN 1 SOLA FILA VERTICAL */
+    /* MARGEN INFERIOR DE CADA TARJETA EN GRILLA */
+    div[data-testid="column"] > div {{
+        margin-bottom: 6px;
+    }}
+
+    /* MÓVIL / VERTICAL */
     @media (max-width: 768px) {{
         div[data-testid="stHorizontalBlock"] {{
             flex-direction: column !important;
@@ -392,23 +399,21 @@ def renderizar_tablero():
 
                     clase_estado = "completed" if es_completado else "pending"
 
-                    # Generamos el bloque contenedor y el botón exactamente en el mismo bloque usando st.container
-                    caja_container = st.container()
-                    with caja_container:
-                        # Dibujamos el HTML y el botón invisible dentro del mismo contenedor relativo
-                        st.markdown(f"""
-                            <div class="product-card-box {clase_estado}">
-                                <div class="title-text">{producto}</div>
-                                <div class="qty-badge">{cant_mostrar}</div>
-                            </div>
-                        """, unsafe_allow_html=True)
-                        
-                        st.button(
-                            " ", 
-                            key=f"btn_{producto}", 
-                            on_click=alternar_estado, 
-                            args=(producto, cant_total)
-                        )
+                    # 1. Dibujamos la tarjeta visual de 42px de alto
+                    st.markdown(f"""
+                        <div class="product-card-box {clase_estado}">
+                            <div class="title-text">{producto}</div>
+                            <div class="qty-badge">{cant_mostrar}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # 2. Botón invisible desplazado exactos -42px
+                    st.button(
+                        " ", 
+                        key=f"btn_{producto}", 
+                        on_click=alternar_estado, 
+                        args=(producto, cant_total)
+                    )
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
