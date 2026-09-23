@@ -1,5 +1,7 @@
 import base64
 import os
+import base64
+import os
 import requests
 import streamlit as st
 import streamlit.components.v1 as components
@@ -188,7 +190,7 @@ st.markdown(f"""
         border: 1px solid #e5e7eb;
     }}
 
-    /* ESTILOS COMUNES PARA LOS BOTONES NUMÉRICOS */
+    /* ESTILOS DE BOTÓN BASE */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
         height: 48px !important;
         min-height: 48px !important;
@@ -196,28 +198,27 @@ st.markdown(f"""
         border: none !important;
         font-size: 22px !important;
         font-weight: 900 !important;
+        color: #ffffff !important;
         box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
         margin-bottom: 6px !important;
     }}
 
-    /* ESTADO PENDIENTE (PRIMARY): ROJO INTENSO */
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button[kind="primary"] {{
+    /* ESTADO PENDIENTE: ROJO INTENSO */
+    .btn-rojo button {{
         background-color: #ef4444 !important;
         color: #ffffff !important;
     }}
-
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button[kind="primary"]:hover {{
+    .btn-rojo button:hover {{
         background-color: #dc2626 !important;
         color: #ffffff !important;
     }}
 
-    /* ESTADO COMPLETADO (SECONDARY): VERDE ESMERALDA VIVO */
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button[kind="secondary"] {{
+    /* ESTADO COMPLETADO: VERDE ESMERALDA VIVO */
+    .btn-verde button {{
         background-color: #10b981 !important;
         color: #ffffff !important;
     }}
-
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button[kind="secondary"]:hover {{
+    .btn-verde button:hover {{
         background-color: #059669 !important;
         color: #ffffff !important;
     }}
@@ -371,10 +372,8 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    # TIPO DE BOTÓN NATIVO DE STREAMLIT:
-                    # completado -> "secondary" (Verde esmeralda)
-                    # pendiente -> "primary" (Rojo brillante)
-                    tipo_boton = "secondary" if es_completado else "primary"
+                    # Clase wrapper para inyectar el color exacto al botón
+                    clase_color = "btn-verde" if es_completado else "btn-rojo"
 
                     col_txt, col_btn = st.columns([0.74, 0.26], gap="small")
 
@@ -386,14 +385,15 @@ def renderizar_tablero():
                         """, unsafe_allow_html=True)
 
                     with col_btn:
+                        st.markdown(f'<div class="{clase_color}">', unsafe_allow_html=True)
                         st.button(
                             f"{cant_mostrar}", 
                             key=f"num_btn_{producto}", 
-                            type=tipo_boton,
                             on_click=alternar_estado, 
                             args=(producto, cant_total),
                             use_container_width=True
                         )
+                        st.markdown('</div>', unsafe_allow_html=True)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
