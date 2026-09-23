@@ -96,7 +96,7 @@ def reproducir_sonido_notificacion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS PARCIALES
+# 3. ESTILOS CSS REDISEÑADOS (TARJETA UNIFICADA)
 # ==========================================
 st.markdown(f"""
     <style>
@@ -167,81 +167,83 @@ st.markdown(f"""
         border-radius: 6px !important; border: none !important; margin-bottom: 6px !important;
     }}
 
-    /* ESTRUCTURA DE TARJETA DIVIDIDA (50% TEXTO / 50% BOTÓN ACCIÓN) */
-    .split-card {{
+    /* CONVERTIMOS EL BOTÓN DE STREAMLIT EN LA TARJETA COMPLETA */
+    div[data-testid="stElementContainer"]:has(button[key^="btn_prod_"]) {{
+        margin-bottom: 6px !important;
+    }}
+
+    div[data-testid="stElementContainer"] button[key^="btn_prod_"] {{
+        width: 100% !important;
+        height: 46px !important;
+        min-height: 46px !important;
+        border-radius: 10px !important;
+        padding: 0px 0px 0px 12px !important;
+        border: none !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+        overflow: hidden !important;
+    }}
+
+    /* ESTADO PENDIENTE (FONDO BLANCO / ACCION ROJO) */
+    div[data-testid="stElementContainer"] button[key^="btn_prod_"].pending-btn {{
+        background-color: #ff4b4b !important;
+        color: #1f2937 !important;
+    }}
+
+    /* ESTADO COMPLETADO (FONDO VERDE / ACCION VERDE OBSCURO) */
+    div[data-testid="stElementContainer"] button[key^="btn_prod_"].completed-btn {{
+        background-color: #10b981 !important;
+        color: #065f46 !important;
+    }}
+
+    /* ESTRUCTURA INTERNA DEL BOTÓN (TEXTO + CAJA NUMÉRICA) */
+    .card-inside-wrapper {{
         display: flex;
-        align-items: center;
         width: 100%;
-        height: 42px;
-        border-radius: 6px;
-        overflow: hidden;
-        margin-bottom: 6px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        height: 100%;
+        align-items: center;
+        justify-content: space-between;
     }}
 
-    .split-card.pending {{
-        background-color: #ffffff;
-        border-left: 5px solid #ff4b4b;
-    }}
-
-    .split-card.completed {{
-        background-color: #d1fae5;
-        border-left: 5px solid #10b981;
-    }}
-
-    /* LADO IZQUIERDO: NOMBRE DEL PRODUCTO (50% DEL ANCHO) */
-    .split-card .card-info {{
-        width: 50%;
-        padding-left: 8px;
-        padding-right: 4px;
-        font-size: 12px;
+    .card-title-label {{
+        flex: 1;
+        text-align: left;
+        font-size: 13px;
         font-weight: 800;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-    }}
-
-    .split-card.pending .card-info {{ color: #1f2937; }}
-    .split-card.completed .card-info {{ color: #065f46; }}
-
-    /* LADO DERECHO: CONTENEDOR DEL BOTÓN DE ACCIÓN (50% DEL ANCHO) */
-    .split-card .card-action {{
-        width: 50%;
+        padding-right: 8px;
+        background-color: #ffffff;
         height: 100%;
+        display: flex;
+        align-items: center;
+        padding-left: 10px;
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
     }}
 
-    /* ESTILO DEL BOTÓN SEGÚN EL ESTADO */
-    .split-card .card-action button {{
-        width: 100% !important;
-        height: 100% !important;
-        min-height: 42px !important;
-        border-radius: 0px !important;
-        border: none !important;
-        font-size: 12px !important;
-        font-weight: 900 !important;
-        letter-spacing: 0.5px !important;
-        padding: 0 4px !important;
-        transition: background-color 0.2s ease, color 0.2s ease;
+    .completed-btn .card-title-label {{
+        background-color: #d1fae5;
+        color: #065f46;
     }}
 
-    /* BOTÓN PENDIENTE (ROJO) */
-    .split-card.pending .card-action button {{
-        background-color: #ff4b4b !important;
-        color: #ffffff !important;
+    .pending-btn .card-title-label {{
+        background-color: #ffffff;
+        color: #1f2937;
     }}
 
-    .split-card.pending .card-action button:hover {{
-        background-color: #e03e3e !important;
-    }}
-
-    /* BOTÓN COMPLETADO (VERDE) */
-    .split-card.completed .card-action button {{
-        background-color: #10b981 !important;
-        color: #ffffff !important;
-    }}
-
-    .split-card.completed .card-action button:hover {{
-        background-color: #059669 !important;
+    .card-number-badge {{
+        width: 48px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 900;
+        color: #ffffff;
     }}
 
     /* MÓVIL / VERTICAL */
@@ -393,26 +395,34 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    clase_estado = "completed" if es_completado else "pending"
-                    texto_boton = f"✓ LISTO ({cant_mostrar})" if es_completado else f"LISTO: {cant_mostrar}"
+                    clase_css = "completed-btn" if es_completado else "pending-btn"
 
-                    # CONTENEDOR DIVIDIDO: 50% NOMBRE DEL PRODUCTO / 50% BOTÓN VISIBLE
-                    st.markdown(f"""
-                        <div class="split-card {clase_estado}">
-                            <div class="card-info">{producto}</div>
-                            <div class="card-action">
-                    """, unsafe_allow_html=True)
-                    
+                    # HTML COMPACTO INSERTADO DIRECTO DENTRO DE LA ETIQUETA DEL BOTÓN NATIVO
+                    contenido_boton = f"""
+                        <div class="card-inside-wrapper">
+                            <div class="card-title-label">{producto}</div>
+                            <div class="card-number-badge">{cant_mostrar}</div>
+                        </div>
+                    """
+
+                    # BOTÓN ÚNICO QUE SIRVE TANTO DE TARJETA COMO DE ZONA TÁCTIL
                     st.button(
-                        texto_boton, 
-                        key=f"btn_{producto}", 
+                        contenido_boton, 
+                        key=f"btn_prod_{producto}", 
                         on_click=alternar_estado, 
-                        args=(producto, cant_total)
+                        args=(producto, cant_total),
+                        type="secondary"
                     )
 
-                    st.markdown("""
-                            </div>
-                        </div>
+                    # Inyectar clase dinámica al botón según su estado (Pendiente / Completado)
+                    st.markdown(f"""
+                        <script>
+                        var btns = window.parent.document.querySelectorAll('button[key="btn_prod_{producto}"]');
+                        btns.forEach(function(b) {{
+                            b.classList.remove('pending-btn', 'completed-btn');
+                            b.classList.add('{clase_css}');
+                        }});
+                        </script>
                     """, unsafe_allow_html=True)
 
     else:
