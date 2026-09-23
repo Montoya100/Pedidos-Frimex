@@ -95,7 +95,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS
+# 3. ESTILOS CSS REVISADOS Y CORREGIDOS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -231,104 +231,89 @@ st.markdown(f"""
         margin-bottom: 6px !important;
     }}
 
-    /* REGLAS PARA LA FILA INTERNA (BOTÓN + CAJA PEGADOS SIN ESPACIO) */
-    .item-row {{
+    /* ESTILOS DE TARJETA CORRIDA Y NATIVA */
+    .card-wrap {{
+        position: relative !important;
+        margin-bottom: 6px !important;
+        width: 100% !important;
+    }}
+
+    .card-body {{
         display: flex !important;
         flex-direction: row !important;
         align-items: center !important;
-        justify-content: space-between !important;
+        height: 40px !important;
+        border-radius: 6px !important;
+        overflow: hidden !important;
         width: 100% !important;
-        margin-bottom: 4px !important;
-        gap: 0px !important;
     }}
 
-    .item-col-btn {{
-        flex: 1 1 auto !important;
-        min-width: 0 !important;
-    }}
-
-    .item-col-qty {{
-        flex: 0 0 42px !important;
-        width: 42px !important;
-    }}
-
-    /* ESTADO PENDIENTE (BOTÓN BLANCO Y CAJA ROJA) */
-    .prod-btn-pending button {{
+    /* ESTADO PENDIENTE */
+    .card-pending {{
         background-color: #ffffff !important;
-        color: #1f2937 !important;
         border-left: 5px solid #ff4b4b !important;
-        border-top: none !important;
-        border-right: none !important;
-        border-bottom: none !important;
-        border-top-left-radius: 6px !important;
-        border-bottom-left-radius: 6px !important;
-        border-top-right-radius: 0px !important;
-        border-bottom-right-radius: 0px !important;
-        font-size: 13px !important;
-        font-weight: 700 !important;
-        text-align: left !important;
-        height: 38px !important;
-        margin: 0 !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        padding-left: 8px !important;
+    }}
+    .card-pending .card-title {{
+        color: #1f2937 !important;
+    }}
+    .card-pending .card-qty {{
+        background-color: #ff4b4b !important;
+        color: #ffffff !important;
     }}
 
-    .qty-box-red {{
-        background-color: #ff4b4b;
-        color: #ffffff;
-        font-weight: 900;
-        font-size: 15px;
-        height: 38px;
-        width: 42px;
-        border-top-right-radius: 6px;
-        border-bottom-right-radius: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 !important;
-    }}
-
-    /* ESTADO COMPLETADO (TODO EL BLOQUE CAMBIA A VERDE VIBRANTE) */
-    .prod-btn-completed button {{
+    /* ESTADO COMPLETADO */
+    .card-completed {{
         background-color: #d1fae5 !important;
-        color: #065f46 !important;
         border-left: 5px solid #10b981 !important;
-        border-top: none !important;
-        border-right: none !important;
-        border-bottom: none !important;
-        border-top-left-radius: 6px !important;
-        border-bottom-left-radius: 6px !important;
-        border-top-right-radius: 0px !important;
-        border-bottom-right-radius: 0px !important;
+    }}
+    .card-completed .card-title {{
+        color: #065f46 !important;
+    }}
+    .card-completed .card-qty {{
+        background-color: #10b981 !important;
+        color: #ffffff !important;
+    }}
+
+    /* SEGMENTO NOMBRE PRODUCTO */
+    .card-title {{
+        flex: 1 1 auto !important;
+        padding-left: 10px !important;
+        padding-right: 6px !important;
         font-size: 13px !important;
-        font-weight: 700 !important;
-        text-align: left !important;
-        height: 38px !important;
-        margin: 0 !important;
+        font-weight: 800 !important;
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
-        padding-left: 8px !important;
+        line-height: 40px !important;
     }}
 
-    .qty-box-green {{
-        background-color: #10b981;
-        color: #ffffff;
-        font-weight: 900;
-        font-size: 15px;
-        height: 38px;
-        width: 42px;
-        border-top-right-radius: 6px;
-        border-bottom-right-radius: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 !important;
+    /* SEGMENTO CANTIDAD */
+    .card-qty {{
+        flex: 0 0 44px !important;
+        width: 44px !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 16px !important;
+        font-weight: 900 !important;
     }}
 
-    /* ADAPTACIÓN AUTOMÁTICA EN VERTICAL (MÓVIL / PANTALLA ESTRECHA) */
+    /* BOTÓN TRANSPARENTE ENCIMA PARA CAPTURAR EL CLICK */
+    .card-wrap div[data-testid="stButton"] button {{
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 40px !important;
+        background: transparent !important;
+        border: none !important;
+        color: transparent !important;
+        z-index: 10 !important;
+        cursor: pointer !important;
+    }}
+
+    /* MÓVIL / VERTICAL: APILAR 3 COLUMNAS EN 1 SOLA FILA VERTICAL */
     @media (max-width: 768px) {{
         div[data-testid="stHorizontalBlock"] {{
             flex-direction: column !important;
@@ -466,7 +451,7 @@ def renderizar_tablero():
     if conteo_productos:
         productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1], reverse=True)
 
-        # AGRUPACIÓN DE 3 EN 3 PRODUCTOS POR FILA
+        # RENDERIZADO EN FILAS DE 3 COLUMNAS
         for i in range(0, len(productos_ordenados), 3):
             grupo = productos_ordenados[i:i+3]
             cols = st.columns(3)
@@ -477,29 +462,24 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    btn_class = "prod-btn-completed" if es_completado else "prod-btn-pending"
-                    box_class = "qty-box-green" if es_completado else "qty-box-red"
+                    card_class = "card-completed" if es_completado else "card-pending"
 
-                    # Generar la tira corrida pegada
-                    st.markdown('<div class="item-row">', unsafe_allow_html=True)
-                    
-                    sub_btn, sub_qty = st.columns([1, 0.22])
-                    
-                    with sub_btn:
-                        st.markdown(f'<div class="{btn_class}">', unsafe_allow_html=True)
-                        st.button(
-                            label=producto,
-                            key=f"btn_{producto}",
-                            use_container_width=True,
-                            on_click=alternar_estado,
-                            args=(producto, cant_total)
-                        )
-                        st.markdown('</div>', unsafe_allow_html=True)
+                    # HTML unificado + Botón invisible superior
+                    st.markdown(f"""
+                        <div class="card-wrap">
+                            <div class="card-body {card_class}">
+                                <div class="card-title">{producto}</div>
+                                <div class="card-qty">{cant_mostrar}</div>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
 
-                    with sub_qty:
-                        st.markdown(f'<div class="{box_class}">{cant_mostrar}</div>', unsafe_allow_html=True)
-
-                    st.markdown('</div>', unsafe_allow_html=True)
+                    st.button(
+                        label=f"btn_{producto}",
+                        key=f"btn_{producto}",
+                        on_click=alternar_estado,
+                        args=(producto, cant_total)
+                    )
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
