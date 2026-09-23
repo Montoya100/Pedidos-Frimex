@@ -96,7 +96,7 @@ def reproducir_sonido_notificacion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS GENERALES Y SUPERPOSICIÓN
+# 3. ESTILOS CSS GENERALES Y BOTÓN FLOTANTE ABSOLUTO
 # ==========================================
 st.markdown(f"""
     <style>
@@ -284,40 +284,43 @@ st.markdown(f"""
     .card-visual.pending .card-qty {{ background-color: #ff4b4b; }}
     .card-visual.completed .card-qty {{ background-color: #10b981; }}
 
-    /* CONTENEDOR SUPERPUESTO (GRID COMPACTO) */
-    .card-overlay-container {{
-        display: grid;
-        grid-template-areas: "stack";
-        width: 100%;
-        height: 40px;
-        margin-bottom: 6px;
-        position: relative;
-    }}
-
-    .card-overlay-container > div {{
-        grid-area: stack;
-    }}
-
-    /* HACER EL BOTÓN STREAMLIT TRANSPARENTE Y TOTALMENTE SUPERPUESTO */
-    .card-overlay-container div[data-testid="stButton"] {{
-        width: 100% !important;
-        height: 100% !important;
-        z-index: 2;
-    }}
-
-    .card-overlay-container div[data-testid="stButton"] button {{
+    /* CONTENEDOR CONTENEDOR POSICIÓN RELATIVA */
+    .card-floating-wrap {{
+        position: relative !important;
         width: 100% !important;
         height: 40px !important;
+        margin-bottom: 6px !important;
+    }}
+
+    /* BOTÓN TRANSPARENTE TOTALMENTE FLOTANTE (POSICIÓN ABSOLUTA ENCIMA) */
+    .card-floating-wrap div[data-testid="stButton"] {{
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 10 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }}
+
+    .card-floating-wrap div[data-testid="stButton"] button {{
+        width: 100% !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        max-height: 40px !important;
         background: transparent !important;
         border: none !important;
         color: transparent !important;
         box-shadow: none !important;
         cursor: pointer !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }}
 
-    .card-overlay-container div[data-testid="stButton"] button:hover,
-    .card-overlay-container div[data-testid="stButton"] button:focus,
-    .card-overlay-container div[data-testid="stButton"] button:active {{
+    .card-floating-wrap div[data-testid="stButton"] button:hover,
+    .card-floating-wrap div[data-testid="stButton"] button:focus,
+    .card-floating-wrap div[data-testid="stButton"] button:active {{
         background: transparent !important;
         border: none !important;
         color: transparent !important;
@@ -475,10 +478,10 @@ def renderizar_tablero():
 
                     clase_estado = "completed" if es_completado else "pending"
 
-                    # Contenedor Grid: Superponemos la tarjeta HTML y el botón Streamlit transparente
-                    st.markdown(f'<div class="card-overlay-container">', unsafe_allow_html=True)
+                    # Contenedor Relativo: Permite que el botón flote encima exactamente sobre la tarjeta HTML
+                    st.markdown(f'<div class="card-floating-wrap">', unsafe_allow_html=True)
                     
-                    # 1. Capa visual limpia (Sin código raro)
+                    # 1. Capa visual limpia (Debajo)
                     st.markdown(f"""
                         <div class="card-visual {clase_estado}">
                             <div class="card-title">{producto}</div>
@@ -486,7 +489,7 @@ def renderizar_tablero():
                         </div>
                     """, unsafe_allow_html=True)
 
-                    # 2. Capa invisible de clic (Streamlit nativo directo)
+                    # 2. Capa invisible nativa de clic (Encima en posición absoluta)
                     st.button(
                         " ", 
                         key=f"btn_{producto}", 
