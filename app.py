@@ -87,7 +87,8 @@ def reproducir_sonido_notificacion():
             gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
             osc2.connect(gain2);
             gain2.connect(ctx.destination);
-            osc2.start(ctx.currentTime + 0.4);
+            osc2.start(ctx.currentTime + 0.12);
+            osc2.stop(ctx.currentTime + 0.4);
         } catch(e) {}
     })();
     </script>
@@ -187,61 +188,39 @@ st.markdown(f"""
         border: 1px solid #e5e7eb;
     }}
 
-    /* CONTENEDOR DE LA TARJETA NUMÉRICA */
-    .num-card-wrapper {{
-        position: relative;
-        width: 100%;
-        height: 48px;
-        margin-bottom: 6px;
-    }}
-
-    .num-card-visual {{
-        width: 100%;
-        height: 48px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 22px;
-        font-weight: 900;
-        color: #ffffff;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-    }}
-
-    /* ROJO BRILLANTE CUANDO ESTÁ PENDIENTE */
-    .num-card-visual.pending {{
-        background-color: #ef4444 !important; /* Red 500 */
-    }}
-
-    /* VERDE VIVO / ESMERALDA BRILLANTE CUANDO ESTÁ COMPLETADO */
-    .num-card-visual.done {{
-        background-color: #10b981 !important; /* Emerald 500 - Más alegre y visible */
-    }}
-
-    /* EL BOTÓN DE STREAMLIT ES CUBIERTA TRANSPARENTE E INVISIBLE PARA CAPTURAR EL CLIC */
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
+    /* UNIFICACIÓN DE LA TARJETA NUMÉRICA (BOTÓN) */
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
         height: 48px !important;
-        margin: 0 !important;
-        z-index: 10 !important;
-    }}
-
-    div[data-testid="stElementContainer"] button[key^="num_btn_"] {{
-        width: 100% !important;
-        height: 48px !important;
-        background-color: transparent !important;
-        color: transparent !important; /* Oculta el texto duplicado del botón nativo */
-        border: none !important;
-        box-shadow: none !important;
-        cursor: pointer !important;
-    }}
-
-    div[data-testid="stElementContainer"] button[key^="num_btn_"]:hover {{
-        background-color: rgba(255, 255, 255, 0.15) !important;
+        min-height: 48px !important;
         border-radius: 10px !important;
+        border: none !important;
+        font-size: 22px !important;
+        font-weight: 900 !important;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
+        transition: background-color 0.2s ease-in-out !important;
+        margin-bottom: 6px !important;
+    }}
+
+    /* ESTADO PENDIENTE: ROJO INTENSO */
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
+        background-color: #ef4444 !important;
+        color: #ffffff !important;
+    }}
+
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button:hover {{
+        background-color: #dc2626 !important;
+        color: #ffffff !important;
+    }}
+
+    /* ESTADO COMPLETADO: VERDE ESMERALDA VIVO (SE DETECTA MEDIANTE EL CONTENIDO DEL BOTÓN) */
+    div[data-testid="stElementContainer"]:has(button span[data-completed="true"]) button {{
+        background-color: #10b981 !important;
+        color: #ffffff !important;
+    }}
+
+    div[data-testid="stElementContainer"]:has(button span[data-completed="true"]) button:hover {{
+        background-color: #059669 !important;
+        color: #ffffff !important;
     }}
 
     /* MÓVIL / VERTICAL */
@@ -393,7 +372,9 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    clase_num = "done" if es_completado else "pending"
+                    # Se genera la etiqueta HTML dentro del botón con el atributo data-completed
+                    estado_attr = 'data-completed="true"' if es_completado else 'data-completed="false"'
+                    label_boton = f'<span {estado_attr}>{cant_mostrar}</span>'
 
                     col_txt, col_btn = st.columns([0.74, 0.26], gap="small")
 
@@ -405,18 +386,8 @@ def renderizar_tablero():
                         """, unsafe_allow_html=True)
 
                     with col_btn:
-                        # La tarjeta numeral HTML dibuja el número único visualmente
-                        st.markdown(f"""
-                            <div class="num-card-wrapper">
-                                <div class="num-card-visual {clase_num}">
-                                    {cant_mostrar}
-                                </div>
-                            </div>
-                        """, unsafe_allow_html=True)
-                        
-                        # El botón invisible de Streamlit recibe el clic pero no pinta texto
                         st.button(
-                            "", 
+                            label_boton, 
                             key=f"num_btn_{producto}", 
                             on_click=alternar_estado, 
                             args=(producto, cant_total),
