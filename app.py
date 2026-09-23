@@ -95,7 +95,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS REVISADOS (FILA ÚNICA)
+# 3. ESTILOS CSS (MICRO-GRID INMODIFICABLE)
 # ==========================================
 st.markdown(f"""
     <style>
@@ -231,18 +231,17 @@ st.markdown(f"""
         margin-bottom: 10px !important;
     }}
 
-    /* FORZAR FILA ÚNICA PERFECTAMENTE ALINEADA */
-    div[data-testid="stHorizontalBlock"] {{
-        align-items: center !important;
+    /* CONTENEDOR GRID DE UNA SOLA FILA */
+    .grid-producto-container {{
+        display: grid !important;
+        grid-template-columns: 1fr 55px !important;
         gap: 6px !important;
+        align-items: center !important;
         margin-bottom: 8px !important;
+        width: 100% !important;
     }}
 
-    div[data-testid="column"] {{
-        padding: 0 !important;
-    }}
-
-    /* BOTONES PENDIENTE Y COMPLETADO */
+    /* ESTILO PARA EL BOTÓN DENTRO DEL GRID */
     .prod-btn-pending button {{
         background-color: #ffffff !important;
         color: #2c3e50 !important;
@@ -256,6 +255,9 @@ st.markdown(f"""
         text-align: left !important;
         height: 48px !important;
         margin: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }}
 
     .prod-btn-completed button {{
@@ -271,9 +273,12 @@ st.markdown(f"""
         text-align: left !important;
         height: 48px !important;
         margin: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }}
 
-    /* RECUADROS ROJO Y VERDE A LA DERECHA */
+    /* CAJAS DE CANTIDAD DENTRO DEL GRID */
     .qty-box-red {{
         background-color: #ff4b4b;
         color: #ffffff;
@@ -324,7 +329,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 4. CONSULTA ESTABLE A LA API DE LOYVERSE
+# 4. CONSULTA A LA API DE LOYVERSE
 # ==========================================
 def obtener_recibos_hoy():
     created_at_min = estado_global["hora_corte_utc"].strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -451,22 +456,24 @@ def renderizar_tablero():
             btn_class = "prod-btn-completed" if es_completado else "prod-btn-pending"
             box_class = "qty-box-green" if es_completado else "qty-box-red"
 
-            # Fila corrida: Producto (Izquierda) + Recuadro Rojo/Verde (Derecha)
-            col_prod, col_qty = st.columns([5, 1])
+            # Renderizado por Micro-Grid HTML/CSS directo para bloquear colapso vertical
+            st.markdown(f'<div class="grid-producto-container">', unsafe_allow_html=True)
             
-            with col_prod:
-                st.markdown(f'<div class="{btn_class}">', unsafe_allow_html=True)
-                st.button(
-                    label=producto,
-                    key=f"btn_{producto}",
-                    use_container_width=True,
-                    on_click=alternar_estado,
-                    args=(producto, cant_total)
-                )
-                st.markdown('</div>', unsafe_allow_html=True)
+            # Sub-bloque 1: Botón
+            st.markdown(f'<div class="{btn_class}">', unsafe_allow_html=True)
+            st.button(
+                label=producto,
+                key=f"btn_{producto}",
+                use_container_width=True,
+                on_click=alternar_estado,
+                args=(producto, cant_total)
+            )
+            st.markdown('</div>', unsafe_allow_html=True)
 
-            with col_qty:
-                st.markdown(f'<div class="{box_class}">{cant_mostrar}</div>', unsafe_allow_html=True)
+            # Sub-bloque 2: Cuadro de Cantidad
+            st.markdown(f'<div class="{box_class}">{cant_mostrar}</div>', unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
