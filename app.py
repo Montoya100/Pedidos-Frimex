@@ -95,7 +95,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS
+# 3. ESTILOS CSS COMPACTOS & RESPONSIVOS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -121,18 +121,18 @@ st.markdown(f"""
     }}
 
     .splash-logo-img {{
-        max-width: 180px;
-        max-height: 180px;
+        max-width: 140px;
+        max-height: 140px;
         object-fit: contain;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
     }}
 
     .splash-loader {{
-        border: 4px solid #262730;
-        border-top: 4px solid #ff4b4b;
+        border: 3px solid #262730;
+        border-top: 3px solid #ff4b4b;
         border-radius: 50%;
-        width: 40px;
-        height: 40px;
+        width: 32px;
+        height: 32px;
         animation: spin 1s linear infinite;
     }}
 
@@ -150,25 +150,25 @@ st.markdown(f"""
     header {{visibility: hidden;}}
     
     .block-container {{
-        padding-top: 0.8rem !important;
+        padding-top: 0.4rem !important;
         padding-bottom: 0rem !important;
-        padding-left: 0.6rem !important;
-        padding-right: 0.6rem !important;
+        padding-left: 0.4rem !important;
+        padding-right: 0.4rem !important;
     }}
 
-    /* ENCABEZADO CENTRADO Y COMPACTO */
+    /* ENCABEZADO CENTRADO Y ULTRA COMPACTO */
     .header-logo-container {{
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 10px;
-        margin-bottom: 8px;
+        gap: 8px;
+        margin-bottom: 4px;
         width: 100%;
         text-align: center;
     }}
     
     .header-logo-img {{
-        height: 44px !important;
+        height: 32px !important;
         width: auto;
         object-fit: contain;
     }}
@@ -183,8 +183,8 @@ st.markdown(f"""
     .header-title {{
         color: #ffffff;
         font-weight: 900;
-        font-size: 17px !important;
-        line-height: 1.1;
+        font-size: 15px !important;
+        line-height: 1;
         letter-spacing: 0.5px;
         margin: 0;
         padding: 0;
@@ -192,53 +192,53 @@ st.markdown(f"""
         white-space: nowrap;
     }}
 
-    /* MÉTRICAS EN UNA SOLA LÍNEA HORIZONTAL */
+    /* MÉTRICAS EN UNA SOLA LÍNEA */
     .metrics-row {{
         display: flex;
         justify-content: space-around;
         align-items: center;
         background-color: #1a1d24;
-        border-radius: 8px;
-        padding: 8px 12px;
-        margin-bottom: 12px;
+        border-radius: 6px;
+        padding: 4px 8px;
+        margin-bottom: 8px;
         border: 1px solid #2d3139;
     }}
 
     .metric-inline {{
         display: flex;
         align-items: center;
-        gap: 8px;
-        font-size: 15px;
+        gap: 6px;
+        font-size: 13px;
         font-weight: 700;
         color: #ffffff;
     }}
 
     .metric-inline .val {{
-        font-size: 20px;
+        font-size: 16px;
         font-weight: 900;
         color: #ff4b4b;
     }}
 
     /* BOTÓN REINICIAR */
     .btn-reiniciar-wrap button {{
-        height: 38px !important;
-        font-size: 13px !important;
+        height: 32px !important;
+        font-size: 12px !important;
         font-weight: 700 !important;
         background-color: #ffffff !important;
         color: #2c3e50 !important;
-        border-radius: 8px !important;
+        border-radius: 6px !important;
         border: none !important;
-        margin-bottom: 10px !important;
+        margin-bottom: 6px !important;
     }}
 
-    /* FORZAR QUE LAS COLUMNAS NATIVAS PERMANEZCAN SIEMPRE HORIZONTALES EN CUALQUIER ANCHO */
+    /* ESTRUCTURA HORIZONTAL DEL PRODUCTO + NÚMERO (INVARIABLE) */
     div[data-testid="stHorizontalBlock"] {{
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
         align-items: center !important;
-        gap: 6px !important;
-        margin-bottom: 6px !important;
+        gap: 4px !important;
+        margin-bottom: 4px !important;
     }}
 
     div[data-testid="column"] {{
@@ -248,70 +248,72 @@ st.markdown(f"""
     }}
 
     div[data-testid="column"]:last-child {{
-        flex: 0 0 55px !important;
-        max-width: 55px !important;
+        flex: 0 0 45px !important;
+        max-width: 45px !important;
     }}
 
-    /* ESTILOS DE BOTÓN DE PRODUCTO (IZQUIERDA) */
+    /* ESTADO PENDIENTE: BLANCO + BORDE ROJO */
     .prod-btn-pending button {{
         background-color: #ffffff !important;
-        color: #2c3e50 !important;
-        border-left: 6px solid #ff4b4b !important;
+        color: #1f2937 !important;
+        border-left: 5px solid #ff4b4b !important;
         border-top: none !important;
         border-right: none !important;
         border-bottom: none !important;
-        border-radius: 8px !important;
-        font-size: 15px !important;
+        border-radius: 6px !important;
+        font-size: 13px !important;
         font-weight: 700 !important;
         text-align: left !important;
-        height: 48px !important;
+        height: 40px !important;
         margin: 0 !important;
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
+        padding-left: 8px !important;
     }}
 
-    .prod-btn-completed button {{
-        background-color: #d1fae5 !important;
-        color: #065f46 !important;
-        border-left: 6px solid #10b981 !important;
-        border-top: none !important;
-        border-right: none !important;
-        border-bottom: none !important;
-        border-radius: 8px !important;
-        font-size: 15px !important;
-        font-weight: 700 !important;
-        text-align: left !important;
-        height: 48px !important;
-        margin: 0 !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-    }}
-
-    /* RECUADROS DE CANTIDAD (DERECHA) */
     .qty-box-red {{
         background-color: #ff4b4b;
         color: #ffffff;
         font-weight: 900;
-        font-size: 18px;
-        height: 48px;
-        width: 55px;
-        border-radius: 8px;
+        font-size: 16px;
+        height: 40px;
+        width: 45px;
+        border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 0 !important;
     }}
 
+    /* ESTADO COMPLETADO: TODO VERDE */
+    .prod-btn-completed button {{
+        background-color: #d1fae5 !important;
+        color: #065f46 !important;
+        border-left: 5px solid #10b981 !important;
+        border-top: none !important;
+        border-right: none !important;
+        border-bottom: none !important;
+        border-radius: 6px !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        text-align: left !important;
+        height: 40px !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        padding-left: 8px !important;
+    }}
+
     .qty-box-green {{
         background-color: #10b981;
         color: #ffffff;
         font-weight: 900;
-        font-size: 18px;
-        height: 48px;
-        width: 55px;
-        border-radius: 8px;
+        font-size: 16px;
+        height: 40px;
+        width: 45px;
+        border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -320,16 +322,16 @@ st.markdown(f"""
 
     @media (max-width: 768px) {{
         .header-title {{
-            font-size: 15px !important;
+            font-size: 14px !important;
         }}
         .header-logo-img {{
-            height: 38px !important;
+            height: 28px !important;
         }}
         .metric-inline {{
-            font-size: 13px;
+            font-size: 12px;
         }}
         .metric-inline .val {{
-            font-size: 18px;
+            font-size: 15px;
         }}
     }}
     </style>
@@ -422,7 +424,7 @@ def renderizar_tablero():
             <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
             <div class="header-text-group">
                 <h1 class="header-title">TABLA DE PRODUCCIÓN</h1>
-                <span style="font-size:10px; color:#a0a0a0; margin-top:1px;">🔄 Sincronizado | {datetime.now().strftime('%H:%M:%S')}</span>
+                <span style="font-size:9px; color:#a0a0a0;">🔄 Sincronizado | {datetime.now().strftime('%H:%M:%S')}</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -449,7 +451,7 @@ def renderizar_tablero():
                 <span>Tickets:</span>
                 <span class="val">{len(recibos)}</span>
             </div>
-            <div style="border-left: 1px solid #3d424d; height: 18px;"></div>
+            <div style="border-left: 1px solid #3d424d; height: 14px;"></div>
             <div class="metric-inline">
                 <span>Pendientes:</span>
                 <span class="val" style="color: {'#10b981' if piezas_pendientes == 0 else '#ff4b4b'};">{piezas_pendientes}</span>
@@ -460,31 +462,36 @@ def renderizar_tablero():
     if conteo_productos:
         productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1], reverse=True)
 
-        for producto, cant_total in productos_ordenados:
+        # 3 COLUMNAS EN PANTALLAS HORIZONTALES / 1 EN VERTICAL
+        columnas_principales = st.columns([1, 1, 1])
+
+        for idx, (producto, cant_total) in enumerate(productos_ordenados):
+            col_target = columnas_principales[idx % 3]
+
             es_completado = producto in estado_global["completados"]
-            
             cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
             cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
             btn_class = "prod-btn-completed" if es_completado else "prod-btn-pending"
             box_class = "qty-box-green" if es_completado else "qty-box-red"
 
-            # Fila horizontal forzada con 2 columnas no-responsivas
-            col_prod, col_qty = st.columns([5, 1])
-            
-            with col_prod:
-                st.markdown(f'<div class="{btn_class}">', unsafe_allow_html=True)
-                st.button(
-                    label=producto,
-                    key=f"btn_{producto}",
-                    use_container_width=True,
-                    on_click=alternar_estado,
-                    args=(producto, cant_total)
-                )
-                st.markdown('</div>', unsafe_allow_html=True)
+            with col_target:
+                # Fila horizontal que jamás se rompe
+                col_prod, col_qty = st.columns([5, 1])
+                
+                with col_prod:
+                    st.markdown(f'<div class="{btn_class}">', unsafe_allow_html=True)
+                    st.button(
+                        label=producto,
+                        key=f"btn_{producto}",
+                        use_container_width=True,
+                        on_click=alternar_estado,
+                        args=(producto, cant_total)
+                    )
+                    st.markdown('</div>', unsafe_allow_html=True)
 
-            with col_qty:
-                st.markdown(f'<div class="{box_class}">{cant_mostrar}</div>', unsafe_allow_html=True)
+                with col_qty:
+                    st.markdown(f'<div class="{box_class}">{cant_mostrar}</div>', unsafe_allow_html=True)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
