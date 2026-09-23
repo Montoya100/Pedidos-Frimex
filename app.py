@@ -167,17 +167,17 @@ st.markdown(f"""
         border-radius: 6px !important; border: none !important; margin-bottom: 6px !important;
     }}
 
-    /* TARJETA DE TEXTO (PRODUCTO) */
+    /* TARJETA DE TEXTO (PRODUCTO) - ESTÁTICA Y NEUTRA */
     .card-box-img {{
         background-color: #ffffff;
         border-radius: 10px;
         height: 48px;
         display: flex;
         align-items: center;
-        justify-content: center; /* Centrado Horizontal */
+        justify-content: center;
         text-align: center;
         padding: 0 10px;
-        font-size: 15px; /* Texto más grande */
+        font-size: 15px;
         font-weight: 800;
         color: #111827;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -188,55 +188,69 @@ st.markdown(f"""
         border: 1px solid #e5e7eb;
     }}
 
-    .card-box-img.completed {{
-        background-color: #ecfdf5;
-        color: #065f46;
-        border-color: #a7f3d0;
+    /* CONTENEDOR DE LA TARJETA NUMÉRICA Y SU BOTÓN OVERLAY */
+    .num-card-wrapper {{
+        position: relative;
+        width: 100%;
+        height: 48px;
+        margin-bottom: 6px;
     }}
 
-    /* ESTILO PARA EL BOTÓN NATIVO DE STREAMLIT (CANTIDAD) */
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
-        margin-bottom: 6px !important;
+    .num-card-visual {{
+        width: 100%;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: 900;
+        color: #ffffff;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.3);
     }}
 
-    div[data-testid="stElementContainer"] button[key^="num_btn_"] {{
-        height: 48px !important;
-        min-height: 48px !important;
-        border-radius: 10px !important;
-        border: none !important;
-        font-size: 22px !important;
-        font-weight: 900 !important;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
-        transition: transform 0.1s ease-in-out;
-    }}
-
-    div[data-testid="stElementContainer"] button[key^="num_btn_"]:active {{
-        transform: scale(0.95);
-    }}
-
-    /* BOTÓN PENDIENTE: ROJO INTENSO */
-    div[data-testid="stElementContainer"] button[key^="num_btn_"] {{
+    /* ROJO SI ESTÁ PENDIENTE */
+    .num-card-visual.pending {{
         background-color: #dc2626 !important;
-        color: #ffffff !important;
     }}
 
-    /* BOTÓN COMPLETADO: VERDE ESMERALDA INTENSO */
-    div[data-testid="stElementContainer"]:has(button[key*="_COMPLETADO_"]) button {{
+    /* VERDE SI ESTÁ COMPLETADO */
+    .num-card-visual.done {{
         background-color: #047857 !important;
-        color: #ffffff !important;
     }}
 
-    /* MÓVIL / VERTICAL: CENTRADO Y ANCHO COMPLETO */
+    /* EL BOTÓN DE STREAMLIT SE HACE TRANSPARENTE Y CUBRE LA TARJETA COMPLETA */
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 48px !important;
+        margin: 0 !important;
+        z-index: 10 !important;
+    }}
+
+    div[data-testid="stElementContainer"] button[key^="num_btn_"] {{
+        width: 100% !important;
+        height: 48px !important;
+        background-color: transparent !important;
+        color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        cursor: pointer !important;
+    }}
+
+    div[data-testid="stElementContainer"] button[key^="num_btn_"]:hover {{
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }}
+
+    /* MÓVIL / VERTICAL */
     @media (max-width: 768px) {{
         div[data-testid="stHorizontalBlock"] {{
             flex-direction: column !important;
             gap: 0px !important;
         }}
         div[data-testid="column"] {{
-            width: 100% !important;
-        }}
-        .card-box-img {{
-            justify-content: center !important;
             width: 100% !important;
         }}
     }}
@@ -379,25 +393,31 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    clase_card = "completed" if es_completado else ""
-                    
-                    # Incluimos la etiqueta en la KEY del botón para forzar la regla CSS
-                    tag_estado = "_COMPLETADO_" if es_completado else "_PENDIENTE_"
-                    key_boton = f"num_btn_{tag_estado}_{producto}"
+                    # Clase del color directo de la tarjeta numeral
+                    clase_num = "done" if es_completado else "pending"
 
                     col_txt, col_btn = st.columns([0.74, 0.26], gap="small")
 
                     with col_txt:
                         st.markdown(f"""
-                            <div class="card-box-img {clase_card}">
+                            <div class="card-box-img">
                                 {producto}
                             </div>
                         """, unsafe_allow_html=True)
 
                     with col_btn:
+                        # Renderizamos la tarjeta numeral HTML directa + Botón transparente encima
+                        st.markdown(f"""
+                            <div class="num-card-wrapper">
+                                <div class="num-card-visual {clase_num}">
+                                    {cant_mostrar}
+                                </div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
                         st.button(
                             f"{cant_mostrar}", 
-                            key=key_boton, 
+                            key=f"num_btn_{producto}", 
                             on_click=alternar_estado, 
                             args=(producto, cant_total),
                             use_container_width=True
