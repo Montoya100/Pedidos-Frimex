@@ -188,7 +188,7 @@ st.markdown(f"""
         border: 1px solid #e5e7eb;
     }}
 
-    /* UNIFICACIÓN DE LA TARJETA NUMÉRICA (BOTÓN) */
+    /* ESTILOS COMUNES PARA LOS BOTONES NUMÉRICOS */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
         height: 48px !important;
         min-height: 48px !important;
@@ -197,28 +197,27 @@ st.markdown(f"""
         font-size: 22px !important;
         font-weight: 900 !important;
         box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
-        transition: background-color 0.2s ease-in-out !important;
         margin-bottom: 6px !important;
     }}
 
-    /* ESTADO PENDIENTE: ROJO INTENSO */
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
+    /* ESTADO PENDIENTE (PRIMARY): ROJO INTENSO */
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button[kind="primary"] {{
         background-color: #ef4444 !important;
         color: #ffffff !important;
     }}
 
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button:hover {{
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button[kind="primary"]:hover {{
         background-color: #dc2626 !important;
         color: #ffffff !important;
     }}
 
-    /* ESTADO COMPLETADO: VERDE ESMERALDA VIVO (SE DETECTA MEDIANTE EL CONTENIDO DEL BOTÓN) */
-    div[data-testid="stElementContainer"]:has(button span[data-completed="true"]) button {{
+    /* ESTADO COMPLETADO (SECONDARY): VERDE ESMERALDA VIVO */
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button[kind="secondary"] {{
         background-color: #10b981 !important;
         color: #ffffff !important;
     }}
 
-    div[data-testid="stElementContainer"]:has(button span[data-completed="true"]) button:hover {{
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button[kind="secondary"]:hover {{
         background-color: #059669 !important;
         color: #ffffff !important;
     }}
@@ -372,9 +371,9 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    # Se genera la etiqueta HTML dentro del botón con el atributo data-completed
-                    estado_attr = 'data-completed="true"' if es_completado else 'data-completed="false"'
-                    label_boton = f'<span {estado_attr}>{cant_mostrar}</span>'
+                    # TIPO DE BOTÓN NATIVO DE STREAMLIT
+                    # completado -> "secondary" (Verde), pendiente -> "primary" (Rojo)
+                    tipo_boton = "secondary" if es_completado else "primary"
 
                     col_txt, col_btn = st.columns([0.74, 0.26], gap="small")
 
@@ -387,8 +386,9 @@ def renderizar_tablero():
 
                     with col_btn:
                         st.button(
-                            label_boton, 
+                            f"{cant_mostrar}", 
                             key=f"num_btn_{producto}", 
+                            type=tipo_boton,
                             on_click=alternar_estado, 
                             args=(producto, cant_total),
                             use_container_width=True
