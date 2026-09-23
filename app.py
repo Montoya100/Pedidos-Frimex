@@ -2,7 +2,6 @@ import base64
 import os
 import requests
 import streamlit as st
-import streamlit.components.v1 as components
 from datetime import datetime, timezone
 
 # ==========================================
@@ -93,18 +92,10 @@ def reproducir_sonido_notificacion():
     })();
     </script>
     """
-    components.html(sound_js, height=0, width=0)
-
-# Procesar clics enviados desde la tarjeta HTML personalizada
-query_params = st.query_params
-if "toggle_prod" in query_params and "toggle_qty" in query_params:
-    prod_toggle = query_params["toggle_prod"]
-    qty_toggle = float(query_params["toggle_qty"])
-    alternar_estado(prod_toggle, qty_toggle)
-    st.query_params.clear()
+    st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS GENERALES
+# 3. ESTILOS CSS UNIFICADOS (TARJETA-BOTÓN INTEGRADA)
 # ==========================================
 st.markdown(f"""
     <style>
@@ -238,6 +229,74 @@ st.markdown(f"""
         border-radius: 6px !important;
         border: none !important;
         margin-bottom: 6px !important;
+    }}
+
+    /* FORMATO DE TARJETA NATIVA EN EL PROPIO BOTÓN STREAMLIT */
+    div[data-testid="stButton"] button.btn-product-card {{
+        width: 100% !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        max-height: 40px !important;
+        margin-bottom: 6px !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 6px !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        overflow: hidden !important;
+        box-shadow: none !important;
+    }}
+
+    /* ESTADO PENDIENTE */
+    div[data-testid="stButton"] button.card-pending-btn {{
+        background-color: #ffffff !important;
+        border-left: 5px solid #ff4b4b !important;
+    }}
+    div[data-testid="stButton"] button.card-pending-btn .btn-title {{
+        color: #1f2937 !important;
+    }}
+    div[data-testid="stButton"] button.card-pending-btn .btn-qty {{
+        background-color: #ff4b4b !important;
+        color: #ffffff !important;
+    }}
+
+    /* ESTADO COMPLETADO */
+    div[data-testid="stButton"] button.card-completed-btn {{
+        background-color: #d1fae5 !important;
+        border-left: 5px solid #10b981 !important;
+    }}
+    div[data-testid="stButton"] button.card-completed-btn .btn-title {{
+        color: #065f46 !important;
+    }}
+    div[data-testid="stButton"] button.card-completed-btn .btn-qty {{
+        background-color: #10b981 !important;
+        color: #ffffff !important;
+    }}
+
+    .btn-title {{
+        flex: 1 1 auto !important;
+        padding-left: 10px !important;
+        padding-right: 6px !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        text-align: left !important;
+        line-height: 40px !important;
+    }}
+
+    .btn-qty {{
+        flex: 0 0 44px !important;
+        width: 44px !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 16px !important;
+        font-weight: 900 !important;
     }}
 
     /* MÓVIL / VERTICAL: APILAR 3 COLUMNAS EN 1 SOLA FILA VERTICAL */
@@ -389,84 +448,33 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    # Colores idénticos a los definidos previamente
-                    bg_color = "#d1fae5" if es_completado else "#ffffff"
-                    border_color = "#10b981" if es_completado else "#ff4b4b"
-                    text_color = "#065f46" if es_completado else "#1f2937"
-                    qty_bg = "#10b981" if es_completado else "#ff4b4b"
+                    clase_estado = "card-completed-btn" if es_completado else "card-pending-btn"
 
-                    # Componente HTML único e interactivo por tarjeta
-                    html_card = f"""
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                    <style>
-                        body {{
-                            margin: 0;
-                            padding: 0;
-                            background: transparent;
-                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                            overflow: hidden;
-                        }}
-                        .card-btn {{
-                            display: flex;
-                            flex-direction: row;
-                            align-items: center;
-                            height: 40px;
-                            width: 100%;
-                            background-color: {bg_color};
-                            border-left: 5px solid {border_color};
-                            border-radius: 6px;
-                            overflow: hidden;
-                            cursor: pointer;
-                            box-sizing: border-box;
-                            user-select: none;
-                            transition: transform 0.05s ease-in-out;
-                        }}
-                        .card-btn:active {{
-                            transform: scale(0.98);
-                        }}
-                        .card-title {{
-                            flex: 1 1 auto;
-                            padding-left: 10px;
-                            padding-right: 6px;
-                            font-size: 13px;
-                            font-weight: 800;
-                            color: {text_color};
-                            white-space: nowrap;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                            line-height: 40px;
-                        }}
-                        .card-qty {{
-                            flex: 0 0 44px;
-                            width: 44px;
-                            height: 100%;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            background-color: {qty_bg};
-                            color: #ffffff;
-                            font-size: 16px;
-                            font-weight: 900;
-                        }}
-                    </style>
-                    </head>
-                    <body>
-                        <div class="card-btn" onclick="toggleCard()">
-                            <div class="card-title">{producto}</div>
-                            <div class="card-qty">{cant_mostrar}</div>
-                        </div>
+                    # El propio botón de Streamlit se convierte en la tarjeta física
+                    # permitiendo HTML dentro del texto del botón con unsafe_allow_html=True
+                    label_html = f'<div class="btn-title">{producto}</div><div class="btn-qty">{cant_mostrar}</div>'
+
+                    st.button(
+                        label=label_html,
+                        key=f"btn_{producto}",
+                        use_container_width=True,
+                        type="primary" if es_completado else "secondary",
+                        on_click=alternar_estado,
+                        args=(producto, cant_total)
+                    )
+
+                    # Inyectamos las clases CSS directamente sobre el botón renderizado
+                    st.markdown(
+                        f"""
                         <script>
-                            function toggleCard() {{
-                                var url = window.parent.location.pathname + '?toggle_prod=' + encodeURIComponent("{producto}") + '&toggle_qty=' + {cant_total};
-                                window.parent.location.href = url;
+                            var btn = window.parent.document.querySelector('button[key="btn_{producto}"]');
+                            if(btn) {{
+                                btn.classList.add('btn-product-card', '{clase_estado}');
                             }}
                         </script>
-                    </body>
-                    </html>
-                    """
-                    components.html(html_card, height=46)
+                        """,
+                        unsafe_allow_html=True
+                    )
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
