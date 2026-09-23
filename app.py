@@ -96,7 +96,7 @@ def reproducir_sonido_notificacion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS (CAMBIO GARANTIZADO)
+# 3. ESTILOS CSS PERSONALIZADOS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -167,16 +167,17 @@ st.markdown(f"""
         border-radius: 6px !important; border: none !important; margin-bottom: 6px !important;
     }}
 
-    /* TARJETA DE TEXTO (NOMBRE DEL PRODUCTO) */
+    /* TARJETA DE TEXTO (PRODUCTO) */
     .card-box-img {{
         background-color: #ffffff;
         border-radius: 10px;
-        height: 46px;
+        height: 48px;
         display: flex;
         align-items: center;
-        padding-left: 12px;
-        padding-right: 8px;
-        font-size: 13px;
+        justify-content: center; /* Centrado Horizontal */
+        text-align: center;
+        padding: 0 10px;
+        font-size: 15px; /* Texto más grande */
         font-weight: 800;
         color: #111827;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -188,46 +189,44 @@ st.markdown(f"""
     }}
 
     .card-box-img.completed {{
-        background-color: #d1fae5 !important; /* Verde pastel claro */
-        color: #064e3b !important;            /* Texto verde oscuro */
-        border-color: #a7f3d0 !important;
+        background-color: #ecfdf5;
+        color: #065f46;
+        border-color: #a7f3d0;
     }}
 
-    /* ESTILO BASE DE TARJETA DE NÚMERO */
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
-        height: 46px !important;
-        min-height: 46px !important;
+    /* ESTILO PARA EL BOTÓN NATIVO DE STREAMLIT (CANTIDAD) */
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
+        margin-bottom: 6px !important;
+    }}
+
+    div[data-testid="stElementContainer"] button[key^="num_btn_"] {{
+        height: 48px !important;
+        min-height: 48px !important;
         border-radius: 10px !important;
         border: none !important;
-        font-size: 20px !important;
+        font-size: 22px !important;
         font-weight: 900 !important;
         box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
-        transition: all 0.2s ease-in-out !important;
+        transition: transform 0.1s ease-in-out;
     }}
 
-    /* COLOR POR DEFECTO: ROJO POTENTE (PENDIENTE) */
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
+    div[data-testid="stElementContainer"] button[key^="num_btn_"]:active {{
+        transform: scale(0.95);
+    }}
+
+    /* BOTÓN PENDIENTE: ROJO INTENSO */
+    div[data-testid="stElementContainer"] button[key^="num_btn_"] {{
         background-color: #dc2626 !important;
         color: #ffffff !important;
     }}
 
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button:hover {{
-        background-color: #b91c1c !important;
+    /* BOTÓN COMPLETADO: VERDE ESMERALDA INTENSO */
+    div[data-testid="stElementContainer"]:has(button[key*="_COMPLETADO_"]) button {{
+        background-color: #047857 !important;
         color: #ffffff !important;
     }}
 
-    /* COLOR CUANDO ESTÁ COMPLETADO: VERDE ESMERALDA INTENSO (CONTRASTE) */
-    div[data-testid="stElementContainer"]:has(button[key^="btn_done_"]) button {{
-        background-color: #047857 !important; /* Verde obscuro/fuerte */
-        color: #ffffff !important;
-    }}
-
-    div[data-testid="stElementContainer"]:has(button[key^="btn_done_"]) button:hover {{
-        background-color: #065f46 !important;
-        color: #ffffff !important;
-    }}
-
-    /* MÓVIL / VERTICAL */
+    /* MÓVIL / VERTICAL: CENTRADO Y ANCHO COMPLETO */
     @media (max-width: 768px) {{
         div[data-testid="stHorizontalBlock"] {{
             flex-direction: column !important;
@@ -238,7 +237,7 @@ st.markdown(f"""
         }}
         .card-box-img {{
             justify-content: center !important;
-            padding-left: 8px !important;
+            width: 100% !important;
         }}
     }}
     </style>
@@ -382,10 +381,11 @@ def renderizar_tablero():
 
                     clase_card = "completed" if es_completado else ""
                     
-                    # Cambiamos la 'key' del botón según el estado para enganchar el selector CSS
-                    prefijo_key = "btn_done_" if es_completado else "num_btn_"
+                    # Incluimos la etiqueta en la KEY del botón para forzar la regla CSS
+                    tag_estado = "_COMPLETADO_" if es_completado else "_PENDIENTE_"
+                    key_boton = f"num_btn_{tag_estado}_{producto}"
 
-                    col_txt, col_btn = st.columns([0.76, 0.24], gap="small")
+                    col_txt, col_btn = st.columns([0.74, 0.26], gap="small")
 
                     with col_txt:
                         st.markdown(f"""
@@ -397,7 +397,7 @@ def renderizar_tablero():
                     with col_btn:
                         st.button(
                             f"{cant_mostrar}", 
-                            key=f"{prefijo_key}{producto}", 
+                            key=key_boton, 
                             on_click=alternar_estado, 
                             args=(producto, cant_total),
                             use_container_width=True
