@@ -1,7 +1,5 @@
 import base64
 import os
-import base64
-import os
 import requests
 import streamlit as st
 import streamlit.components.v1 as components
@@ -190,7 +188,7 @@ st.markdown(f"""
         border: 1px solid #e5e7eb;
     }}
 
-    /* ESTILOS DE BOTÓN BASE */
+    /* ESTILOS DE BASE PARA BOTONES NUMÉRICOS */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
         height: 48px !important;
         min-height: 48px !important;
@@ -201,26 +199,6 @@ st.markdown(f"""
         color: #ffffff !important;
         box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
         margin-bottom: 6px !important;
-    }}
-
-    /* ESTADO PENDIENTE: ROJO INTENSO */
-    .btn-rojo button {{
-        background-color: #ef4444 !important;
-        color: #ffffff !important;
-    }}
-    .btn-rojo button:hover {{
-        background-color: #dc2626 !important;
-        color: #ffffff !important;
-    }}
-
-    /* ESTADO COMPLETADO: VERDE ESMERALDA VIVO */
-    .btn-verde button {{
-        background-color: #10b981 !important;
-        color: #ffffff !important;
-    }}
-    .btn-verde button:hover {{
-        background-color: #059669 !important;
-        color: #ffffff !important;
     }}
 
     /* MÓVIL / VERTICAL */
@@ -358,6 +336,9 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
+    # Mapeo de estados para inyección de JS
+    colores_js = []
+
     if conteo_productos:
         productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1], reverse=True)
 
@@ -372,8 +353,10 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    # Clase wrapper para inyectar el color exacto al botón
-                    clase_color = "btn-verde" if es_completado else "btn-rojo"
+                    # Determinar color
+                    color_hex = "#10b981" if es_completado else "#ef4444"
+                    btn_key = f"num_btn_{producto}"
+                    colores_js.append(f'"{btn_key}": "{color_hex}"')
 
                     col_txt, col_btn = st.columns([0.74, 0.26], gap="small")
 
@@ -385,15 +368,33 @@ def renderizar_tablero():
                         """, unsafe_allow_html=True)
 
                     with col_btn:
-                        st.markdown(f'<div class="{clase_color}">', unsafe_allow_html=True)
                         st.button(
                             f"{cant_mostrar}", 
-                            key=f"num_btn_{producto}", 
+                            key=btn_key, 
                             on_click=alternar_estado, 
                             args=(producto, cant_total),
                             use_container_width=True
                         )
-                        st.markdown('</div>', unsafe_allow_html=True)
+
+        # INYECCIÓN DIRECTA DE COLORES POR JAVASCRIPT
+        js_map = "{" + ", ".join(colores_js) + "}"
+        script_colores = f"""
+        <script>
+        (function() {{
+            const mapaColores = {js_map};
+            const doc = window.parent.document;
+            
+            Object.keys(mapaColores).forEach(key => {{
+                const btn = doc.querySelector(`button[key="${{key}}"]`);
+                if (btn) {{
+                    btn.style.setProperty('background-color', mapaColores[key], 'important');
+                    btn.style.setProperty('color', '#ffffff', 'important');
+                }}
+            }});
+        }})();
+        </script>
+        """
+        components.html(script_colores, height=0, width=0)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
