@@ -2,6 +2,7 @@ import base64
 import os
 import requests
 import streamlit as st
+import streamlit.components.v1 as components
 from datetime import datetime, timezone
 
 # ==========================================
@@ -92,10 +93,10 @@ def reproducir_sonido_notificacion():
     })();
     </script>
     """
-    st.components.v1.html(sound_js, height=0, width=0)
+    components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS UNIFICADOS (TARJETA-BOTÓN INTEGRADA)
+# 3. ESTILOS CSS GENERALES Y SUPERPOSICIÓN
 # ==========================================
 st.markdown(f"""
     <style>
@@ -231,72 +232,96 @@ st.markdown(f"""
         margin-bottom: 6px !important;
     }}
 
-    /* FORMATO DE TARJETA NATIVA EN EL PROPIO BOTÓN STREAMLIT */
-    div[data-testid="stButton"] button.btn-product-card {{
+    /* TARJETA VISUAL ESTÉTICA */
+    .card-visual {{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        height: 40px;
+        width: 100%;
+        border-radius: 6px;
+        overflow: hidden;
+        box-sizing: border-box;
+    }}
+
+    .card-visual.pending {{
+        background-color: #ffffff;
+        border-left: 5px solid #ff4b4b;
+    }}
+
+    .card-visual.completed {{
+        background-color: #d1fae5;
+        border-left: 5px solid #10b981;
+    }}
+
+    .card-visual .card-title {{
+        flex: 1 1 auto;
+        padding-left: 10px;
+        padding-right: 6px;
+        font-size: 13px;
+        font-weight: 800;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 40px;
+    }}
+
+    .card-visual.pending .card-title {{ color: #1f2937; }}
+    .card-visual.completed .card-title {{ color: #065f46; }}
+
+    .card-visual .card-qty {{
+        flex: 0 0 44px;
+        width: 44px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-size: 16px;
+        font-weight: 900;
+    }}
+
+    .card-visual.pending .card-qty {{ background-color: #ff4b4b; }}
+    .card-visual.completed .card-qty {{ background-color: #10b981; }}
+
+    /* CONTENEDOR SUPERPUESTO (GRID COMPACTO) */
+    .card-overlay-container {{
+        display: grid;
+        grid-template-areas: "stack";
+        width: 100%;
+        height: 40px;
+        margin-bottom: 6px;
+        position: relative;
+    }}
+
+    .card-overlay-container > div {{
+        grid-area: stack;
+    }}
+
+    /* HACER EL BOTÓN STREAMLIT TRANSPARENTE Y TOTALMENTE SUPERPUESTO */
+    .card-overlay-container div[data-testid="stButton"] {{
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 2;
+    }}
+
+    .card-overlay-container div[data-testid="stButton"] button {{
         width: 100% !important;
         height: 40px !important;
-        min-height: 40px !important;
-        max-height: 40px !important;
-        margin-bottom: 6px !important;
-        padding: 0 !important;
+        background: transparent !important;
         border: none !important;
-        border-radius: 6px !important;
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        overflow: hidden !important;
+        color: transparent !important;
         box-shadow: none !important;
+        cursor: pointer !important;
     }}
 
-    /* ESTADO PENDIENTE */
-    div[data-testid="stButton"] button.card-pending-btn {{
-        background-color: #ffffff !important;
-        border-left: 5px solid #ff4b4b !important;
-    }}
-    div[data-testid="stButton"] button.card-pending-btn .btn-title {{
-        color: #1f2937 !important;
-    }}
-    div[data-testid="stButton"] button.card-pending-btn .btn-qty {{
-        background-color: #ff4b4b !important;
-        color: #ffffff !important;
-    }}
-
-    /* ESTADO COMPLETADO */
-    div[data-testid="stButton"] button.card-completed-btn {{
-        background-color: #d1fae5 !important;
-        border-left: 5px solid #10b981 !important;
-    }}
-    div[data-testid="stButton"] button.card-completed-btn .btn-title {{
-        color: #065f46 !important;
-    }}
-    div[data-testid="stButton"] button.card-completed-btn .btn-qty {{
-        background-color: #10b981 !important;
-        color: #ffffff !important;
-    }}
-
-    .btn-title {{
-        flex: 1 1 auto !important;
-        padding-left: 10px !important;
-        padding-right: 6px !important;
-        font-size: 13px !important;
-        font-weight: 800 !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        text-align: left !important;
-        line-height: 40px !important;
-    }}
-
-    .btn-qty {{
-        flex: 0 0 44px !important;
-        width: 44px !important;
-        height: 100% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 16px !important;
-        font-weight: 900 !important;
+    .card-overlay-container div[data-testid="stButton"] button:hover,
+    .card-overlay-container div[data-testid="stButton"] button:focus,
+    .card-overlay-container div[data-testid="stButton"] button:active {{
+        background: transparent !important;
+        border: none !important;
+        color: transparent !important;
+        box-shadow: none !important;
     }}
 
     /* MÓVIL / VERTICAL: APILAR 3 COLUMNAS EN 1 SOLA FILA VERTICAL */
@@ -448,33 +473,28 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    clase_estado = "card-completed-btn" if es_completado else "card-pending-btn"
+                    clase_estado = "completed" if es_completado else "pending"
 
-                    # El propio botón de Streamlit se convierte en la tarjeta física
-                    # permitiendo HTML dentro del texto del botón con unsafe_allow_html=True
-                    label_html = f'<div class="btn-title">{producto}</div><div class="btn-qty">{cant_mostrar}</div>'
+                    # Contenedor Grid: Superponemos la tarjeta HTML y el botón Streamlit transparente
+                    st.markdown(f'<div class="card-overlay-container">', unsafe_allow_html=True)
+                    
+                    # 1. Capa visual limpia (Sin código raro)
+                    st.markdown(f"""
+                        <div class="card-visual {clase_estado}">
+                            <div class="card-title">{producto}</div>
+                            <div class="card-qty">{cant_mostrar}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
 
+                    # 2. Capa invisible de clic (Streamlit nativo directo)
                     st.button(
-                        label=label_html,
-                        key=f"btn_{producto}",
-                        use_container_width=True,
-                        type="primary" if es_completado else "secondary",
-                        on_click=alternar_estado,
+                        " ", 
+                        key=f"btn_{producto}", 
+                        on_click=alternar_estado, 
                         args=(producto, cant_total)
                     )
 
-                    # Inyectamos las clases CSS directamente sobre el botón renderizado
-                    st.markdown(
-                        f"""
-                        <script>
-                            var btn = window.parent.document.querySelector('button[key="btn_{producto}"]');
-                            if(btn) {{
-                                btn.classList.add('btn-product-card', '{clase_estado}');
-                            }}
-                        </script>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                    st.markdown('</div>', unsafe_allow_html=True)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
