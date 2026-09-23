@@ -96,7 +96,7 @@ def reproducir_sonido_notificacion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS REDISEÑADOS (TARJETA UNIFICADA)
+# 3. ESTILOS CSS LIMPIOS (SIN TRUCOS DE ALTURA NI MÁSCARAS)
 # ==========================================
 st.markdown(f"""
     <style>
@@ -167,83 +167,54 @@ st.markdown(f"""
         border-radius: 6px !important; border: none !important; margin-bottom: 6px !important;
     }}
 
-    /* CONVERTIMOS EL BOTÓN DE STREAMLIT EN LA TARJETA COMPLETA */
-    div[data-testid="stElementContainer"]:has(button[key^="btn_prod_"]) {{
-        margin-bottom: 6px !important;
-    }}
-
-    div[data-testid="stElementContainer"] button[key^="btn_prod_"] {{
-        width: 100% !important;
-        height: 46px !important;
-        min-height: 46px !important;
-        border-radius: 10px !important;
-        padding: 0px 0px 0px 12px !important;
-        border: none !important;
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-        overflow: hidden !important;
-    }}
-
-    /* ESTADO PENDIENTE (FONDO BLANCO / ACCION ROJO) */
-    div[data-testid="stElementContainer"] button[key^="btn_prod_"].pending-btn {{
-        background-color: #ff4b4b !important;
-        color: #1f2937 !important;
-    }}
-
-    /* ESTADO COMPLETADO (FONDO VERDE / ACCION VERDE OBSCURO) */
-    div[data-testid="stElementContainer"] button[key^="btn_prod_"].completed-btn {{
-        background-color: #10b981 !important;
-        color: #065f46 !important;
-    }}
-
-    /* ESTRUCTURA INTERNA DEL BOTÓN (TEXTO + CAJA NUMÉRICA) */
-    .card-inside-wrapper {{
+    /* ESTILO DE LA TARJETA EXACTA A TU IMAGEN */
+    .card-box-img {{
+        background-color: #ffffff;
+        border-radius: 12px;
+        height: 46px;
         display: flex;
-        width: 100%;
-        height: 100%;
         align-items: center;
-        justify-content: space-between;
-    }}
-
-    .card-title-label {{
-        flex: 1;
-        text-align: left;
+        padding-left: 14px;
         font-size: 13px;
         font-weight: 800;
+        color: #1f2937;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        padding-right: 8px;
-        background-color: #ffffff;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        padding-left: 10px;
-        border-top-left-radius: 8px;
-        border-bottom-left-radius: 8px;
+        margin-bottom: 6px;
     }}
 
-    .completed-btn .card-title-label {{
+    .card-box-img.completed {{
         background-color: #d1fae5;
         color: #065f46;
     }}
 
-    .pending-btn .card-title-label {{
-        background-color: #ffffff;
-        color: #1f2937;
+    /* BOTÓN DERECHO (INDICADOR NUMÉRICO) */
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
+        margin-bottom: 6px !important;
     }}
 
-    .card-number-badge {{
-        width: 48px;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        font-weight: 900;
-        color: #ffffff;
+    div[data-testid="stElementContainer"] button[key^="num_btn_"] {{
+        height: 46px !important;
+        min-height: 46px !important;
+        border-radius: 12px !important;
+        border: none !important;
+        font-size: 18px !important;
+        font-weight: 900 !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+    }}
+
+    /* BOTÓN PENDIENTE (ROJO) */
+    div[data-testid="stElementContainer"] button[key^="num_btn_"].btn-pending {{
+        background-color: #ff4b4b !important;
+        color: #ffffff !important;
+    }}
+
+    /* BOTÓN COMPLETADO (VERDE) */
+    div[data-testid="stElementContainer"] button[key^="num_btn_"].btn-completed {{
+        background-color: #10b981 !important;
+        color: #ffffff !important;
     }}
 
     /* MÓVIL / VERTICAL */
@@ -384,7 +355,7 @@ def renderizar_tablero():
     if conteo_productos:
         productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1], reverse=True)
 
-        # RENDERIZADO EN FILAS DE 3 COLUMNAS
+        # RENDERIZADO EN GRILLA
         for i in range(0, len(productos_ordenados), 3):
             grupo = productos_ordenados[i:i+3]
             cols = st.columns(3)
@@ -395,35 +366,38 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    clase_css = "completed-btn" if es_completado else "pending-btn"
+                    clase_card = "completed" if es_completado else ""
+                    clase_btn = "btn-completed" if es_completado else "btn-pending"
 
-                    # HTML COMPACTO INSERTADO DIRECTO DENTRO DE LA ETIQUETA DEL BOTÓN NATIVO
-                    contenido_boton = f"""
-                        <div class="card-inside-wrapper">
-                            <div class="card-title-label">{producto}</div>
-                            <div class="card-number-badge">{cant_mostrar}</div>
-                        </div>
-                    """
+                    # DIVIDIMOS LA TARJETA EN 80% TEXTO Y 20% BOTÓN NUMÉRICO
+                    col_txt, col_btn = st.columns([0.78, 0.22], gap="small")
 
-                    # BOTÓN ÚNICO QUE SIRVE TANTO DE TARJETA COMO DE ZONA TÁCTIL
-                    st.button(
-                        contenido_boton, 
-                        key=f"btn_prod_{producto}", 
-                        on_click=alternar_estado, 
-                        args=(producto, cant_total),
-                        type="secondary"
-                    )
+                    with col_txt:
+                        st.markdown(f"""
+                            <div class="card-box-img {clase_card}">
+                                {producto}
+                            </div>
+                        """, unsafe_allow_html=True)
 
-                    # Inyectar clase dinámica al botón según su estado (Pendiente / Completado)
-                    st.markdown(f"""
-                        <script>
-                        var btns = window.parent.document.querySelectorAll('button[key="btn_prod_{producto}"]');
-                        btns.forEach(function(b) {{
-                            b.classList.remove('pending-btn', 'completed-btn');
-                            b.classList.add('{clase_css}');
-                        }});
-                        </script>
-                    """, unsafe_allow_html=True)
+                    with col_btn:
+                        st.button(
+                            f"{cant_mostrar}", 
+                            key=f"num_btn_{producto}", 
+                            on_click=alternar_estado, 
+                            args=(producto, cant_total),
+                            use_container_width=True
+                        )
+
+                        # Inyectar color dinamico al botón indicador
+                        st.markdown(f"""
+                            <script>
+                            var btn = window.parent.document.querySelector('button[key="num_btn_{producto}"]');
+                            if (btn) {{
+                                btn.classList.remove('btn-pending', 'btn-completed');
+                                btn.classList.add('{clase_btn}');
+                            }}
+                            </script>
+                        """, unsafe_allow_html=True)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
