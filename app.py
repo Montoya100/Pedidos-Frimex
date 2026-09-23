@@ -96,7 +96,7 @@ def reproducir_sonido_notificacion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS LIMPIOS (SIN TRUCOS DE ALTURA NI MÁSCARAS)
+# 3. ESTILOS CSS CON MAYOR CONTRASTE EN BOTONES
 # ==========================================
 st.markdown(f"""
     <style>
@@ -167,30 +167,32 @@ st.markdown(f"""
         border-radius: 6px !important; border: none !important; margin-bottom: 6px !important;
     }}
 
-    /* ESTILO DE LA TARJETA EXACTA A TU IMAGEN */
+    /* TARJETA DE TEXTO */
     .card-box-img {{
         background-color: #ffffff;
-        border-radius: 12px;
+        border-radius: 10px;
         height: 46px;
         display: flex;
         align-items: center;
-        padding-left: 14px;
+        padding-left: 12px;
         font-size: 13px;
         font-weight: 800;
-        color: #1f2937;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        color: #111827;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         margin-bottom: 6px;
+        border: 1px solid #e5e7eb;
     }}
 
     .card-box-img.completed {{
         background-color: #d1fae5;
-        color: #065f46;
+        color: #064e3b;
+        border-color: #a7f3d0;
     }}
 
-    /* BOTÓN DERECHO (INDICADOR NUMÉRICO) */
+    /* RECUADRO NUMÉRICO CON ALTO CONTRASTE */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
         margin-bottom: 6px !important;
     }}
@@ -198,22 +200,27 @@ st.markdown(f"""
     div[data-testid="stElementContainer"] button[key^="num_btn_"] {{
         height: 46px !important;
         min-height: 46px !important;
-        border-radius: 12px !important;
+        border-radius: 10px !important;
         border: none !important;
-        font-size: 18px !important;
+        font-size: 20px !important;
         font-weight: 900 !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
+        transition: transform 0.1s ease-in-out;
     }}
 
-    /* BOTÓN PENDIENTE (ROJO) */
+    div[data-testid="stElementContainer"] button[key^="num_btn_"]:active {{
+        transform: scale(0.95);
+    }}
+
+    /* COLOR ROJO INTENSO (PENDIENTE) */
     div[data-testid="stElementContainer"] button[key^="num_btn_"].btn-pending {{
-        background-color: #ff4b4b !important;
+        background-color: #dc2626 !important; /* Rojo fuerte e intenso */
         color: #ffffff !important;
     }}
 
-    /* BOTÓN COMPLETADO (VERDE) */
+    /* COLOR VERDE OSCURO / ESMERALDA (COMPLETADO) */
     div[data-testid="stElementContainer"] button[key^="num_btn_"].btn-completed {{
-        background-color: #10b981 !important;
+        background-color: #059669 !important; /* Verde esmeralda fuerte */
         color: #ffffff !important;
     }}
 
@@ -369,8 +376,7 @@ def renderizar_tablero():
                     clase_card = "completed" if es_completado else ""
                     clase_btn = "btn-completed" if es_completado else "btn-pending"
 
-                    # DIVIDIMOS LA TARJETA EN 80% TEXTO Y 20% BOTÓN NUMÉRICO
-                    col_txt, col_btn = st.columns([0.78, 0.22], gap="small")
+                    col_txt, col_btn = st.columns([0.76, 0.24], gap="small")
 
                     with col_txt:
                         st.markdown(f"""
@@ -388,7 +394,6 @@ def renderizar_tablero():
                             use_container_width=True
                         )
 
-                        # Inyectar color dinamico al botón indicador
                         st.markdown(f"""
                             <script>
                             var btn = window.parent.document.querySelector('button[key="num_btn_{producto}"]');
