@@ -96,7 +96,7 @@ def reproducir_sonido_notificacion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS GENERALES Y BOTÓN FLOTANTE ABSOLUTO
+# 3. ESTILOS CSS REVISADOS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -232,99 +232,72 @@ st.markdown(f"""
         margin-bottom: 6px !important;
     }}
 
-    /* TARJETA VISUAL ESTÉTICA */
-    .card-visual {{
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        height: 40px;
-        width: 100%;
-        border-radius: 6px;
-        overflow: hidden;
-        box-sizing: border-box;
+    /* TARJETA NATIVA TRANSFORMADA DE BOTÓN STREAMLIT */
+    div[data-testid="stButton"] button.btn-card-pending {{
+        width: 100% !important;
+        height: 40px !important;
+        background-color: #ffffff !important;
+        border-left: 5px solid #ff4b4b !important;
+        border-top: none !important;
+        border-right: none !important;
+        border-bottom: none !important;
+        border-radius: 6px !important;
+        margin-bottom: 6px !important;
+        padding: 0 0 0 10px !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
     }}
 
-    .card-visual.pending {{
-        background-color: #ffffff;
-        border-left: 5px solid #ff4b4b;
+    div[data-testid="stButton"] button.btn-card-completed {{
+        width: 100% !important;
+        height: 40px !important;
+        background-color: #d1fae5 !important;
+        border-left: 5px solid #10b981 !important;
+        border-top: none !important;
+        border-right: none !important;
+        border-bottom: none !important;
+        border-radius: 6px !important;
+        margin-bottom: 6px !important;
+        padding: 0 0 0 10px !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
     }}
 
-    .card-visual.completed {{
-        background-color: #d1fae5;
-        border-left: 5px solid #10b981;
+    /* FORMATO DE TEXTO INTERNO DEL BOTÓN DE STREAMLIT */
+    div[data-testid="stButton"] button.btn-card-pending div[data-testid="stMarkdownContainer"] p {{
+        color: #1f2937 !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
     }}
 
-    .card-visual .card-title {{
-        flex: 1 1 auto;
-        padding-left: 10px;
-        padding-right: 6px;
-        font-size: 13px;
-        font-weight: 800;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        line-height: 40px;
+    div[data-testid="stButton"] button.btn-card-completed div[data-testid="stMarkdownContainer"] p {{
+        color: #065f46 !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
     }}
 
-    .card-visual.pending .card-title {{ color: #1f2937; }}
-    .card-visual.completed .card-title {{ color: #065f46; }}
-
-    .card-visual .card-qty {{
-        flex: 0 0 44px;
+    /* ETIOUETA DE CANTIDAD DENTRO DEL BOTÓN */
+    .badge-qty {{
+        background-color: #ff4b4b;
+        color: #ffffff;
+        font-weight: 900;
+        font-size: 16px;
         width: 44px;
-        height: 100%;
+        height: 40px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #ffffff;
-        font-size: 16px;
-        font-weight: 900;
+        border-top-right-radius: 6px;
+        border-bottom-right-radius: 6px;
+        margin-right: -1px;
     }}
 
-    .card-visual.pending .card-qty {{ background-color: #ff4b4b; }}
-    .card-visual.completed .card-qty {{ background-color: #10b981; }}
-
-    /* CONTENEDOR CONTENEDOR POSICIÓN RELATIVA */
-    .card-floating-wrap {{
-        position: relative !important;
-        width: 100% !important;
-        height: 40px !important;
-        margin-bottom: 6px !important;
-    }}
-
-    /* BOTÓN TRANSPARENTE TOTALMENTE FLOTANTE (POSICIÓN ABSOLUTA ENCIMA) */
-    .card-floating-wrap div[data-testid="stButton"] {{
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        z-index: 10 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }}
-
-    .card-floating-wrap div[data-testid="stButton"] button {{
-        width: 100% !important;
-        height: 40px !important;
-        min-height: 40px !important;
-        max-height: 40px !important;
-        background: transparent !important;
-        border: none !important;
-        color: transparent !important;
-        box-shadow: none !important;
-        cursor: pointer !important;
-        padding: 0 !important;
-        margin: 0 !important;
-    }}
-
-    .card-floating-wrap div[data-testid="stButton"] button:hover,
-    .card-floating-wrap div[data-testid="stButton"] button:focus,
-    .card-floating-wrap div[data-testid="stButton"] button:active {{
-        background: transparent !important;
-        border: none !important;
-        color: transparent !important;
-        box-shadow: none !important;
+    .badge-qty.completed {{
+        background-color: #10b981;
     }}
 
     /* MÓVIL / VERTICAL: APILAR 3 COLUMNAS EN 1 SOLA FILA VERTICAL */
@@ -476,28 +449,35 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    clase_estado = "completed" if es_completado else "pending"
+                    clase_clase = "btn-card-completed" if es_completado else "btn-card-pending"
+                    clase_badge = "completed" if es_completado else ""
 
-                    # Contenedor Relativo: Permite que el botón flote encima exactamente sobre la tarjeta HTML
-                    st.markdown(f'<div class="card-floating-wrap">', unsafe_allow_html=True)
-                    
-                    # 1. Capa visual limpia (Debajo)
-                    st.markdown(f"""
-                        <div class="card-visual {clase_estado}">
-                            <div class="card-title">{producto}</div>
-                            <div class="card-qty">{cant_mostrar}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-
-                    # 2. Capa invisible nativa de clic (Encima en posición absoluta)
+                    # Renderizamos un único botón limpio con Streamlit sin caracteres raros
                     st.button(
-                        " ", 
-                        key=f"btn_{producto}", 
-                        on_click=alternar_estado, 
+                        f"{producto}",
+                        key=f"btn_{producto}",
+                        use_container_width=True,
+                        on_click=alternar_estado,
                         args=(producto, cant_total)
                     )
 
-                    st.markdown('</div>', unsafe_allow_html=True)
+                    # Inyectamos dinámicamente la etiqueta con el número y las clases CSS sobre el propio botón
+                    st.components.v1.html(f"""
+                        <script>
+                            var parentDoc = window.parent.document;
+                            var btn = parentDoc.querySelector('button[key="btn_{producto}"]');
+                            if(btn) {{
+                                btn.className = '{clase_clase}';
+                                var badge = btn.querySelector('.badge-qty');
+                                if(!badge) {{
+                                    badge = parentDoc.createElement('div');
+                                    btn.appendChild(badge);
+                                }}
+                                badge.className = 'badge-qty {clase_badge}';
+                                badge.innerHTML = '{cant_mostrar}';
+                            }}
+                        </script>
+                    """, height=0)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
