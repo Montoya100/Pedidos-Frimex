@@ -95,7 +95,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS (RESPONSIVO REAL: 1 COL EN VERTICAL, 3 EN HORIZONTAL)
+# 3. ESTILOS CSS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -231,42 +231,28 @@ st.markdown(f"""
         margin-bottom: 6px !important;
     }}
 
-    /* REGLAS DE GRID RESPONSIVO PARA LA LISTA DE PRODUCTOS */
-    /* Por defecto (pantallas anchas / horizontal): 3 columnas */
-    div[data-testid="stHorizontalBlock"]:has(.prod-btn-pending, .prod-btn-completed) {{
-        display: grid !important;
-        grid-template-columns: repeat(3, 1fr) !important;
-        gap: 6px !important;
-        width: 100% !important;
-    }}
-
-    /* Si la pantalla es vertical / móvil (menos de 768px): 1 columna */
-    @media (max-width: 768px) {{
-        div[data-testid="stHorizontalBlock"]:has(.prod-btn-pending, .prod-btn-completed) {{
-            grid-template-columns: 1fr !important;
-        }}
-    }}
-
-    /* CONTENEDOR DE CADA ITEM DE PRODUCTO (BOTÓN + CANTIDAD EN LA MISMA LÍNEA) */
-    .product-item-container {{
+    /* REGLAS PARA LA FILA INTERNA (BOTÓN + CAJA PEGADOS SIN ESPACIO) */
+    .item-row {{
         display: flex !important;
         flex-direction: row !important;
         align-items: center !important;
-        gap: 4px !important;
+        justify-content: space-between !important;
         width: 100% !important;
+        margin-bottom: 4px !important;
+        gap: 0px !important;
     }}
 
-    .product-item-container > div:first-child {{
+    .item-col-btn {{
         flex: 1 1 auto !important;
         min-width: 0 !important;
     }}
 
-    .product-item-container > div:last-child {{
+    .item-col-qty {{
         flex: 0 0 42px !important;
         width: 42px !important;
     }}
 
-    /* ESTADO PENDIENTE (BLANCO CON BORDE ROJO + RECUADRO ROJO) */
+    /* ESTADO PENDIENTE (BOTÓN BLANCO Y CAJA ROJA) */
     .prod-btn-pending button {{
         background-color: #ffffff !important;
         color: #1f2937 !important;
@@ -274,7 +260,10 @@ st.markdown(f"""
         border-top: none !important;
         border-right: none !important;
         border-bottom: none !important;
-        border-radius: 6px !important;
+        border-top-left-radius: 6px !important;
+        border-bottom-left-radius: 6px !important;
+        border-top-right-radius: 0px !important;
+        border-bottom-right-radius: 0px !important;
         font-size: 13px !important;
         font-weight: 700 !important;
         text-align: left !important;
@@ -293,7 +282,8 @@ st.markdown(f"""
         font-size: 15px;
         height: 38px;
         width: 42px;
-        border-radius: 6px;
+        border-top-right-radius: 6px;
+        border-bottom-right-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -308,7 +298,10 @@ st.markdown(f"""
         border-top: none !important;
         border-right: none !important;
         border-bottom: none !important;
-        border-radius: 6px !important;
+        border-top-left-radius: 6px !important;
+        border-bottom-left-radius: 6px !important;
+        border-top-right-radius: 0px !important;
+        border-bottom-right-radius: 0px !important;
         font-size: 13px !important;
         font-weight: 700 !important;
         text-align: left !important;
@@ -327,11 +320,23 @@ st.markdown(f"""
         font-size: 15px;
         height: 38px;
         width: 42px;
-        border-radius: 6px;
+        border-top-right-radius: 6px;
+        border-bottom-right-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 0 !important;
+    }}
+
+    /* ADAPTACIÓN AUTOMÁTICA EN VERTICAL (MÓVIL / PANTALLA ESTRECHA) */
+    @media (max-width: 768px) {{
+        div[data-testid="stHorizontalBlock"] {{
+            flex-direction: column !important;
+            gap: 0px !important;
+        }}
+        div[data-testid="column"] {{
+            width: 100% !important;
+        }}
     }}
     </style>
 
@@ -461,31 +466,40 @@ def renderizar_tablero():
     if conteo_productos:
         productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1], reverse=True)
 
-        # Generador dinámico en la misma estructura horizontal con Grid CSS
-        for producto, cant_total in productos_ordenados:
-            es_completado = producto in estado_global["completados"]
-            cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
-            cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
+        # AGRUPACIÓN DE 3 EN 3 PRODUCTOS POR FILA
+        for i in range(0, len(productos_ordenados), 3):
+            grupo = productos_ordenados[i:i+3]
+            cols = st.columns(3)
 
-            btn_class = "prod-btn-completed" if es_completado else "prod-btn-pending"
-            box_class = "qty-box-green" if es_completado else "qty-box-red"
+            for idx, (producto, cant_total) in enumerate(grupo):
+                with cols[idx]:
+                    es_completado = producto in estado_global["completados"]
+                    cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
+                    cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-            # Las 2 piezas juntas mantenidas en 1 fila inseparable
-            col_prod, col_qty = st.columns([5, 1])
-            
-            with col_prod:
-                st.markdown(f'<div class="{btn_class}">', unsafe_allow_html=True)
-                st.button(
-                    label=producto,
-                    key=f"btn_{producto}",
-                    use_container_width=True,
-                    on_click=alternar_estado,
-                    args=(producto, cant_total)
-                )
-                st.markdown('</div>', unsafe_allow_html=True)
+                    btn_class = "prod-btn-completed" if es_completado else "prod-btn-pending"
+                    box_class = "qty-box-green" if es_completado else "qty-box-red"
 
-            with col_qty:
-                st.markdown(f'<div class="{box_class}">{cant_mostrar}</div>', unsafe_allow_html=True)
+                    # Generar la tira corrida pegada
+                    st.markdown('<div class="item-row">', unsafe_allow_html=True)
+                    
+                    sub_btn, sub_qty = st.columns([1, 0.22])
+                    
+                    with sub_btn:
+                        st.markdown(f'<div class="{btn_class}">', unsafe_allow_html=True)
+                        st.button(
+                            label=producto,
+                            key=f"btn_{producto}",
+                            use_container_width=True,
+                            on_click=alternar_estado,
+                            args=(producto, cant_total)
+                        )
+                        st.markdown('</div>', unsafe_allow_html=True)
+
+                    with sub_qty:
+                        st.markdown(f'<div class="{box_class}">{cant_mostrar}</div>', unsafe_allow_html=True)
+
+                    st.markdown('</div>', unsafe_allow_html=True)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
