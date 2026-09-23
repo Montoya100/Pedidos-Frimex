@@ -2,6 +2,7 @@ import base64
 import os
 import requests
 import streamlit as st
+import streamlit.components.v1 as components
 from datetime import datetime, timezone
 
 # ==========================================
@@ -92,10 +93,18 @@ def reproducir_sonido_notificacion():
     })();
     </script>
     """
-    st.components.v1.html(sound_js, height=0, width=0)
+    components.html(sound_js, height=0, width=0)
+
+# Procesar clics enviados desde la tarjeta HTML personalizada
+query_params = st.query_params
+if "toggle_prod" in query_params and "toggle_qty" in query_params:
+    prod_toggle = query_params["toggle_prod"]
+    qty_toggle = float(query_params["toggle_qty"])
+    alternar_estado(prod_toggle, qty_toggle)
+    st.query_params.clear()
 
 # ==========================================
-# 3. ESTILOS CSS REVISADOS (SUPERPOSICIÓN PERFECTA)
+# 3. ESTILOS CSS GENERALES
 # ==========================================
 st.markdown(f"""
     <style>
@@ -229,124 +238,6 @@ st.markdown(f"""
         border-radius: 6px !important;
         border: none !important;
         margin-bottom: 6px !important;
-    }}
-
-    /* CONTENEDOR RELATIVO PARA ENCAJAR PERFECTO EL BOTÓN TRANSPARENTE */
-    .item-wrapper {{
-        position: relative !important;
-        width: 100% !important;
-        height: 40px !important;
-        margin-bottom: 6px !important;
-    }}
-
-    .card-body {{
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        height: 40px !important;
-        border-radius: 6px !important;
-        overflow: hidden !important;
-        width: 100% !important;
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        z-index: 1 !important;
-    }}
-
-    /* ESTADO PENDIENTE */
-    .card-pending {{
-        background-color: #ffffff !important;
-        border-left: 5px solid #ff4b4b !important;
-    }}
-    .card-pending .card-title {{
-        color: #1f2937 !important;
-    }}
-    .card-pending .card-qty {{
-        background-color: #ff4b4b !important;
-        color: #ffffff !important;
-    }}
-
-    /* ESTADO COMPLETADO */
-    .card-completed {{
-        background-color: #d1fae5 !important;
-        border-left: 5px solid #10b981 !important;
-    }}
-    .card-completed .card-title {{
-        color: #065f46 !important;
-    }}
-    .card-completed .card-qty {{
-        background-color: #10b981 !important;
-        color: #ffffff !important;
-    }}
-
-    /* SEGMENTO NOMBRE PRODUCTO */
-    .card-title {{
-        flex: 1 1 auto !important;
-        padding-left: 10px !important;
-        padding-right: 6px !important;
-        font-size: 13px !important;
-        font-weight: 800 !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        line-height: 40px !important;
-    }}
-
-    /* SEGMENTO CANTIDAD */
-    .card-qty {{
-        flex: 0 0 44px !important;
-        width: 44px !important;
-        height: 100% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 16px !important;
-        font-weight: 900 !important;
-    }}
-
-    /* CAPA DE BOTÓN ABSOLUTO EN)CIMA DE LA TARJETA */
-    .btn-invisible-overlay {{
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 40px !important;
-        z-index: 10 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }}
-
-    .btn-invisible-overlay div[data-testid="stButton"] {{
-        width: 100% !important;
-        height: 40px !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }}
-
-    .btn-invisible-overlay button {{
-        background: transparent !important;
-        background-color: transparent !important;
-        border: none !important;
-        color: transparent !important;
-        box-shadow: none !important;
-        height: 40px !important;
-        min-height: 40px !important;
-        max-height: 40px !important;
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        cursor: pointer !important;
-    }}
-
-    .btn-invisible-overlay button:hover,
-    .btn-invisible-overlay button:focus,
-    .btn-invisible-overlay button:active {{
-        background: transparent !important;
-        background-color: transparent !important;
-        border: none !important;
-        color: transparent !important;
-        box-shadow: none !important;
-        outline: none !important;
     }}
 
     /* MÓVIL / VERTICAL: APILAR 3 COLUMNAS EN 1 SOLA FILA VERTICAL */
@@ -498,28 +389,84 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    card_class = "card-completed" if es_completado else "card-pending"
+                    # Colores idénticos a los definidos previamente
+                    bg_color = "#d1fae5" if es_completado else "#ffffff"
+                    border_color = "#10b981" if es_completado else "#ff4b4b"
+                    text_color = "#065f46" if es_completado else "#1f2937"
+                    qty_bg = "#10b981" if es_completado else "#ff4b4b"
 
-                    # Estructura contenedor unico con posicionamiento absoluto
-                    st.markdown(f"""
-                        <div class="item-wrapper">
-                            <div class="card-body {card_class}">
-                                <div class="card-title">{producto}</div>
-                                <div class="card-qty">{cant_mostrar}</div>
-                            </div>
+                    # Componente HTML único e interactivo por tarjeta
+                    html_card = f"""
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                    <style>
+                        body {{
+                            margin: 0;
+                            padding: 0;
+                            background: transparent;
+                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                            overflow: hidden;
+                        }}
+                        .card-btn {{
+                            display: flex;
+                            flex-direction: row;
+                            align-items: center;
+                            height: 40px;
+                            width: 100%;
+                            background-color: {bg_color};
+                            border-left: 5px solid {border_color};
+                            border-radius: 6px;
+                            overflow: hidden;
+                            cursor: pointer;
+                            box-sizing: border-box;
+                            user-select: none;
+                            transition: transform 0.05s ease-in-out;
+                        }}
+                        .card-btn:active {{
+                            transform: scale(0.98);
+                        }}
+                        .card-title {{
+                            flex: 1 1 auto;
+                            padding-left: 10px;
+                            padding-right: 6px;
+                            font-size: 13px;
+                            font-weight: 800;
+                            color: {text_color};
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            line-height: 40px;
+                        }}
+                        .card-qty {{
+                            flex: 0 0 44px;
+                            width: 44px;
+                            height: 100%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            background-color: {qty_bg};
+                            color: #ffffff;
+                            font-size: 16px;
+                            font-weight: 900;
+                        }}
+                    </style>
+                    </head>
+                    <body>
+                        <div class="card-btn" onclick="toggleCard()">
+                            <div class="card-title">{producto}</div>
+                            <div class="card-qty">{cant_mostrar}</div>
                         </div>
-                    """, unsafe_allow_html=True)
-
-                    # Botón 100% encimado
-                    st.markdown('<div class="btn-invisible-overlay">', unsafe_allow_html=True)
-                    st.button(
-                        label=" ",
-                        key=f"btn_{producto}",
-                        use_container_width=True,
-                        on_click=alternar_estado,
-                        args=(producto, cant_total)
-                    )
-                    st.markdown('</div>', unsafe_allow_html=True)
+                        <script>
+                            function toggleCard() {{
+                                var url = window.parent.location.pathname + '?toggle_prod=' + encodeURIComponent("{producto}") + '&toggle_qty=' + {cant_total};
+                                window.parent.location.href = url;
+                            }}
+                        </script>
+                    </body>
+                    </html>
+                    """
+                    components.html(html_card, height=46)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
