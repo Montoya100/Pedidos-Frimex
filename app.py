@@ -95,7 +95,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS (MICRO-GRID INMODIFICABLE)
+# 3. ESTILOS CSS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -231,17 +231,28 @@ st.markdown(f"""
         margin-bottom: 10px !important;
     }}
 
-    /* CONTENEDOR GRID DE UNA SOLA FILA */
-    .grid-producto-container {{
-        display: grid !important;
-        grid-template-columns: 1fr 55px !important;
-        gap: 6px !important;
+    /* FORZAR QUE LAS COLUMNAS NATIVAS PERMANEZCAN SIEMPRE HORIZONTALES EN CUALQUIER ANCHO */
+    div[data-testid="stHorizontalBlock"] {{
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
         align-items: center !important;
-        margin-bottom: 8px !important;
-        width: 100% !important;
+        gap: 6px !important;
+        margin-bottom: 6px !important;
     }}
 
-    /* ESTILO PARA EL BOTÓN DENTRO DEL GRID */
+    div[data-testid="column"] {{
+        width: auto !important;
+        min-width: 0 !important;
+        flex: 1 1 auto !important;
+    }}
+
+    div[data-testid="column"]:last-child {{
+        flex: 0 0 55px !important;
+        max-width: 55px !important;
+    }}
+
+    /* ESTILOS DE BOTÓN DE PRODUCTO (IZQUIERDA) */
     .prod-btn-pending button {{
         background-color: #ffffff !important;
         color: #2c3e50 !important;
@@ -278,13 +289,14 @@ st.markdown(f"""
         text-overflow: ellipsis !important;
     }}
 
-    /* CAJAS DE CANTIDAD DENTRO DEL GRID */
+    /* RECUADROS DE CANTIDAD (DERECHA) */
     .qty-box-red {{
         background-color: #ff4b4b;
         color: #ffffff;
         font-weight: 900;
         font-size: 18px;
         height: 48px;
+        width: 55px;
         border-radius: 8px;
         display: flex;
         align-items: center;
@@ -298,6 +310,7 @@ st.markdown(f"""
         font-weight: 900;
         font-size: 18px;
         height: 48px;
+        width: 55px;
         border-radius: 8px;
         display: flex;
         align-items: center;
@@ -456,24 +469,22 @@ def renderizar_tablero():
             btn_class = "prod-btn-completed" if es_completado else "prod-btn-pending"
             box_class = "qty-box-green" if es_completado else "qty-box-red"
 
-            # Renderizado por Micro-Grid HTML/CSS directo para bloquear colapso vertical
-            st.markdown(f'<div class="grid-producto-container">', unsafe_allow_html=True)
+            # Fila horizontal forzada con 2 columnas no-responsivas
+            col_prod, col_qty = st.columns([5, 1])
             
-            # Sub-bloque 1: Botón
-            st.markdown(f'<div class="{btn_class}">', unsafe_allow_html=True)
-            st.button(
-                label=producto,
-                key=f"btn_{producto}",
-                use_container_width=True,
-                on_click=alternar_estado,
-                args=(producto, cant_total)
-            )
-            st.markdown('</div>', unsafe_allow_html=True)
+            with col_prod:
+                st.markdown(f'<div class="{btn_class}">', unsafe_allow_html=True)
+                st.button(
+                    label=producto,
+                    key=f"btn_{producto}",
+                    use_container_width=True,
+                    on_click=alternar_estado,
+                    args=(producto, cant_total)
+                )
+                st.markdown('</div>', unsafe_allow_html=True)
 
-            # Sub-bloque 2: Cuadro de Cantidad
-            st.markdown(f'<div class="{box_class}">{cant_mostrar}</div>', unsafe_allow_html=True)
-            
-            st.markdown('</div>', unsafe_allow_html=True)
+            with col_qty:
+                st.markdown(f'<div class="{box_class}">{cant_mostrar}</div>', unsafe_allow_html=True)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
