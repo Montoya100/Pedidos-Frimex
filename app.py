@@ -194,11 +194,35 @@ st.markdown(f"""
         min-height: 48px !important;
         border-radius: 10px !important;
         border: none !important;
-        font-size: 22px !important;
+        font-size: 20px !important;
         font-weight: 900 !important;
         color: #ffffff !important;
         box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
         margin-bottom: 6px !important;
+    }}
+
+    /* INYECCIÓN DE COLOR ROJO (PENDIENTE) */
+    button[aria-label*="🔴"], button[data-testid="stBaseButton-secondary"]:has(span:contains("🔴")) {{
+        background-color: #ef4444 !important;
+        color: #ffffff !important;
+    }}
+
+    div[data-testid="stElementContainer"] button:has(div:contains("🔴")),
+    div[data-testid="stElementContainer"] button[aria-label*="🔴"] {{
+        background-color: #ef4444 !important;
+        color: #ffffff !important;
+    }}
+
+    /* INYECCIÓN DE COLOR VERDE (COMPLETADO) */
+    button[aria-label*="🟢"], button[data-testid="stBaseButton-secondary"]:has(span:contains("🟢")) {{
+        background-color: #10b981 !important;
+        color: #ffffff !important;
+    }}
+
+    div[data-testid="stElementContainer"] button:has(div:contains("🟢")),
+    div[data-testid="stElementContainer"] button[aria-label*="🟢"] {{
+        background-color: #10b981 !important;
+        color: #ffffff !important;
     }}
 
     /* MÓVIL / VERTICAL */
@@ -336,9 +360,6 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # Mapeo de estados para inyección de JS
-    colores_js = []
-
     if conteo_productos:
         productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1], reverse=True)
 
@@ -353,10 +374,11 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    # Determinar color
-                    color_hex = "#10b981" if es_completado else "#ef4444"
-                    btn_key = f"num_btn_{producto}"
-                    colores_js.append(f'"{btn_key}": "{color_hex}"')
+                    # ETIQUETA CON EMOJI IDENTIFICADOR (NATIVO EN STREAMLIT)
+                    # Verde = Completado / Listo
+                    # Rojo = Pendiente
+                    icono = "🟢" if es_completado else "🔴"
+                    texto_boton = f"{icono} {cant_mostrar}"
 
                     col_txt, col_btn = st.columns([0.74, 0.26], gap="small")
 
@@ -369,32 +391,12 @@ def renderizar_tablero():
 
                     with col_btn:
                         st.button(
-                            f"{cant_mostrar}", 
-                            key=btn_key, 
+                            texto_boton, 
+                            key=f"num_btn_{producto}", 
                             on_click=alternar_estado, 
                             args=(producto, cant_total),
                             use_container_width=True
                         )
-
-        # INYECCIÓN DIRECTA DE COLORES POR JAVASCRIPT
-        js_map = "{" + ", ".join(colores_js) + "}"
-        script_colores = f"""
-        <script>
-        (function() {{
-            const mapaColores = {js_map};
-            const doc = window.parent.document;
-            
-            Object.keys(mapaColores).forEach(key => {{
-                const btn = doc.querySelector(`button[key="${{key}}"]`);
-                if (btn) {{
-                    btn.style.setProperty('background-color', mapaColores[key], 'important');
-                    btn.style.setProperty('color', '#ffffff', 'important');
-                }}
-            }});
-        }})();
-        </script>
-        """
-        components.html(script_colores, height=0, width=0)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
