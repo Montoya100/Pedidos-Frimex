@@ -95,7 +95,7 @@ def reproducir_sonido_notificacion():
     st.components.v1.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS REVISADOS (BOTÓN INVISIBLE)
+# 3. ESTILOS CSS REVISADOS (SUPERPOSICIÓN PERFECTA)
 # ==========================================
 st.markdown(f"""
     <style>
@@ -231,11 +231,12 @@ st.markdown(f"""
         margin-bottom: 6px !important;
     }}
 
-    /* ESTILOS DE TARJETA CORRIDA Y NATIVA */
-    .card-wrap {{
+    /* CONTENEDOR RELATIVO PARA ENCAJAR PERFECTO EL BOTÓN TRANSPARENTE */
+    .item-wrapper {{
         position: relative !important;
-        margin-bottom: 6px !important;
         width: 100% !important;
+        height: 40px !important;
+        margin-bottom: 6px !important;
     }}
 
     .card-body {{
@@ -246,6 +247,10 @@ st.markdown(f"""
         border-radius: 6px !important;
         overflow: hidden !important;
         width: 100% !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        z-index: 1 !important;
     }}
 
     /* ESTADO PENDIENTE */
@@ -299,11 +304,23 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* SUPERPOSICIÓN DE BOTÓN STREAMLIT (TOTALMENTE INVISIBLE) */
+    /* CAPA DE BOTÓN ABSOLUTO EN)CIMA DE LA TARJETA */
     .btn-invisible-overlay {{
-        margin-top: -46px !important;
-        position: relative !important;
-        z-index: 20 !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 40px !important;
+        z-index: 10 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }}
+
+    .btn-invisible-overlay div[data-testid="stButton"] {{
+        width: 100% !important;
+        height: 40px !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }}
 
     .btn-invisible-overlay button {{
@@ -483,9 +500,9 @@ def renderizar_tablero():
 
                     card_class = "card-completed" if es_completado else "card-pending"
 
-                    # 1. Tarjeta visual perfecta
+                    # Estructura contenedor unico con posicionamiento absoluto
                     st.markdown(f"""
-                        <div class="card-wrap">
+                        <div class="item-wrapper">
                             <div class="card-body {card_class}">
                                 <div class="card-title">{producto}</div>
                                 <div class="card-qty">{cant_mostrar}</div>
@@ -493,7 +510,7 @@ def renderizar_tablero():
                         </div>
                     """, unsafe_allow_html=True)
 
-                    # 2. Botón clickeable totalmente transparente encimado
+                    # Botón 100% encimado
                     st.markdown('<div class="btn-invisible-overlay">', unsafe_allow_html=True)
                     st.button(
                         label=" ",
