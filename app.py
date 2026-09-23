@@ -87,8 +87,7 @@ def reproducir_sonido_notificacion():
             gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
             osc2.connect(gain2);
             gain2.connect(ctx.destination);
-            osc2.start(ctx.currentTime + 0.12);
-            osc2.stop(ctx.currentTime + 0.4);
+            osc2.start(ctx.currentTime + 0.4);
         } catch(e) {}
     })();
     </script>
@@ -167,7 +166,7 @@ st.markdown(f"""
         border-radius: 6px !important; border: none !important; margin-bottom: 6px !important;
     }}
 
-    /* TARJETA DE TEXTO (PRODUCTO) - ESTÁTICA Y NEUTRA */
+    /* TARJETA DE TEXTO (PRODUCTO) */
     .card-box-img {{
         background-color: #ffffff;
         border-radius: 10px;
@@ -188,7 +187,7 @@ st.markdown(f"""
         border: 1px solid #e5e7eb;
     }}
 
-    /* CONTENEDOR DE LA TARJETA NUMÉRICA Y SU BOTÓN OVERLAY */
+    /* CONTENEDOR DE LA TARJETA NUMÉRICA */
     .num-card-wrapper {{
         position: relative;
         width: 100%;
@@ -209,17 +208,17 @@ st.markdown(f"""
         box-shadow: 0 3px 6px rgba(0,0,0,0.3);
     }}
 
-    /* ROJO SI ESTÁ PENDIENTE */
+    /* ROJO BRILLANTE CUANDO ESTÁ PENDIENTE */
     .num-card-visual.pending {{
-        background-color: #dc2626 !important;
+        background-color: #ef4444 !important; /* Red 500 */
     }}
 
-    /* VERDE SI ESTÁ COMPLETADO */
+    /* VERDE VIVO / ESMERALDA BRILLANTE CUANDO ESTÁ COMPLETADO */
     .num-card-visual.done {{
-        background-color: #047857 !important;
+        background-color: #10b981 !important; /* Emerald 500 - Más alegre y visible */
     }}
 
-    /* EL BOTÓN DE STREAMLIT SE HACE TRANSPARENTE Y CUBRE LA TARJETA COMPLETA */
+    /* EL BOTÓN DE STREAMLIT ES CUBIERTA TRANSPARENTE E INVISIBLE PARA CAPTURAR EL CLIC */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
         position: absolute !important;
         top: 0 !important;
@@ -234,14 +233,15 @@ st.markdown(f"""
         width: 100% !important;
         height: 48px !important;
         background-color: transparent !important;
-        color: transparent !important;
+        color: transparent !important; /* Oculta el texto duplicado del botón nativo */
         border: none !important;
         box-shadow: none !important;
         cursor: pointer !important;
     }}
 
     div[data-testid="stElementContainer"] button[key^="num_btn_"]:hover {{
-        background-color: rgba(255, 255, 255, 0.1) !important;
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        border-radius: 10px !important;
     }}
 
     /* MÓVIL / VERTICAL */
@@ -393,7 +393,6 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    # Clase del color directo de la tarjeta numeral
                     clase_num = "done" if es_completado else "pending"
 
                     col_txt, col_btn = st.columns([0.74, 0.26], gap="small")
@@ -406,7 +405,7 @@ def renderizar_tablero():
                         """, unsafe_allow_html=True)
 
                     with col_btn:
-                        # Renderizamos la tarjeta numeral HTML directa + Botón transparente encima
+                        # La tarjeta numeral HTML dibuja el número único visualmente
                         st.markdown(f"""
                             <div class="num-card-wrapper">
                                 <div class="num-card-visual {clase_num}">
@@ -415,8 +414,9 @@ def renderizar_tablero():
                             </div>
                         """, unsafe_allow_html=True)
                         
+                        # El botón invisible de Streamlit recibe el clic pero no pinta texto
                         st.button(
-                            f"{cant_mostrar}", 
+                            "", 
                             key=f"num_btn_{producto}", 
                             on_click=alternar_estado, 
                             args=(producto, cant_total),
