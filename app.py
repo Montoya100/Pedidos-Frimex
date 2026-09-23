@@ -96,22 +96,16 @@ def reproducir_sonido_notificacion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS REVISADOS
+# 3. ESTILOS CSS CON TÉCNICA Y ESTRUCTURA FIJA
 # ==========================================
 st.markdown(f"""
     <style>
     /* Splash Screen */
     #splash-screen {{
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
+        top: 0; left: 0; width: 100vw; height: 100vh;
         background-color: #0e1117;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
         z-index: 999999;
         animation: fadeOut 0.8s ease-in-out 1.8s forwards;
     }}
@@ -122,19 +116,12 @@ st.markdown(f"""
     }}
 
     .splash-logo-img {{
-        max-width: 130px;
-        max-height: 130px;
-        object-fit: contain;
-        margin-bottom: 12px;
+        max-width: 130px; max-height: 130px; object-fit: contain; margin-bottom: 12px;
     }}
 
     .splash-loader {{
-        border: 3px solid #262730;
-        border-top: 3px solid #ff4b4b;
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        animation: spin 1s linear infinite;
+        border: 3px solid #262730; border-top: 3px solid #ff4b4b; border-radius: 50%;
+        width: 30px; height: 30px; animation: spin 1s linear infinite;
     }}
 
     @keyframes spin {{
@@ -142,162 +129,116 @@ st.markdown(f"""
         100% {{ transform: rotate(360deg); }}
     }}
 
-    .stApp {{
-        background-color: #0e1117 !important;
-    }}
-
+    .stApp {{ background-color: #0e1117 !important; }}
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     header {{visibility: hidden;}}
     
     .block-container {{
-        padding-top: 0.4rem !important;
-        padding-bottom: 0rem !important;
-        padding-left: 0.4rem !important;
-        padding-right: 0.4rem !important;
+        padding-top: 0.4rem !important; padding-bottom: 0rem !important;
+        padding-left: 0.4rem !important; padding-right: 0.4rem !important;
     }}
 
     /* ENCABEZADO ULTRA COMPACTO */
     .header-logo-container {{
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 4px;
-        width: 100%;
-        text-align: center;
+        display: flex; justify-content: center; align-items: center;
+        gap: 8px; margin-bottom: 4px; width: 100%; text-align: center;
     }}
     
-    .header-logo-img {{
-        height: 30px !important;
-        width: auto;
-        object-fit: contain;
-    }}
+    .header-logo-img {{ height: 30px !important; width: auto; object-fit: contain; }}
 
-    .header-text-group {{
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }}
+    .header-text-group {{ display: flex; flex-direction: column; align-items: center; justify-content: center; }}
 
     .header-title {{
-        color: #ffffff;
-        font-weight: 900;
-        font-size: 15px !important;
-        line-height: 1;
-        letter-spacing: 0.5px;
-        margin: 0;
-        padding: 0;
-        text-align: center;
-        white-space: nowrap;
+        color: #ffffff; font-weight: 900; font-size: 15px !important;
+        line-height: 1; letter-spacing: 0.5px; margin: 0; padding: 0; text-align: center; white-space: nowrap;
     }}
 
     /* MÉTRICAS */
     .metrics-row {{
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        background-color: #1a1d24;
-        border-radius: 6px;
-        padding: 4px 8px;
-        margin-bottom: 8px;
-        border: 1px solid #2d3139;
+        display: flex; justify-content: space-around; align-items: center;
+        background-color: #1a1d24; border-radius: 6px; padding: 4px 8px;
+        margin-bottom: 8px; border: 1px solid #2d3139;
     }}
 
-    .metric-inline {{
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 13px;
-        font-weight: 700;
-        color: #ffffff;
-    }}
-
-    .metric-inline .val {{
-        font-size: 16px;
-        font-weight: 900;
-        color: #ff4b4b;
-    }}
+    .metric-inline {{ display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #ffffff; }}
+    .metric-inline .val {{ font-size: 16px; font-weight: 900; color: #ff4b4b; }}
 
     /* BOTÓN REINICIAR */
     .btn-reiniciar-wrap button {{
-        height: 32px !important;
-        font-size: 12px !important;
-        font-weight: 700 !important;
-        background-color: #ffffff !important;
-        color: #2c3e50 !important;
-        border-radius: 6px !important;
-        border: none !important;
-        margin-bottom: 6px !important;
+        height: 32px !important; font-size: 12px !important; font-weight: 700 !important;
+        background-color: #ffffff !important; color: #2c3e50 !important;
+        border-radius: 6px !important; border: none !important; margin-bottom: 6px !important;
     }}
 
-    /* TARJETA NATIVA TRANSFORMADA DE BOTÓN STREAMLIT */
-    div[data-testid="stButton"] button.btn-card-pending {{
-        width: 100% !important;
-        height: 40px !important;
-        background-color: #ffffff !important;
-        border-left: 5px solid #ff4b4b !important;
-        border-top: none !important;
-        border-right: none !important;
-        border-bottom: none !important;
-        border-radius: 6px !important;
-        margin-bottom: 6px !important;
-        padding: 0 0 0 10px !important;
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
+    /* CONTENEDOR DE TARJETA ESTILIZADO CON BOTÓN INVISIBLE ENCIMA */
+    .product-card-box {{
+        position: relative;
+        width: 100%;
+        height: 42px;
+        margin-bottom: 6px;
+        border-radius: 6px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }}
 
-    div[data-testid="stButton"] button.btn-card-completed {{
-        width: 100% !important;
-        height: 40px !important;
-        background-color: #d1fae5 !important;
-        border-left: 5px solid #10b981 !important;
-        border-top: none !important;
-        border-right: none !important;
-        border-bottom: none !important;
-        border-radius: 6px !important;
-        margin-bottom: 6px !important;
-        padding: 0 0 0 10px !important;
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
+    .product-card-box.pending {{
+        background-color: #ffffff;
+        border-left: 5px solid #ff4b4b;
     }}
 
-    /* FORMATO DE TEXTO INTERNO DEL BOTÓN DE STREAMLIT */
-    div[data-testid="stButton"] button.btn-card-pending div[data-testid="stMarkdownContainer"] p {{
-        color: #1f2937 !important;
-        font-size: 13px !important;
-        font-weight: 800 !important;
-        margin: 0 !important;
+    .product-card-box.completed {{
+        background-color: #d1fae5;
+        border-left: 5px solid #10b981;
     }}
 
-    div[data-testid="stButton"] button.btn-card-completed div[data-testid="stMarkdownContainer"] p {{
-        color: #065f46 !important;
-        font-size: 13px !important;
-        font-weight: 800 !important;
-        margin: 0 !important;
+    .product-card-box .title-text {{
+        padding-left: 10px;
+        padding-right: 6px;
+        font-size: 13px;
+        font-weight: 800;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }}
 
-    /* ETIOUETA DE CANTIDAD DENTRO DEL BOTÓN */
-    .badge-qty {{
-        background-color: #ff4b4b;
-        color: #ffffff;
-        font-weight: 900;
-        font-size: 16px;
+    .product-card-box.pending .title-text {{ color: #1f2937; }}
+    .product-card-box.completed .title-text {{ color: #065f46; }}
+
+    /* RECUADRO DEL CONTADOR TOTALMENTE SEPARADO Y DESTACADO */
+    .product-card-box .qty-badge {{
         width: 44px;
-        height: 40px;
+        height: 42px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-top-right-radius: 6px;
-        border-bottom-right-radius: 6px;
-        margin-right: -1px;
+        font-size: 16px;
+        font-weight: 900;
+        color: #ffffff;
     }}
 
-    .badge-qty.completed {{
-        background-color: #10b981;
+    .product-card-box.pending .qty-badge {{ background-color: #ff4b4b; }}
+    .product-card-box.completed .qty-badge {{ background-color: #10b981; }}
+
+    /* BOTÓN INVISIBLE INTEGRADO EN LA MISMA CAJA QUE NO GENERA ESPACIO EXTRA */
+    .product-card-box button[kind="secondary"], 
+    .product-card-box button[kind="primary"],
+    .product-card-box button {{
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        opacity: 0 !important;
+        z-index: 5 !important;
+        cursor: pointer !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
     }}
 
     /* MÓVIL / VERTICAL: APILAR 3 COLUMNAS EN 1 SOLA FILA VERTICAL */
@@ -449,35 +390,25 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    clase_clase = "btn-card-completed" if es_completado else "btn-card-pending"
-                    clase_badge = "completed" if es_completado else ""
+                    clase_estado = "completed" if es_completado else "pending"
 
-                    # Renderizamos un único botón limpio con Streamlit sin caracteres raros
-                    st.button(
-                        f"{producto}",
-                        key=f"btn_{producto}",
-                        use_container_width=True,
-                        on_click=alternar_estado,
-                        args=(producto, cant_total)
-                    )
-
-                    # Inyectamos dinámicamente la etiqueta con el número y las clases CSS sobre el propio botón
-                    st.components.v1.html(f"""
-                        <script>
-                            var parentDoc = window.parent.document;
-                            var btn = parentDoc.querySelector('button[key="btn_{producto}"]');
-                            if(btn) {{
-                                btn.className = '{clase_clase}';
-                                var badge = btn.querySelector('.badge-qty');
-                                if(!badge) {{
-                                    badge = parentDoc.createElement('div');
-                                    btn.appendChild(badge);
-                                }}
-                                badge.className = 'badge-qty {clase_badge}';
-                                badge.innerHTML = '{cant_mostrar}';
-                            }}
-                        </script>
-                    """, height=0)
+                    # Generamos el bloque contenedor y el botón exactamente en el mismo bloque usando st.container
+                    caja_container = st.container()
+                    with caja_container:
+                        # Dibujamos el HTML y el botón invisible dentro del mismo contenedor relativo
+                        st.markdown(f"""
+                            <div class="product-card-box {clase_estado}">
+                                <div class="title-text">{producto}</div>
+                                <div class="qty-badge">{cant_mostrar}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                        st.button(
+                            " ", 
+                            key=f"btn_{producto}", 
+                            on_click=alternar_estado, 
+                            args=(producto, cant_total)
+                        )
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
