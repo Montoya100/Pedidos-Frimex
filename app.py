@@ -258,18 +258,24 @@ st.markdown(f"""
         margin-bottom: 6px;
     }}
 
-    /* CAJA DEL NÚMERO MASIVO BASE */
+    /* CAJA ORIGINAL DEL NÚMERO MASIVO GIGANTE (HTML PURO) */
     .num-box-masivo {{
         border-radius: 10px;
         height: 100px !important;
         display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 68px !important; /* CIFRA MASIVA */
+        font-weight: 900 !important;
+        line-height: 1 !important;
         box-shadow: 0 3px 6px rgba(0,0,0,0.3);
         margin-bottom: 6px;
+        user-select: none;
     }}
 
-    .num-box-pendiente {{ background-color: #c93b3b !important; }}
-    .num-box-completado {{ background-color: #059669 !important; opacity: 0.75; }}
-    .num-box-reciente {{ background-color: #1d4ed8 !important; }}
+    .num-box-pendiente {{ background-color: #c93b3b !important; color: #ffffff !important; }}
+    .num-box-completado {{ background-color: #059669 !important; color: #ffffff !important; opacity: 0.75; }}
+    .num-box-reciente {{ background-color: #1d4ed8 !important; color: #ffffff !important; }}
 
     /* TARJETA PENDIENTE (ROJO) */
     .card-pendiente {{
@@ -299,7 +305,7 @@ st.markdown(f"""
         100% {{ box-shadow: 0 0 18px #60a5fa; transform: scale(1.01); }}
     }}
 
-    /* ESTILIZACIÓN DEL BOTÓN SUPERPUESTO (CONTIENE EL NÚMERO Y EL TEXTO DE ESTADO) */
+    /* BOTÓN TRANSPARENTE SUPERPUESTO (CONTIENE ÚNICAMENTE EL TEXTO DE ESTADO) */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
         height: 100px !important;
         margin-top: -106px !important;
@@ -312,30 +318,18 @@ st.markdown(f"""
         border: none !important;
         box-shadow: none !important;
         display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
+        align-items: flex-end !important;
         justify-content: center !important;
-        padding: 0px !important;
+        padding-bottom: 6px !important;
     }}
 
-    /* CIFRA GIGANTE DENTRO DEL BOTÓN */
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button p {{
-        font-size: 62px !important;
-        font-weight: 900 !important;
-        line-height: 0.9 !important;
-        color: #ffffff !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }}
-
-    /* ETIQUETA DE ESTADO (PENDIENTE, NUEVO, TERMINADO) DENTRO DEL BOTÓN */
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button span {{
+    /* ESTILO DE LA ETIQUETA PENDIENTE / NUEVO / TERMINADO EN EL BOTÓN TRANSPARENTE */
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button * {{
         font-size: 11px !important;
         font-weight: 900 !important;
         letter-spacing: 1.2px !important;
         text-transform: uppercase !important;
         color: #ffffff !important;
-        margin-top: 2px !important;
         opacity: 0.95 !important;
     }}
 
@@ -550,12 +544,16 @@ def renderizar_tablero():
                             """, unsafe_allow_html=True)
 
                         with col_btn:
-                            # Contenedor de fondo con el color correspondiente
-                            st.markdown(f'<div class="num-box-masivo {clase_num_box}"></div>', unsafe_allow_html=True)
+                            # 1. Cuadro original: renderiza la cifra masiva / infinito con HTML puro
+                            st.markdown(f"""
+                                <div class="num-box-masivo {clase_num_box}">
+                                    {valor_mostrar}
+                                </div>
+                            """, unsafe_allow_html=True)
                             
-                            # Botón con número gigante y texto de estado integrado
+                            # 2. Botón transparente superpuesto: contiene solo la etiqueta de estado
                             st.button(
-                                f"{valor_mostrar}\n\n:{texto_estado}:", 
+                                texto_estado, 
                                 key=f"num_btn_{producto}", 
                                 on_click=alternar_estado, 
                                 args=(producto, cant_total),
