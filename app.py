@@ -158,15 +158,27 @@ st.markdown(f"""
         line-height: 1.1; letter-spacing: 0.8px; margin: 0; padding: 0; text-align: center; white-space: nowrap;
     }}
 
-    /* MÉTRICAS EN LÍNEA */
+    /* MÉTRICAS EN LÍNEA (AMPLIADAS PARA MAYOR VISIBILIDAD) */
     .metrics-row {{
         display: flex; justify-content: space-around; align-items: center;
-        background-color: #1a1d24; border-radius: 6px; padding: 4px 8px;
-        margin-bottom: 8px; border: 1px solid #2d3139;
+        background-color: #1a1d24; border-radius: 8px; padding: 6px 12px;
+        margin-bottom: 10px; border: 1px solid #2d3139;
     }}
 
-    .metric-inline {{ display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: #ffffff; }}
-    .metric-inline .val {{ font-size: 16px; font-weight: 900; color: #e55353; }}
+    .metric-inline {{ 
+        display: flex; 
+        align-items: center; 
+        gap: 8px; 
+        font-size: 16px !important; /* TEXTO DE ETIQUETA MÁS GRANDE */
+        font-weight: 800 !important; 
+        color: #ffffff; 
+    }}
+
+    .metric-inline .val {{ 
+        font-size: 22px !important; /* NÚMERO MÁS GRANDE */
+        font-weight: 900 !important; 
+        color: #e55353; 
+    }}
 
     /* BANNER DE FELICITACIONES */
     .banner-felicidades {{
@@ -393,7 +405,7 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # ENCABEZADO CON DRAWER / POPOVER DE CONFIGURACIÓN INTEGRADO EN LA MISMA LÍNEA
+    # ENCABEZADO
     col_hdr_left, col_hdr_center, col_hdr_right = st.columns([0.15, 0.70, 0.15])
     
     with col_hdr_center:
@@ -408,7 +420,6 @@ def renderizar_tablero():
         """, unsafe_allow_html=True)
 
     with col_hdr_right:
-        # Menú desplegable oculto (Popover / Drawer) para ganar el espacio superior
         with st.popover("⚙️ Opciones", use_container_width=True):
             st.markdown("### Acciones de Tablero")
             if st.button("🗑️ Borrar todo", use_container_width=True):
@@ -426,14 +437,14 @@ def renderizar_tablero():
             cant_marcada = estado_global["cantidades_al_completar"].get(prod, 0)
             piezas_pendientes += (cant_total - cant_marcada)
 
-    # Métricas
+    # MÉTRICAS DESTACADAS
     st.markdown(f"""
         <div class="metrics-row">
             <div class="metric-inline">
                 <span>Tickets:</span>
                 <span class="val">{len(recibos)}</span>
             </div>
-            <div style="border-left: 1px solid #3d424d; height: 14px;"></div>
+            <div style="border-left: 1px solid #3d424d; height: 18px;"></div>
             <div class="metric-inline">
                 <span>Pendientes:</span>
                 <span class="val" style="color: {'#10b981' if piezas_pendientes == 0 else '#e55353'};">{piezas_pendientes}</span>
