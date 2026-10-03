@@ -217,10 +217,10 @@ st.markdown(f"""
         100% {{ transform: scale(1.01); box-shadow: 0 6px 18px rgba(16, 185, 129, 0.7); }}
     }}
 
-    /* TARJETA DE TEXTO DEL PRODUCTO (AJUSTADA) */
+    /* TARJETA DE TEXTO DEL PRODUCTO */
     .card-box-img {{
-        border-radius: 12px;
-        height: 110px !important;
+        border-radius: 10px;
+        height: 70px !important;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -231,26 +231,25 @@ st.markdown(f"""
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         white-space: normal;
         word-wrap: break-word;
-        line-height: 1.25;
-        margin-bottom: 8px;
-        transition: all 0.3s ease;
+        line-height: 1.2;
+        margin-bottom: 6px;
     }}
 
-    /* TARJETA PENDIENTE (ROJO CÁLIDO / SUAVE) */
+    /* TARJETA PENDIENTE (ROJO) */
     .card-pendiente {{
         background-color: #e55353 !important;
         color: #ffffff !important;
         border: 1px solid #c93b3b !important;
     }}
 
-    /* TARJETA COMPLETADA (VERDE TOTAL) */
+    /* TARJETA COMPLETADA (VERDE) */
     .card-completado {{
         background-color: #10b981 !important;
         color: #ffffff !important;
         border: 1px solid #059669 !important;
     }}
 
-    /* ESTADO TEMPORAL AZUL DESTACADO (NUEVO PRODUCTO / 2 MINUTOS) */
+    /* ESTADO TEMPORAL AZUL (NUEVO PRODUCTO) */
     .card-nueva-orden {{
         background-color: #2563eb !important;
         color: #ffffff !important;
@@ -263,38 +262,31 @@ st.markdown(f"""
         100% {{ box-shadow: 0 0 18px #60a5fa; transform: scale(1.01); }}
     }}
 
-    /* CONTENEDOR Y BOTÓN DEL NÚMERO GIGANTESCO */
+    /* INYECCIÓN DIRECTA PARA TAMAÑO GIGANTE DEL TEXTO DEL BOTÓN */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
-        height: 110px !important;
+        height: 70px !important;
     }}
 
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
-        height: 110px !important;
-        min-height: 110px !important;
-        max-height: 110px !important;
-        border-radius: 12px !important;
+        height: 70px !important;
+        min-height: 70px !important;
+        max-height: 70px !important;
+        border-radius: 10px !important;
         border: none !important;
-        font-size: 95px !important; /* NÚMERO GIGANTE ULTRA VISIBLE */
-        font-weight: 900 !important; /* NEGRITA ABSOLUTA */
-        line-height: 110px !important;
         padding: 0px !important;
-        color: #ffffff !important;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.4) !important;
-        margin-bottom: 8px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
+        margin: 0px !important;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
     }}
 
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button p {{
-        font-size: 95px !important;
+    /* SELECCIONA EL TEXTO O SÍMBOLO INTERNO RENDERIZADO POR STREAMLIT */
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button * {{
+        font-size: 58px !important;
         font-weight: 900 !important;
         line-height: 1 !important;
-        margin: 0 !important;
-        padding: 0 !important;
+        letter-spacing: -2px !important;
     }}
 
-    /* COLORES DE ESTADO PARA EL BOTÓN NUMÉRICO */
+    /* COLORES DE ESTADO DEL BOTÓN NUMÉRICO */
     .btn-num-pendiente button {{
         background-color: #c93b3b !important;
         color: #ffffff !important;
@@ -499,8 +491,8 @@ def renderizar_tablero():
                     valor_mostrar = "∞" if cant_mostrar == 1 else str(cant_mostrar)
                     tag_update = "✨ " if es_reciente else ""
 
-                    # REPROPORCIONADO: 40% Nombre del producto / 60% Número Gigante
-                    col_txt, col_btn = st.columns([0.40, 0.60], gap="small")
+                    # PROPORCIÓN AJUSTADA: 70% Nombre Producto / 30% Número Gigante
+                    col_txt, col_btn = st.columns([0.70, 0.30], gap="small")
 
                     with col_txt:
                         st.markdown(f"""
