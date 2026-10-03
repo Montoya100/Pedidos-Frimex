@@ -119,36 +119,16 @@ def reproducir_sonido_notificacion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS PERSONALIZADOS
+# 3. ESTILOS CSS ESTÁTICOS (FUERA DEL FRAGMENTO)
 # ==========================================
 st.markdown(f"""
     <style>
-    /* Splash Screen */
-    #splash-screen {{
-        position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background-color: #0e1117;
-        display: flex; flex-direction: column; justify-content: center; align-items: center;
-        z-index: 999999;
-        animation: fadeOut 0.8s ease-in-out 1.8s forwards;
+    /* Desactivar opacidad tenue de Streamlit durante recargas */
+    [data-testid="stAppViewContainer"] {{
+        opacity: 1 !important;
+        transition: none !important;
     }}
     
-    @keyframes fadeOut {{
-        0% {{ opacity: 1; visibility: visible; }}
-        100% {{ opacity: 0; visibility: hidden; }}
-    }}
-
-    .splash-logo-img {{
-        max-width: 150px; max-height: 150px; object-fit: contain; margin-bottom: 12px;
-    }}
-
-    .splash-loader {{
-        border: 3px solid #262730; border-top: 3px solid #ff4b4b; border-radius: 50%;
-        width: 30px; height: 30px; animation: spin 1s linear infinite;
-    }}
-
-    @keyframes spin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}
-
     .stApp {{ background-color: #0e1117 !important; }}
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
@@ -265,7 +245,7 @@ st.markdown(f"""
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 68px !important; /* CIFRA MASIVA */
+        font-size: 68px !important;
         font-weight: 900 !important;
         line-height: 1 !important;
         box-shadow: 0 3px 6px rgba(0,0,0,0.3);
@@ -305,7 +285,7 @@ st.markdown(f"""
         100% {{ box-shadow: 0 0 18px #60a5fa; transform: scale(1.01); }}
     }}
 
-    /* BOTÓN TRANSPARENTE SUPERPUESTO (CONTIENE ÚNICAMENTE EL TEXTO DE ESTADO) */
+    /* BOTÓN TRANSPARENTE SUPERPUESTO */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
         height: 100px !important;
         margin-top: -106px !important;
@@ -323,7 +303,7 @@ st.markdown(f"""
         padding-bottom: 6px !important;
     }}
 
-    /* ESTILO DE LA ETIQUETA PENDIENTE / NUEVO / TERMINADO EN EL BOTÓN TRANSPARENTE */
+    /* ETIQUETA EN BOTÓN TRANSPARENTE */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button * {{
         font-size: 11px !important;
         font-weight: 900 !important;
@@ -344,12 +324,6 @@ st.markdown(f"""
         }}
     }}
     </style>
-
-    <!-- Splash Screen -->
-    <div id="splash-screen">
-        <img src="{LOGO_URL}" class="splash-logo-img" alt="Logo">
-        <div class="splash-loader"></div>
-    </div>
 """, unsafe_allow_html=True)
 
 # ==========================================
@@ -410,7 +384,6 @@ def renderizar_tablero():
                 estado_global["completados"].remove(prod)
                 estado_global["cantidades_al_completar"].pop(prod, None)
 
-    # Control del tiempo de actualización para resplandor azul (2 minutos = 120 segundos)
     if "tiempos_actualizacion" not in st.session_state:
         st.session_state.tiempos_actualizacion = {}
 
@@ -431,7 +404,7 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # Encabezado con Logo y Título
+    # Encabezado estático
     st.markdown(f"""
         <div class="header-logo-container">
             <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
@@ -463,7 +436,7 @@ def renderizar_tablero():
             cant_marcada = estado_global["cantidades_al_completar"].get(prod, 0)
             piezas_pendientes += (cant_total - cant_marcada)
 
-    # Métricas en una línea horizontal
+    # Métricas
     st.markdown(f"""
         <div class="metrics-row">
             <div class="metric-inline">
@@ -478,7 +451,6 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # Banner de Felicitación si todo está listo
     if conteo_productos and piezas_pendientes == 0:
         st.markdown("""
             <div class="banner-felicidades">
@@ -487,7 +459,6 @@ def renderizar_tablero():
         """, unsafe_allow_html=True)
 
     if conteo_productos:
-        # SEPARACIÓN Y REORDENAMIENTO: ACTIVOS ARRIBA, COMPLETADOS ABAJO
         activos = []
         completados = []
 
@@ -544,14 +515,12 @@ def renderizar_tablero():
                             """, unsafe_allow_html=True)
 
                         with col_btn:
-                            # 1. Cuadro original: renderiza la cifra masiva / infinito con HTML puro
                             st.markdown(f"""
                                 <div class="num-box-masivo {clase_num_box}">
                                     {valor_mostrar}
                                 </div>
                             """, unsafe_allow_html=True)
                             
-                            # 2. Botón transparente superpuesto: contiene solo la etiqueta de estado
                             st.button(
                                 texto_estado, 
                                 key=f"num_btn_{producto}", 
@@ -560,11 +529,9 @@ def renderizar_tablero():
                                 use_container_width=True
                             )
 
-        # 1. RENDERIZAR PRODUCTOS ACTIVOS
         if activos:
             renderizar_lista_productos(activos)
 
-        # 2. SEPARADOR Y RENDERIZADO DE PRODUCTOS COMPLETADOS
         if completados:
             st.markdown("""
                 <div class="divider-completados">
