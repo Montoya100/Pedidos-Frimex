@@ -3,7 +3,7 @@ import os
 import requests
 import streamlit as st
 import streamlit.components.v1 as components
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 # ==========================================
 # 1. CONFIGURACIÓN DE PÁGINA
@@ -66,7 +66,7 @@ def restaurar_estado():
         estado_global["respaldo"] = None
         st.toast("↩️ Tablero restaurado con éxito.", icon="✅")
     else:
-        st.toast("⚠️️ No hay respaldo anterior para restaurar.", icon="⚠️")
+        st.toast("⚠️ No hay respaldo anterior para restaurar.", icon="⚠️")
 
 def alternar_estado(producto, cantidad_actual):
     if producto in estado_global["completados"]:
@@ -80,33 +80,39 @@ def reproducir_sonido_notificacion():
     sound_js = """
     <script>
     (function() {
-        try {
-            var AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (!AudioContext) return;
-            var ctx = new AudioContext();
-            
-            var osc1 = ctx.createOscillator();
-            var gain1 = ctx.createGain();
-            osc1.type = 'sine';
-            osc1.frequency.setValueAtTime(587.33, ctx.currentTime);
-            gain1.gain.setValueAtTime(0.15, ctx.currentTime);
-            gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-            osc1.connect(gain1);
-            gain1.connect(ctx.destination);
-            osc1.start(ctx.currentTime);
-            osc1.stop(ctx.currentTime + 0.2);
+        function sonar() {
+            try {
+                var AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                var ctx = new AudioContext();
+                if (ctx.state === 'suspended') {
+                    ctx.resume();
+                }
+                
+                var osc1 = ctx.createOscillator();
+                var gain1 = ctx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(587.33, ctx.currentTime);
+                gain1.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                osc1.start(ctx.currentTime);
+                osc1.stop(ctx.currentTime + 0.25);
 
-            var osc2 = ctx.createOscillator();
-            var gain2 = ctx.createGain();
-            osc2.type = 'sine';
-            osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
-            gain2.gain.setValueAtTime(0.2, ctx.currentTime + 0.12);
-            gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-            osc2.connect(gain2);
-            gain2.connect(ctx.destination);
-            osc2.start(ctx.currentTime + 0.12);
-            osc2.stop(ctx.currentTime + 0.4);
-        } catch(e) {}
+                var osc2 = ctx.createOscillator();
+                var gain2 = ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
+                gain2.gain.setValueAtTime(0.35, ctx.currentTime + 0.15);
+                gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.start(ctx.currentTime + 0.15);
+                osc2.stop(ctx.currentTime + 0.45);
+            } catch(e) {}
+        }
+        sonar();
     })();
     </script>
     """
@@ -133,7 +139,7 @@ st.markdown(f"""
     }}
 
     .splash-logo-img {{
-        max-width: 130px; max-height: 130px; object-fit: contain; margin-bottom: 12px;
+        max-width: 150px; max-height: 150px; object-fit: contain; margin-bottom: 12px;
     }}
 
     .splash-loader {{
@@ -153,27 +159,27 @@ st.markdown(f"""
         padding-left: 0.4rem !important; padding-right: 0.4rem !important;
     }}
 
-    /* ENCABEZADO ULTRA COMPACTO */
+    /* ENCABEZADO DESTACADO */
     .header-logo-container {{
         display: flex; justify-content: center; align-items: center;
-        gap: 8px; margin-bottom: 4px; width: 100%; text-align: center;
+        gap: 12px; margin-bottom: 6px; width: 100%; text-align: center;
     }}
     
-    .header-logo-img {{ height: 30px !important; width: auto; object-fit: contain; }}
+    .header-logo-img {{ height: 45px !important; width: auto; object-fit: contain; }}
     .header-text-group {{ display: flex; flex-direction: column; align-items: center; justify-content: center; }}
 
     .header-title {{
-        color: #ffffff; font-weight: 900; font-size: 15px !important;
-        line-height: 1; letter-spacing: 0.5px; margin: 0; padding: 0; text-align: center; white-space: nowrap;
+        color: #ffffff; font-weight: 900; font-size: 22px !important;
+        line-height: 1.1; letter-spacing: 0.8px; margin: 0; padding: 0; text-align: center; white-space: nowrap;
     }}
 
     /* BOTONES DE ACCIÓN (BORRAR Y RESTAURAR) */
     .btn-borrar button {{
         height: 32px !important; font-size: 12px !important; font-weight: 700 !important;
-        background-color: #ef4444 !important; color: #ffffff !important;
+        background-color: #e55353 !important; color: #ffffff !important;
         border-radius: 6px !important; border: none !important;
     }}
-    .btn-borrar button:hover {{ background-color: #dc2626 !important; }}
+    .btn-borrar button:hover {{ background-color: #c93b3b !important; }}
 
     .btn-restaurar button {{
         height: 32px !important; font-size: 12px !important; font-weight: 700 !important;
@@ -190,7 +196,7 @@ st.markdown(f"""
     }}
 
     .metric-inline {{ display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #ffffff; }}
-    .metric-inline .val {{ font-size: 16px; font-weight: 900; color: #ff4b4b; }}
+    .metric-inline .val {{ font-size: 16px; font-weight: 900; color: #e55353; }}
 
     /* BANNER DE FELICITACIONES */
     .banner-felicidades {{
@@ -230,11 +236,11 @@ st.markdown(f"""
         transition: all 0.3s ease;
     }}
 
-    /* TARJETA PENDIENTE (ROJO TOTAL) */
+    /* TARJETA PENDIENTE (ROJO CÁLIDO / SUAVE) */
     .card-pendiente {{
-        background-color: #ef4444 !important;
+        background-color: #e55353 !important;
         color: #ffffff !important;
-        border: 1px solid #dc2626 !important;
+        border: 1px solid #c93b3b !important;
     }}
 
     /* TARJETA COMPLETADA (VERDE TOTAL) */
@@ -244,33 +250,33 @@ st.markdown(f"""
         border: 1px solid #059669 !important;
     }}
 
-    /* ANIMACIÓN DE ACTUALIZACIÓN */
+    /* ANIMACIÓN DE RESPLANDOR PERSISTENTE (2 MINUTOS) */
     .card-actualizada {{
-        border: 2px solid #ffffff !important;
-        animation: destelloUpdate 1.2s infinite alternate !important;
+        border: 2px solid #60a5fa !important;
+        animation: destelloUpdate 2s infinite alternate !important;
     }}
 
     @keyframes destelloUpdate {{
-        0% {{ transform: scale(0.98); box-shadow: 0 0 4px #ffffff; }}
-        100% {{ transform: scale(1.02); box-shadow: 0 0 14px #ffffff; }}
+        0% {{ box-shadow: 0 0 4px #60a5fa; }}
+        100% {{ box-shadow: 0 0 14px #3b82f6; }}
     }}
 
-    /* BOTONES NUMÉRICOS (NÚMEROS MÁS GRANDES Y BORDES AVALADOS) */
+    /* BOTONES NUMÉRICOS */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
         height: 52px !important;
         min-height: 52px !important;
         border-radius: 10px !important;
         border: none !important;
-        font-size: 26px !important; /* Fuente aumentada para mayor visibilidad */
+        font-size: 26px !important;
         font-weight: 900 !important;
         color: #ffffff !important;
         box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
         margin-bottom: 6px !important;
     }}
 
-    /* ESTADO ROJO PARA BOTÓN NUMÉRICO */
+    /* ESTADO ROJO SUAVE PARA BOTÓN NUMÉRICO */
     button[aria-label*="🔴"] {{
-        background-color: #dc2626 !important;
+        background-color: #c93b3b !important;
         color: #ffffff !important;
     }}
 
@@ -357,17 +363,20 @@ def renderizar_tablero():
                 estado_global["completados"].remove(prod)
                 estado_global["cantidades_al_completar"].pop(prod, None)
 
-    # Identificar productos que se acaban de actualizar
-    productos_actualizados = set()
+    # Control del tiempo de actualización para resplandor (2 minutos = 120 segundos)
+    if "tiempos_actualizacion" not in st.session_state:
+        st.session_state.tiempos_actualizacion = {}
+
     if "ultimo_conteo" not in st.session_state:
         st.session_state.ultimo_conteo = conteo_productos.copy()
     else:
         nuevo_pedido_detectado = False
+        ahora = datetime.now()
         for prod, cant in conteo_productos.items():
             cant_anterior = st.session_state.ultimo_conteo.get(prod, 0)
             if cant > cant_anterior:
                 nuevo_pedido_detectado = True
-                productos_actualizados.add(prod)
+                st.session_state.tiempos_actualizacion[prod] = ahora
 
         if nuevo_pedido_detectado:
             reproducir_sonido_notificacion()
@@ -375,13 +384,13 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # Encabezado
+    # Encabezado con Logo y Título Prominentes
     st.markdown(f"""
         <div class="header-logo-container">
             <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
             <div class="header-text-group">
                 <h1 class="header-title">TABLA DE PRODUCCIÓN</h1>
-                <span style="font-size:9px; color:#a0a0a0;">🔄 Sincronizado | {datetime.now().strftime('%H:%M:%S')}</span>
+                <span style="font-size:10px; color:#a0a0a0;">🔄 Sincronizado | {datetime.now().strftime('%H:%M:%S')}</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -417,7 +426,7 @@ def renderizar_tablero():
             <div style="border-left: 1px solid #3d424d; height: 14px;"></div>
             <div class="metric-inline">
                 <span>Pendientes:</span>
-                <span class="val" style="color: {'#10b981' if piezas_pendientes == 0 else '#ff4b4b'};">{piezas_pendientes}</span>
+                <span class="val" style="color: {'#10b981' if piezas_pendientes == 0 else '#e55353'};">{piezas_pendientes}</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -432,6 +441,7 @@ def renderizar_tablero():
 
     if conteo_productos:
         productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1], reverse=True)
+        ahora_actual = datetime.now()
 
         # RENDERIZADO EN GRILLA DE 3 COLUMNAS
         for i in range(0, len(productos_ordenados), 3):
@@ -444,17 +454,18 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    # ASIGNACIÓN DE COLOR TOTAL A LA TARJETA
                     clase_estado = "card-completado" if es_completado else "card-pendiente"
-                    
-                    # EMOJI PARA IDENTIFICAR EL ESTADO DEL BOTÓN
                     icono = "🟢" if es_completado else "🔴"
                     texto_boton = f"{icono} {cant_mostrar}"
 
-                    # Verificar si este producto tuvo actualización reciente
-                    es_actualizado = producto in productos_actualizados
-                    clase_card_update = "card-actualizada" if es_actualizado else ""
-                    tag_update = "✨ " if es_actualizado else ""
+                    # Validar si han pasado menos de 2 minutos (120 s) desde la última actualización
+                    ultima_upd = st.session_state.tiempos_actualizacion.get(producto)
+                    es_reciente = False
+                    if ultima_upd and (ahora_actual - ultima_upd).total_seconds() < 120:
+                        es_reciente = True
+
+                    clase_card_update = "card-actualizada" if es_reciente else ""
+                    tag_update = "✨ " if es_reciente else ""
 
                     col_txt, col_btn = st.columns([0.72, 0.28], gap="small")
 
