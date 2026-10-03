@@ -250,15 +250,17 @@ st.markdown(f"""
         border: 1px solid #059669 !important;
     }}
 
-    /* ANIMACIÓN DE RESPLANDOR PERSISTENTE (2 MINUTOS) */
-    .card-actualizada {{
+    /* ESTADO TEMPORAL AZUL DESTACADO (NUEVO PRODUCTO / 2 MINUTOS) */
+    .card-nueva-orden {{
+        background-color: #2563eb !important; /* Azul Rey resplandeciente */
+        color: #ffffff !important;
         border: 2px solid #60a5fa !important;
-        animation: destelloUpdate 2s infinite alternate !important;
+        animation: destelloUpdate 1.5s infinite alternate !important;
     }}
 
     @keyframes destelloUpdate {{
-        0% {{ box-shadow: 0 0 4px #60a5fa; }}
-        100% {{ box-shadow: 0 0 14px #3b82f6; }}
+        0% {{ box-shadow: 0 0 6px #3b82f6; transform: scale(0.99); }}
+        100% {{ box-shadow: 0 0 18px #60a5fa; transform: scale(1.01); }}
     }}
 
     /* BOTONES NUMÉRICOS */
@@ -363,7 +365,7 @@ def renderizar_tablero():
                 estado_global["completados"].remove(prod)
                 estado_global["cantidades_al_completar"].pop(prod, None)
 
-    # Control del tiempo de actualización para resplandor (2 minutos = 120 segundos)
+    # Control del tiempo de actualización para resplandor azul (2 minutos = 120 segundos)
     if "tiempos_actualizacion" not in st.session_state:
         st.session_state.tiempos_actualizacion = {}
 
@@ -454,24 +456,27 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    clase_estado = "card-completado" if es_completado else "card-pendiente"
-                    icono = "🟢" if es_completado else "🔴"
-                    texto_boton = f"{icono} {cant_mostrar}"
-
                     # Validar si han pasado menos de 2 minutos (120 s) desde la última actualización
                     ultima_upd = st.session_state.tiempos_actualizacion.get(producto)
                     es_reciente = False
-                    if ultima_upd and (ahora_actual - ultima_upd).total_seconds() < 120:
+                    if ultima_upd and (ahora_actual - ultima_upd).total_seconds() < 120 and not es_completado:
                         es_reciente = True
 
-                    clase_card_update = "card-actualizada" if es_reciente else ""
+                    # Selección de la clase de color principal
+                    if es_reciente:
+                        clase_estado = "card-nueva-orden" # Azul destellante para nuevos
+                    else:
+                        clase_estado = "card-completado" if es_completado else "card-pendiente"
+
+                    icono = "🟢" if es_completado else "🔴"
+                    texto_boton = f"{icono} {cant_mostrar}"
                     tag_update = "✨ " if es_reciente else ""
 
                     col_txt, col_btn = st.columns([0.72, 0.28], gap="small")
 
                     with col_txt:
                         st.markdown(f"""
-                            <div class="card-box-img {clase_estado} {clase_card_update}">
+                            <div class="card-box-img {clase_estado}">
                                 {tag_update}{producto}
                             </div>
                         """, unsafe_allow_html=True)
