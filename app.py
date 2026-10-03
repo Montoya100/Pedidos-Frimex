@@ -42,13 +42,12 @@ def obtener_estado_global():
         "completados": set(),
         "cantidades_al_completar": {},
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
-        "respaldo": None  # Para permitir la restauración si borran por error
+        "respaldo": None
     }
 
 estado_global = obtener_estado_global()
 
 def borrar_todo():
-    # Guardar copia de respaldo antes de limpiar
     estado_global["respaldo"] = {
         "completados": estado_global["completados"].copy(),
         "cantidades_al_completar": estado_global["cantidades_al_completar"].copy(),
@@ -67,7 +66,7 @@ def restaurar_estado():
         estado_global["respaldo"] = None
         st.toast("↩️ Tablero restaurado con éxito.", icon="✅")
     else:
-        st.toast("⚠️ No hay respaldo anterior para restaurar.", icon="⚠️")
+        st.toast("⚠️️ No hay respaldo anterior para restaurar.", icon="⚠️")
 
 def alternar_estado(producto, cantidad_actual):
     if producto in estado_global["completados"]:
@@ -114,7 +113,7 @@ def reproducir_sonido_notificacion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS PERSONALIZADOS Y ANIMACIONES
+# 3. ESTILOS CSS PERSONALIZADOS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -169,10 +168,6 @@ st.markdown(f"""
     }}
 
     /* BOTONES DE ACCIÓN (BORRAR Y RESTAURAR) */
-    .btn-acciones-container {{
-        display: flex; gap: 8px; margin-bottom: 6px;
-    }}
-    
     .btn-borrar button {{
         height: 32px !important; font-size: 12px !important; font-weight: 700 !important;
         background-color: #ef4444 !important; color: #ffffff !important;
@@ -197,7 +192,7 @@ st.markdown(f"""
     .metric-inline {{ display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #ffffff; }}
     .metric-inline .val {{ font-size: 16px; font-weight: 900; color: #ff4b4b; }}
 
-    /* BANNER DE FELICITACIONES CUANDO TODO ESTÁ LISTO */
+    /* BANNER DE FELICITACIONES */
     .banner-felicidades {{
         background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         color: #ffffff;
@@ -216,75 +211,72 @@ st.markdown(f"""
         100% {{ transform: scale(1.01); box-shadow: 0 6px 18px rgba(16, 185, 129, 0.7); }}
     }}
 
-    /* TARJETA DE TEXTO (PRODUCTO) */
+    /* TARJETA DE TEXTO BASE (PRODUCTO) */
     .card-box-img {{
-        background-color: #ffffff;
         border-radius: 10px;
-        height: 48px;
+        height: 52px;
         display: flex;
         align-items: center;
         justify-content: center;
         text-align: center;
         padding: 0 10px;
         font-size: 15px;
-        font-weight: 800;
-        color: #111827;
+        font-weight: 900;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         margin-bottom: 6px;
-        border: 1px solid #e5e7eb;
         transition: all 0.3s ease;
     }}
 
-    /* ANIMACIÓN Y RESPLANDOR PARA PRODUCTO ACTUALIZADO */
+    /* TARJETA PENDIENTE (ROJO TOTAL) */
+    .card-pendiente {{
+        background-color: #ef4444 !important;
+        color: #ffffff !important;
+        border: 1px solid #dc2626 !important;
+    }}
+
+    /* TARJETA COMPLETADA (VERDE TOTAL) */
+    .card-completado {{
+        background-color: #10b981 !important;
+        color: #ffffff !important;
+        border: 1px solid #059669 !important;
+    }}
+
+    /* ANIMACIÓN DE ACTUALIZACIÓN */
     .card-actualizada {{
-        border: 2px solid #3b82f6 !important;
-        background-color: #eff6ff !important;
-        color: #1d4ed8 !important;
-        animation: destelloUpdate 1.5s infinite alternate !important;
+        border: 2px solid #ffffff !important;
+        animation: destelloUpdate 1.2s infinite alternate !important;
     }}
 
     @keyframes destelloUpdate {{
-        0% {{ box-shadow: 0 0 4px #3b82f6; }}
-        100% {{ box-shadow: 0 0 16px #3b82f6; }}
+        0% {{ transform: scale(0.98); box-shadow: 0 0 4px #ffffff; }}
+        100% {{ transform: scale(1.02); box-shadow: 0 0 14px #ffffff; }}
     }}
 
-    /* ESTILOS DE BASE PARA BOTONES NUMÉRICOS */
+    /* BOTONES NUMÉRICOS (NÚMEROS MÁS GRANDES Y BORDES AVALADOS) */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
-        height: 48px !important;
-        min-height: 48px !important;
+        height: 52px !important;
+        min-height: 52px !important;
         border-radius: 10px !important;
         border: none !important;
-        font-size: 20px !important;
+        font-size: 26px !important; /* Fuente aumentada para mayor visibilidad */
         font-weight: 900 !important;
         color: #ffffff !important;
         box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
         margin-bottom: 6px !important;
     }}
 
-    /* INYECCIÓN DE COLOR ROJO (PENDIENTE) */
-    button[aria-label*="🔴"], button[data-testid="stBaseButton-secondary"]:has(span:contains("🔴")) {{
-        background-color: #ef4444 !important;
+    /* ESTADO ROJO PARA BOTÓN NUMÉRICO */
+    button[aria-label*="🔴"] {{
+        background-color: #dc2626 !important;
         color: #ffffff !important;
     }}
 
-    div[data-testid="stElementContainer"] button:has(div:contains("🔴")),
-    div[data-testid="stElementContainer"] button[aria-label*="🔴"] {{
-        background-color: #ef4444 !important;
-        color: #ffffff !important;
-    }}
-
-    /* INYECCIÓN DE COLOR VERDE (COMPLETADO) */
-    button[aria-label*="🟢"], button[data-testid="stBaseButton-secondary"]:has(span:contains("🟢")) {{
-        background-color: #10b981 !important;
-        color: #ffffff !important;
-    }}
-
-    div[data-testid="stElementContainer"] button:has(div:contains("🟢")),
-    div[data-testid="stElementContainer"] button[aria-label*="🟢"] {{
-        background-color: #10b981 !important;
+    /* ESTADO VERDE PARA BOTÓN NUMÉRICO */
+    button[aria-label*="🟢"] {{
+        background-color: #059669 !important;
         color: #ffffff !important;
     }}
 
@@ -365,7 +357,7 @@ def renderizar_tablero():
                 estado_global["completados"].remove(prod)
                 estado_global["cantidades_al_completar"].pop(prod, None)
 
-    # Identificar productos que se acaban de actualizar para destacarlos
+    # Identificar productos que se acaban de actualizar
     productos_actualizados = set()
     if "ultimo_conteo" not in st.session_state:
         st.session_state.ultimo_conteo = conteo_productos.copy()
@@ -394,7 +386,7 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # Botones de Acción (Borrar y Restaurar)
+    # Botones de Acción
     col_b1, col_b2 = st.columns(2)
     with col_b1:
         st.markdown('<div class="btn-borrar">', unsafe_allow_html=True)
@@ -452,20 +444,23 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    # ETIQUETA CON EMOJI IDENTIFICADOR
+                    # ASIGNACIÓN DE COLOR TOTAL A LA TARJETA
+                    clase_estado = "card-completado" if es_completado else "card-pendiente"
+                    
+                    # EMOJI PARA IDENTIFICAR EL ESTADO DEL BOTÓN
                     icono = "🟢" if es_completado else "🔴"
                     texto_boton = f"{icono} {cant_mostrar}"
 
-                    # Verificar si este producto tuvo actualización reciente para aplicar resplandor
+                    # Verificar si este producto tuvo actualización reciente
                     es_actualizado = producto in productos_actualizados
                     clase_card_update = "card-actualizada" if es_actualizado else ""
                     tag_update = "✨ " if es_actualizado else ""
 
-                    col_txt, col_btn = st.columns([0.74, 0.26], gap="small")
+                    col_txt, col_btn = st.columns([0.72, 0.28], gap="small")
 
                     with col_txt:
                         st.markdown(f"""
-                            <div class="card-box-img {clase_card_update}">
+                            <div class="card-box-img {clase_estado} {clase_card_update}">
                                 {tag_update}{producto}
                             </div>
                         """, unsafe_allow_html=True)
