@@ -258,52 +258,18 @@ st.markdown(f"""
         margin-bottom: 6px;
     }}
 
-    /* CAJA DEL NÚMERO MASIVO Y TEXTO DE ESTADO */
+    /* CAJA DEL NÚMERO MASIVO BASE */
     .num-box-masivo {{
         border-radius: 10px;
         height: 100px !important;
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
         box-shadow: 0 3px 6px rgba(0,0,0,0.3);
         margin-bottom: 6px;
-        cursor: pointer;
-        user-select: none;
     }}
 
-    .num-val-giant {{
-        font-size: 62px !important;
-        font-weight: 900 !important;
-        line-height: 1 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }}
-
-    .num-sub-status {{
-        font-size: 11px !important;
-        font-weight: 900 !important;
-        letter-spacing: 1.2px;
-        text-transform: uppercase;
-        margin-top: 2px;
-        opacity: 0.95;
-    }}
-
-    .num-box-pendiente {{
-        background-color: #c93b3b !important;
-        color: #ffffff !important;
-    }}
-
-    .num-box-completado {{
-        background-color: #059669 !important;
-        color: #ffffff !important;
-        opacity: 0.75;
-    }}
-
-    .num-box-reciente {{
-        background-color: #1d4ed8 !important;
-        color: #ffffff !important;
-    }}
+    .num-box-pendiente {{ background-color: #c93b3b !important; }}
+    .num-box-completado {{ background-color: #059669 !important; opacity: 0.75; }}
+    .num-box-reciente {{ background-color: #1d4ed8 !important; }}
 
     /* TARJETA PENDIENTE (ROJO) */
     .card-pendiente {{
@@ -333,7 +299,7 @@ st.markdown(f"""
         100% {{ box-shadow: 0 0 18px #60a5fa; transform: scale(1.01); }}
     }}
 
-    /* BOTÓN TRANSPARENTE SUPERPUESTO */
+    /* ESTILIZACIÓN DEL BOTÓN SUPERPUESTO (CONTIENE EL NÚMERO Y EL TEXTO DE ESTADO) */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
         height: 100px !important;
         margin-top: -106px !important;
@@ -344,8 +310,33 @@ st.markdown(f"""
         min-height: 100px !important;
         background-color: transparent !important;
         border: none !important;
-        color: transparent !important;
         box-shadow: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0px !important;
+    }}
+
+    /* CIFRA GIGANTE DENTRO DEL BOTÓN */
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button p {{
+        font-size: 62px !important;
+        font-weight: 900 !important;
+        line-height: 0.9 !important;
+        color: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }}
+
+    /* ETIQUETA DE ESTADO (PENDIENTE, NUEVO, TERMINADO) DENTRO DEL BOTÓN */
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button span {{
+        font-size: 11px !important;
+        font-weight: 900 !important;
+        letter-spacing: 1.2px !important;
+        text-transform: uppercase !important;
+        color: #ffffff !important;
+        margin-top: 2px !important;
+        opacity: 0.95 !important;
     }}
 
     /* MÓVIL / VERTICAL */
@@ -512,13 +503,11 @@ def renderizar_tablero():
             else:
                 activos.append((prod, cant_total))
 
-        # Ordenar por cantidad descendente en cada sección
         activos.sort(key=lambda x: x[1], reverse=True)
         completados.sort(key=lambda x: x[1], reverse=True)
 
         ahora_actual = datetime.now()
 
-        # FUNCIÓN AUXILIAR DE RENDERIZADO POR BLOQUES DE 3 COLUMNAS
         def renderizar_lista_productos(lista):
             for i in range(0, len(lista), 3):
                 grupo = lista[i:i+3]
@@ -561,26 +550,23 @@ def renderizar_tablero():
                             """, unsafe_allow_html=True)
 
                         with col_btn:
-                            st.markdown(f"""
-                                <div class="num-box-masivo {clase_num_box}">
-                                    <div class="num-val-giant">{valor_mostrar}</div>
-                                    <div class="num-sub-status">{texto_estado}</div>
-                                </div>
-                            """, unsafe_allow_html=True)
+                            # Contenedor de fondo con el color correspondiente
+                            st.markdown(f'<div class="num-box-masivo {clase_num_box}"></div>', unsafe_allow_html=True)
                             
+                            # Botón con número gigante y texto de estado integrado
                             st.button(
-                                "", 
+                                f"{valor_mostrar}\n\n:{texto_estado}:", 
                                 key=f"num_btn_{producto}", 
                                 on_click=alternar_estado, 
                                 args=(producto, cant_total),
                                 use_container_width=True
                             )
 
-        # 1. RENDERIZAR PRODUCTOS ACTIVOS (PENDIENTES Y NUEVOS EN LA PARTE SUPERIOR)
+        # 1. RENDERIZAR PRODUCTOS ACTIVOS
         if activos:
             renderizar_lista_productos(activos)
 
-        # 2. SEPARADOR Y RENDERIZADO DE PRODUCTOS COMPLETADOS (EN LA PARTE INFERIOR)
+        # 2. SEPARADOR Y RENDERIZADO DE PRODUCTOS COMPLETADOS
         if completados:
             st.markdown("""
                 <div class="divider-completados">
