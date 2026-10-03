@@ -56,7 +56,7 @@ def borrar_todo():
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
     estado_global["completados"].clear()
     estado_global["cantidades_al_completar"].clear()
-    st.toast("🗑️️ Tablero limpiado. Puedes restaurarlo si fue un error.", icon="ℹ️")
+    st.toast("🗑 Tablero limpiado. Puedes restaurarlo si fue un error.", icon="ℹ️")
 
 def restaurar_estado():
     if estado_global["respaldo"]:
@@ -217,16 +217,16 @@ st.markdown(f"""
         100% {{ transform: scale(1.01); box-shadow: 0 6px 18px rgba(16, 185, 129, 0.7); }}
     }}
 
-    /* TARJETA DE TEXTO BASE (PRODUCTO) EN NEGRITAS Y MÁS ALTA */
+    /* TARJETA DE TEXTO BASE (PRODUCTO) */
     .card-box-img {{
         border-radius: 12px;
-        height: 85px !important; /* Altura mayor para acomodar fuente gigante */
+        height: 90px !important;
         display: flex;
         align-items: center;
         justify-content: center;
         text-align: center;
         padding: 0 10px;
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 900 !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         white-space: normal;
@@ -263,20 +263,20 @@ st.markdown(f"""
         100% {{ box-shadow: 0 0 18px #60a5fa; transform: scale(1.01); }}
     }}
 
-    /* BOTONES NUMÉRICOS GIGANTES (3X MÁS GRANDES) */
+    /* CONTENEDOR Y BOTÓN DEL NÚMERO GIGANTE */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
-        height: 85px !important;
+        height: 90px !important;
     }}
 
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
-        height: 85px !important;
-        min-height: 85px !important;
-        max-height: 85px !important;
+        height: 90px !important;
+        min-height: 90px !important;
+        max-height: 90px !important;
         border-radius: 12px !important;
         border: none !important;
-        font-size: 64px !important; /* FUENTE GIGANTE VISIBLE A DISTANCIA */
-        font-weight: 900 !important; /* NEGRITAS EXTREMAS */
-        line-height: 1 !important;
+        font-size: 72px !important; /* NÚMERO MASIVO GIGANTE */
+        font-weight: 900 !important; /* NEGRITA EXTREMA */
+        line-height: 90px !important;
         padding: 0px !important;
         color: #ffffff !important;
         box-shadow: 0 4px 8px rgba(0,0,0,0.4) !important;
@@ -286,15 +286,27 @@ st.markdown(f"""
         justify-content: center !important;
     }}
 
-    /* ESTADO ROJO SUAVE PARA BOTÓN NUMÉRICO */
-    button[aria-label*="🔴"] {{
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button p {{
+        font-size: 72px !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }}
+
+    /* COLORES DE ESTADO PARA EL BOTÓN NUMÉRICO */
+    .btn-num-pendiente button {{
         background-color: #c93b3b !important;
         color: #ffffff !important;
     }}
 
-    /* ESTADO VERDE PARA BOTÓN NUMÉRICO */
-    button[aria-label*="🟢"] {{
+    .btn-num-completado button {{
         background-color: #059669 !important;
+        color: #ffffff !important;
+    }}
+
+    .btn-num-reciente button {{
+        background-color: #1d4ed8 !important;
         color: #ffffff !important;
     }}
 
@@ -472,18 +484,19 @@ def renderizar_tablero():
                     if ultima_upd and (ahora_actual - ultima_upd).total_seconds() < 120 and not es_completado:
                         es_reciente = True
 
-                    # Selección de la clase de color principal
+                    # Selección de la clase de color principal y del botón
                     if es_reciente:
                         clase_estado = "card-nueva-orden"
+                        clase_btn = "btn-num-reciente"
+                    elif es_completado:
+                        clase_estado = "card-completado"
+                        clase_btn = "btn-num-completado"
                     else:
-                        clase_estado = "card-completado" if es_completado else "card-pendiente"
+                        clase_estado = "card-pendiente"
+                        clase_btn = "btn-num-pendiente"
 
-                    icono = "🟢" if es_completado else "🔴"
-                    
                     # CONVERSIÓN DEL NÚMERO 1 A SÍMBOLO DE INFINITO (∞)
-                    valor_mostrar = "∞" if cant_mostrar == 1 else cant_mostrar
-                    texto_boton = f"{icono} {valor_mostrar}"
-                    
+                    valor_mostrar = "∞" if cant_mostrar == 1 else str(cant_mostrar)
                     tag_update = "✨ " if es_reciente else ""
 
                     col_txt, col_btn = st.columns([0.65, 0.35], gap="small")
@@ -496,13 +509,15 @@ def renderizar_tablero():
                         """, unsafe_allow_html=True)
 
                     with col_btn:
+                        st.markdown(f'<div class="{clase_btn}">', unsafe_allow_html=True)
                         st.button(
-                            texto_boton, 
+                            valor_mostrar, 
                             key=f"num_btn_{producto}", 
                             on_click=alternar_estado, 
                             args=(producto, cant_total),
                             use_container_width=True
                         )
+                        st.markdown('</div>', unsafe_allow_html=True)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
