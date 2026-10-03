@@ -56,7 +56,7 @@ def borrar_todo():
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
     estado_global["completados"].clear()
     estado_global["cantidades_al_completar"].clear()
-    st.toast("🗑️ Tablero limpiado. Puedes restaurarlo si fue un error.", icon="ℹ️")
+    st.toast("🗑️️ Tablero limpiado. Puedes restaurarlo si fue un error.", icon="ℹ️")
 
 def restaurar_estado():
     if estado_global["respaldo"]:
@@ -175,14 +175,14 @@ st.markdown(f"""
 
     /* BOTONES DE ACCIÓN (BORRAR Y RESTAURAR) */
     .btn-borrar button {{
-        height: 32px !important; font-size: 12px !important; font-weight: 800 !important;
+        height: 36px !important; font-size: 13px !important; font-weight: 800 !important;
         background-color: #e55353 !important; color: #ffffff !important;
         border-radius: 6px !important; border: none !important;
     }}
     .btn-borrar button:hover {{ background-color: #c93b3b !important; }}
 
     .btn-restaurar button {{
-        height: 32px !important; font-size: 12px !important; font-weight: 800 !important;
+        height: 36px !important; font-size: 13px !important; font-weight: 800 !important;
         background-color: #3b82f6 !important; color: #ffffff !important;
         border-radius: 6px !important; border: none !important;
     }}
@@ -217,22 +217,22 @@ st.markdown(f"""
         100% {{ transform: scale(1.01); box-shadow: 0 6px 18px rgba(16, 185, 129, 0.7); }}
     }}
 
-    /* TARJETA DE TEXTO BASE (PRODUCTO) EN NEGRITAS */
+    /* TARJETA DE TEXTO BASE (PRODUCTO) EN NEGRITAS Y MÁS ALTA */
     .card-box-img {{
-        border-radius: 10px;
-        height: 56px;
+        border-radius: 12px;
+        height: 85px !important; /* Altura mayor para acomodar fuente gigante */
         display: flex;
         align-items: center;
         justify-content: center;
         text-align: center;
         padding: 0 10px;
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 900 !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        margin-bottom: 6px;
+        white-space: normal;
+        word-wrap: break-word;
+        line-height: 1.2;
+        margin-bottom: 8px;
         transition: all 0.3s ease;
     }}
 
@@ -263,19 +263,24 @@ st.markdown(f"""
         100% {{ box-shadow: 0 0 18px #60a5fa; transform: scale(1.01); }}
     }}
 
-    /* BOTONES NUMÉRICOS EXTRA GRANDES Y EN NEGRITAS */
+    /* BOTONES NUMÉRICOS GIGANTES (3X MÁS GRANDES) */
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
+        height: 85px !important;
+    }}
+
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
-        height: 56px !important;
-        min-height: 56px !important;
-        border-radius: 10px !important;
+        height: 85px !important;
+        min-height: 85px !important;
+        max-height: 85px !important;
+        border-radius: 12px !important;
         border: none !important;
-        font-size: 38px !important; /* Fuente gigante que abarca todo el recuadro */
-        font-weight: 900 !important; /* Peso visual máximo */
+        font-size: 64px !important; /* FUENTE GIGANTE VISIBLE A DISTANCIA */
+        font-weight: 900 !important; /* NEGRITAS EXTREMAS */
         line-height: 1 !important;
-        padding: 0px 4px !important;
+        padding: 0px !important;
         color: #ffffff !important;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
-        margin-bottom: 6px !important;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.4) !important;
+        margin-bottom: 8px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -481,7 +486,7 @@ def renderizar_tablero():
                     
                     tag_update = "✨ " if es_reciente else ""
 
-                    col_txt, col_btn = st.columns([0.70, 0.30], gap="small")
+                    col_txt, col_btn = st.columns([0.65, 0.35], gap="small")
 
                     with col_txt:
                         st.markdown(f"""
