@@ -220,13 +220,13 @@ st.markdown(f"""
     /* TARJETA DE TEXTO BASE (PRODUCTO) EN NEGRITAS */
     .card-box-img {{
         border-radius: 10px;
-        height: 52px;
+        height: 56px;
         display: flex;
         align-items: center;
         justify-content: center;
         text-align: center;
         padding: 0 10px;
-        font-size: 15px;
+        font-size: 16px;
         font-weight: 900 !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         white-space: nowrap;
@@ -263,17 +263,22 @@ st.markdown(f"""
         100% {{ box-shadow: 0 0 18px #60a5fa; transform: scale(1.01); }}
     }}
 
-    /* BOTONES NUMÉRICOS EN NEGRITAS */
+    /* BOTONES NUMÉRICOS EXTRA GRANDES Y EN NEGRITAS */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
-        height: 52px !important;
-        min-height: 52px !important;
+        height: 56px !important;
+        min-height: 56px !important;
         border-radius: 10px !important;
         border: none !important;
-        font-size: 26px !important;
-        font-weight: 900 !important;
+        font-size: 38px !important; /* Fuente gigante que abarca todo el recuadro */
+        font-weight: 900 !important; /* Peso visual máximo */
+        line-height: 1 !important;
+        padding: 0px 4px !important;
         color: #ffffff !important;
         box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
         margin-bottom: 6px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }}
 
     /* ESTADO ROJO SUAVE PARA BOTÓN NUMÉRICO */
@@ -405,7 +410,7 @@ def renderizar_tablero():
         st.markdown('</div>', unsafe_allow_html=True)
     with col_b2:
         st.markdown('<div class="btn-restaurar">', unsafe_allow_html=True)
-        st.button("↩️️ Restaurar", use_container_width=True, on_click=restaurar_estado)
+        st.button("↩️ Restaurar", use_container_width=True, on_click=restaurar_estado)
         st.markdown('</div>', unsafe_allow_html=True)
 
     # Cálculo de métricas
@@ -476,7 +481,7 @@ def renderizar_tablero():
                     
                     tag_update = "✨ " if es_reciente else ""
 
-                    col_txt, col_btn = st.columns([0.72, 0.28], gap="small")
+                    col_txt, col_btn = st.columns([0.70, 0.30], gap="small")
 
                     with col_txt:
                         st.markdown(f"""
