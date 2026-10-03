@@ -175,14 +175,14 @@ st.markdown(f"""
 
     /* BOTONES DE ACCIÓN (BORRAR Y RESTAURAR) */
     .btn-borrar button {{
-        height: 32px !important; font-size: 12px !important; font-weight: 700 !important;
+        height: 32px !important; font-size: 12px !important; font-weight: 800 !important;
         background-color: #e55353 !important; color: #ffffff !important;
         border-radius: 6px !important; border: none !important;
     }}
     .btn-borrar button:hover {{ background-color: #c93b3b !important; }}
 
     .btn-restaurar button {{
-        height: 32px !important; font-size: 12px !important; font-weight: 700 !important;
+        height: 32px !important; font-size: 12px !important; font-weight: 800 !important;
         background-color: #3b82f6 !important; color: #ffffff !important;
         border-radius: 6px !important; border: none !important;
     }}
@@ -195,7 +195,7 @@ st.markdown(f"""
         margin-bottom: 8px; border: 1px solid #2d3139;
     }}
 
-    .metric-inline {{ display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #ffffff; }}
+    .metric-inline {{ display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: #ffffff; }}
     .metric-inline .val {{ font-size: 16px; font-weight: 900; color: #e55353; }}
 
     /* BANNER DE FELICITACIONES */
@@ -217,7 +217,7 @@ st.markdown(f"""
         100% {{ transform: scale(1.01); box-shadow: 0 6px 18px rgba(16, 185, 129, 0.7); }}
     }}
 
-    /* TARJETA DE TEXTO BASE (PRODUCTO) */
+    /* TARJETA DE TEXTO BASE (PRODUCTO) EN NEGRITAS */
     .card-box-img {{
         border-radius: 10px;
         height: 52px;
@@ -227,7 +227,7 @@ st.markdown(f"""
         text-align: center;
         padding: 0 10px;
         font-size: 15px;
-        font-weight: 900;
+        font-weight: 900 !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         white-space: nowrap;
         overflow: hidden;
@@ -252,7 +252,7 @@ st.markdown(f"""
 
     /* ESTADO TEMPORAL AZUL DESTACADO (NUEVO PRODUCTO / 2 MINUTOS) */
     .card-nueva-orden {{
-        background-color: #2563eb !important; /* Azul Rey resplandeciente */
+        background-color: #2563eb !important;
         color: #ffffff !important;
         border: 2px solid #60a5fa !important;
         animation: destelloUpdate 1.5s infinite alternate !important;
@@ -263,7 +263,7 @@ st.markdown(f"""
         100% {{ box-shadow: 0 0 18px #60a5fa; transform: scale(1.01); }}
     }}
 
-    /* BOTONES NUMÉRICOS */
+    /* BOTONES NUMÉRICOS EN NEGRITAS */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
         height: 52px !important;
         min-height: 52px !important;
@@ -405,7 +405,7 @@ def renderizar_tablero():
         st.markdown('</div>', unsafe_allow_html=True)
     with col_b2:
         st.markdown('<div class="btn-restaurar">', unsafe_allow_html=True)
-        st.button("↩️ Restaurar", use_container_width=True, on_click=restaurar_estado)
+        st.button("↩️️ Restaurar", use_container_width=True, on_click=restaurar_estado)
         st.markdown('</div>', unsafe_allow_html=True)
 
     # Cálculo de métricas
@@ -464,12 +464,16 @@ def renderizar_tablero():
 
                     # Selección de la clase de color principal
                     if es_reciente:
-                        clase_estado = "card-nueva-orden" # Azul destellante para nuevos
+                        clase_estado = "card-nueva-orden"
                     else:
                         clase_estado = "card-completado" if es_completado else "card-pendiente"
 
                     icono = "🟢" if es_completado else "🔴"
-                    texto_boton = f"{icono} {cant_mostrar}"
+                    
+                    # CONVERSIÓN DEL NÚMERO 1 A SÍMBOLO DE INFINITO (∞)
+                    valor_mostrar = "∞" if cant_mostrar == 1 else cant_mostrar
+                    texto_boton = f"{icono} {valor_mostrar}"
+                    
                     tag_update = "✨ " if es_reciente else ""
 
                     col_txt, col_btn = st.columns([0.72, 0.28], gap="small")
@@ -477,7 +481,7 @@ def renderizar_tablero():
                     with col_txt:
                         st.markdown(f"""
                             <div class="card-box-img {clase_estado}">
-                                {tag_update}{producto}
+                                {tag_update}<b>{producto}</b>
                             </div>
                         """, unsafe_allow_html=True)
 
