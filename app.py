@@ -217,38 +217,76 @@ st.markdown(f"""
         100% {{ transform: scale(1.01); box-shadow: 0 6px 18px rgba(16, 185, 129, 0.7); }}
     }}
 
+    /* SEPARADOR DE SECCIÓN COMPLETADOS */
+    .divider-completados {{
+        display: flex;
+        align-items: center;
+        text-align: center;
+        color: #10b981;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 1.5px;
+        margin: 12px 0 8px 0;
+    }}
+
+    .divider-completados::before, .divider-completados::after {{
+        content: '';
+        flex: 1;
+        border-bottom: 2px dashed #10b981;
+        opacity: 0.4;
+    }}
+
+    .divider-completados span {{
+        padding: 0 10px;
+    }}
+
     /* TARJETA DE TEXTO DEL PRODUCTO */
     .card-box-img {{
         border-radius: 10px;
-        height: 85px !important;
+        height: 100px !important;
         display: flex;
         align-items: center;
         justify-content: center;
         text-align: center;
-        padding: 0 8px;
-        font-size: 15px;
-        font-weight: 800 !important;
+        padding: 0 10px;
+        font-size: 30px !important;
+        font-weight: 900 !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         white-space: normal;
         word-wrap: break-word;
-        line-height: 1.2;
+        line-height: 1.15;
         margin-bottom: 6px;
     }}
 
-    /* CAJA DEL NÚMERO MASIVO GIGANTE (HTML PURO) */
+    /* CAJA DEL NÚMERO MASIVO Y TEXTO DE ESTADO */
     .num-box-masivo {{
         border-radius: 10px;
-        height: 85px !important;
+        height: 100px !important;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        font-size: 70px !important; /* TAMAÑO EXTREMO */
-        font-weight: 900 !important;
-        line-height: 1 !important;
         box-shadow: 0 3px 6px rgba(0,0,0,0.3);
         margin-bottom: 6px;
         cursor: pointer;
         user-select: none;
+    }}
+
+    .num-val-giant {{
+        font-size: 62px !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }}
+
+    .num-sub-status {{
+        font-size: 11px !important;
+        font-weight: 900 !important;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        margin-top: 2px;
+        opacity: 0.95;
     }}
 
     .num-box-pendiente {{
@@ -259,6 +297,7 @@ st.markdown(f"""
     .num-box-completado {{
         background-color: #059669 !important;
         color: #ffffff !important;
+        opacity: 0.75;
     }}
 
     .num-box-reciente {{
@@ -278,6 +317,7 @@ st.markdown(f"""
         background-color: #10b981 !important;
         color: #ffffff !important;
         border: 1px solid #059669 !important;
+        opacity: 0.75;
     }}
 
     /* ESTADO TEMPORAL AZUL (NUEVO PRODUCTO) */
@@ -293,15 +333,15 @@ st.markdown(f"""
         100% {{ box-shadow: 0 0 18px #60a5fa; transform: scale(1.01); }}
     }}
 
-    /* SOBRESCRIBIR BOTÓN TRANSPARENTE EN SUPERPOSICIÓN SI SE REQUIERE */
+    /* BOTÓN TRANSPARENTE SUPERPUESTO */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
-        height: 85px !important;
-        margin-top: -91px !important; /* Superpone el botón nativo de Streamlit transparente */
+        height: 100px !important;
+        margin-top: -106px !important;
     }}
 
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
-        height: 85px !important;
-        min-height: 85px !important;
+        height: 100px !important;
+        min-height: 100px !important;
         background-color: transparent !important;
         border: none !important;
         color: transparent !important;
@@ -406,7 +446,7 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # Encabezado con Logo y Título Prominentes
+    # Encabezado con Logo y Título
     st.markdown(f"""
         <div class="header-logo-container">
             <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
@@ -462,67 +502,92 @@ def renderizar_tablero():
         """, unsafe_allow_html=True)
 
     if conteo_productos:
-        productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1], reverse=True)
+        # SEPARACIÓN Y REORDENAMIENTO: ACTIVOS ARRIBA, COMPLETADOS ABAJO
+        activos = []
+        completados = []
+
+        for prod, cant_total in conteo_productos.items():
+            if prod in estado_global["completados"]:
+                completados.append((prod, cant_total))
+            else:
+                activos.append((prod, cant_total))
+
+        # Ordenar por cantidad descendente en cada sección
+        activos.sort(key=lambda x: x[1], reverse=True)
+        completados.sort(key=lambda x: x[1], reverse=True)
+
         ahora_actual = datetime.now()
 
-        # RENDERIZADO EN GRILLA DE 3 COLUMNAS
-        for i in range(0, len(productos_ordenados), 3):
-            grupo = productos_ordenados[i:i+3]
-            cols = st.columns(3)
+        # FUNCIÓN AUXILIAR DE RENDERIZADO POR BLOQUES DE 3 COLUMNAS
+        def renderizar_lista_productos(lista):
+            for i in range(0, len(lista), 3):
+                grupo = lista[i:i+3]
+                cols = st.columns(3)
 
-            for idx, (producto, cant_total) in enumerate(grupo):
-                with cols[idx]:
-                    es_completado = producto in estado_global["completados"]
-                    cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
-                    cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
+                for idx, (producto, cant_total) in enumerate(grupo):
+                    with cols[idx]:
+                        es_completado = producto in estado_global["completados"]
+                        cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
+                        cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    # Validar si han pasado menos de 2 minutos (120 s) desde la última actualización
-                    ultima_upd = st.session_state.tiempos_actualizacion.get(producto)
-                    es_reciente = False
-                    if ultima_upd and (ahora_actual - ultima_upd).total_seconds() < 120 and not es_completado:
-                        es_reciente = True
+                        ultima_upd = st.session_state.tiempos_actualizacion.get(producto)
+                        es_reciente = False
+                        if ultima_upd and (ahora_actual - ultima_upd).total_seconds() < 120 and not es_completado:
+                            es_reciente = True
 
-                    # Selección de la clase de color principal y del botón
-                    if es_reciente:
-                        clase_estado = "card-nueva-orden"
-                        clase_num_box = "num-box-reciente"
-                    elif es_completado:
-                        clase_estado = "card-completado"
-                        clase_num_box = "num-box-completado"
-                    else:
-                        clase_estado = "card-pendiente"
-                        clase_num_box = "num-box-pendiente"
+                        if es_reciente:
+                            clase_estado = "card-nueva-orden"
+                            clase_num_box = "num-box-reciente"
+                            texto_estado = "NUEVO"
+                        elif es_completado:
+                            clase_estado = "card-completado"
+                            clase_num_box = "num-box-completado"
+                            texto_estado = "TERMINADO"
+                        else:
+                            clase_estado = "card-pendiente"
+                            clase_num_box = "num-box-pendiente"
+                            texto_estado = "PENDIENTE"
 
-                    # CONVERSIÓN DEL NÚMERO 1 A SÍMBOLO DE INFINITO (∞)
-                    valor_mostrar = "∞" if cant_mostrar == 1 else str(cant_mostrar)
-                    tag_update = "✨ " if es_reciente else ""
+                        valor_mostrar = "∞" if cant_mostrar == 1 else str(cant_mostrar)
+                        tag_update = "✨ " if es_reciente else ""
 
-                    # PROPORCIÓN: 70% Nombre Producto / 30% Número Gigante HTML
-                    col_txt, col_btn = st.columns([0.70, 0.30], gap="small")
+                        col_txt, col_btn = st.columns([0.70, 0.30], gap="small")
 
-                    with col_txt:
-                        st.markdown(f"""
-                            <div class="card-box-img {clase_estado}">
-                                {tag_update}<b>{producto}</b>
-                            </div>
-                        """, unsafe_allow_html=True)
+                        with col_txt:
+                            st.markdown(f"""
+                                <div class="card-box-img {clase_estado}">
+                                    {tag_update}{producto}
+                                </div>
+                            """, unsafe_allow_html=True)
 
-                    with col_btn:
-                        # Renderiza la tarjeta visual con HTML directo en tamaño gigante
-                        st.markdown(f"""
-                            <div class="num-box-masivo {clase_num_box}">
-                                {valor_mostrar}
-                            </div>
-                        """, unsafe_allow_html=True)
-                        
-                        # Botón invisible superpuesto para capturar el clic
-                        st.button(
-                            "", 
-                            key=f"num_btn_{producto}", 
-                            on_click=alternar_estado, 
-                            args=(producto, cant_total),
-                            use_container_width=True
-                        )
+                        with col_btn:
+                            st.markdown(f"""
+                                <div class="num-box-masivo {clase_num_box}">
+                                    <div class="num-val-giant">{valor_mostrar}</div>
+                                    <div class="num-sub-status">{texto_estado}</div>
+                                </div>
+                            """, unsafe_allow_html=True)
+                            
+                            st.button(
+                                "", 
+                                key=f"num_btn_{producto}", 
+                                on_click=alternar_estado, 
+                                args=(producto, cant_total),
+                                use_container_width=True
+                            )
+
+        # 1. RENDERIZAR PRODUCTOS ACTIVOS (PENDIENTES Y NUEVOS EN LA PARTE SUPERIOR)
+        if activos:
+            renderizar_lista_productos(activos)
+
+        # 2. SEPARADOR Y RENDERIZADO DE PRODUCTOS COMPLETADOS (EN LA PARTE INFERIOR)
+        if completados:
+            st.markdown("""
+                <div class="divider-completados">
+                    <span>PRODUCTOS TERMINADOS</span>
+                </div>
+            """, unsafe_allow_html=True)
+            renderizar_lista_productos(completados)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
