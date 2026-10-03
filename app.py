@@ -220,7 +220,7 @@ st.markdown(f"""
     /* TARJETA DE TEXTO DEL PRODUCTO */
     .card-box-img {{
         border-radius: 10px;
-        height: 70px !important;
+        height: 75px !important;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -262,28 +262,36 @@ st.markdown(f"""
         100% {{ box-shadow: 0 0 18px #60a5fa; transform: scale(1.01); }}
     }}
 
-    /* INYECCIÓN DIRECTA PARA TAMAÑO GIGANTE DEL TEXTO DEL BOTÓN */
+    /* CONTENEDOR DEL BOTÓN NUMÉRICO */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
-        height: 70px !important;
+        height: 75px !important;
     }}
 
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
-        height: 70px !important;
-        min-height: 70px !important;
-        max-height: 70px !important;
+        height: 75px !important;
+        min-height: 75px !important;
+        max-height: 75px !important;
         border-radius: 10px !important;
         border: none !important;
         padding: 0px !important;
         margin: 0px !important;
         box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
+        overflow: hidden !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }}
 
-    /* SELECCIONA EL TEXTO O SÍMBOLO INTERNO RENDERIZADO POR STREAMLIT */
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button * {{
-        font-size: 58px !important;
+    /* ESCALADO VECTORIAL MASIVO (FORZADO CON TRANSFORM SCALE) */
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button p,
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button div,
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button span {{
+        transform: scale(2.5) !important; /* MULTIPLICA X2.5 EL TAMAÑO VISUAL */
         font-weight: 900 !important;
         line-height: 1 !important;
-        letter-spacing: -2px !important;
+        display: inline-block !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }}
 
     /* COLORES DE ESTADO DEL BOTÓN NUMÉRICO */
@@ -491,7 +499,7 @@ def renderizar_tablero():
                     valor_mostrar = "∞" if cant_mostrar == 1 else str(cant_mostrar)
                     tag_update = "✨ " if es_reciente else ""
 
-                    # PROPORCIÓN AJUSTADA: 70% Nombre Producto / 30% Número Gigante
+                    # PROPORCIÓN: 70% Nombre Producto / 30% Número Gigante Escalado
                     col_txt, col_btn = st.columns([0.70, 0.30], gap="small")
 
                     with col_txt:
