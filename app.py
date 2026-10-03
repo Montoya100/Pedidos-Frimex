@@ -220,7 +220,7 @@ st.markdown(f"""
     /* TARJETA DE TEXTO DEL PRODUCTO */
     .card-box-img {{
         border-radius: 10px;
-        height: 75px !important;
+        height: 85px !important;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -233,6 +233,37 @@ st.markdown(f"""
         word-wrap: break-word;
         line-height: 1.2;
         margin-bottom: 6px;
+    }}
+
+    /* CAJA DEL NÚMERO MASIVO GIGANTE (HTML PURO) */
+    .num-box-masivo {{
+        border-radius: 10px;
+        height: 85px !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 70px !important; /* TAMAÑO EXTREMO */
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+        margin-bottom: 6px;
+        cursor: pointer;
+        user-select: none;
+    }}
+
+    .num-box-pendiente {{
+        background-color: #c93b3b !important;
+        color: #ffffff !important;
+    }}
+
+    .num-box-completado {{
+        background-color: #059669 !important;
+        color: #ffffff !important;
+    }}
+
+    .num-box-reciente {{
+        background-color: #1d4ed8 !important;
+        color: #ffffff !important;
     }}
 
     /* TARJETA PENDIENTE (ROJO) */
@@ -262,52 +293,19 @@ st.markdown(f"""
         100% {{ box-shadow: 0 0 18px #60a5fa; transform: scale(1.01); }}
     }}
 
-    /* CONTENEDOR DEL BOTÓN NUMÉRICO */
+    /* SOBRESCRIBIR BOTÓN TRANSPARENTE EN SUPERPOSICIÓN SI SE REQUIERE */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
-        height: 75px !important;
+        height: 85px !important;
+        margin-top: -91px !important; /* Superpone el botón nativo de Streamlit transparente */
     }}
 
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
-        height: 75px !important;
-        min-height: 75px !important;
-        max-height: 75px !important;
-        border-radius: 10px !important;
+        height: 85px !important;
+        min-height: 85px !important;
+        background-color: transparent !important;
         border: none !important;
-        padding: 0px !important;
-        margin: 0px !important;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
-        overflow: hidden !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }}
-
-    /* ESCALADO VECTORIAL MASIVO (FORZADO CON TRANSFORM SCALE) */
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button p,
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button div,
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button span {{
-        transform: scale(2.5) !important; /* MULTIPLICA X2.5 EL TAMAÑO VISUAL */
-        font-weight: 900 !important;
-        line-height: 1 !important;
-        display: inline-block !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }}
-
-    /* COLORES DE ESTADO DEL BOTÓN NUMÉRICO */
-    .btn-num-pendiente button {{
-        background-color: #c93b3b !important;
-        color: #ffffff !important;
-    }}
-
-    .btn-num-completado button {{
-        background-color: #059669 !important;
-        color: #ffffff !important;
-    }}
-
-    .btn-num-reciente button {{
-        background-color: #1d4ed8 !important;
-        color: #ffffff !important;
+        color: transparent !important;
+        box-shadow: none !important;
     }}
 
     /* MÓVIL / VERTICAL */
@@ -487,19 +485,19 @@ def renderizar_tablero():
                     # Selección de la clase de color principal y del botón
                     if es_reciente:
                         clase_estado = "card-nueva-orden"
-                        clase_btn = "btn-num-reciente"
+                        clase_num_box = "num-box-reciente"
                     elif es_completado:
                         clase_estado = "card-completado"
-                        clase_btn = "btn-num-completado"
+                        clase_num_box = "num-box-completado"
                     else:
                         clase_estado = "card-pendiente"
-                        clase_btn = "btn-num-pendiente"
+                        clase_num_box = "num-box-pendiente"
 
                     # CONVERSIÓN DEL NÚMERO 1 A SÍMBOLO DE INFINITO (∞)
                     valor_mostrar = "∞" if cant_mostrar == 1 else str(cant_mostrar)
                     tag_update = "✨ " if es_reciente else ""
 
-                    # PROPORCIÓN: 70% Nombre Producto / 30% Número Gigante Escalado
+                    # PROPORCIÓN: 70% Nombre Producto / 30% Número Gigante HTML
                     col_txt, col_btn = st.columns([0.70, 0.30], gap="small")
 
                     with col_txt:
@@ -510,15 +508,21 @@ def renderizar_tablero():
                         """, unsafe_allow_html=True)
 
                     with col_btn:
-                        st.markdown(f'<div class="{clase_btn}">', unsafe_allow_html=True)
+                        # Renderiza la tarjeta visual con HTML directo en tamaño gigante
+                        st.markdown(f"""
+                            <div class="num-box-masivo {clase_num_box}">
+                                {valor_mostrar}
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Botón invisible superpuesto para capturar el clic
                         st.button(
-                            valor_mostrar, 
+                            "", 
                             key=f"num_btn_{producto}", 
                             on_click=alternar_estado, 
                             args=(producto, cant_total),
                             use_container_width=True
                         )
-                        st.markdown('</div>', unsafe_allow_html=True)
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
