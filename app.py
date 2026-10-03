@@ -119,16 +119,21 @@ def reproducir_sonido_notificacion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS ESTÁTICOS (FUERA DEL FRAGMENTO)
+# 3. ESTILOS CSS ESTÁTICOS (SIN PARPADEO)
 # ==========================================
 st.markdown(f"""
     <style>
-    /* Desactivar opacidad tenue de Streamlit durante recargas */
-    [data-testid="stAppViewContainer"] {{
+    /* ELIMINAR EL PARPADEO / OPACIDAD DURANTE EL REFRESCADO */
+    div[data-testid="stAppViewContainer"],
+    div[data-testid="stMain"],
+    section[data-testid="stSidebar"],
+    .element-container,
+    div[data-testid="stFragment"] {{
         opacity: 1 !important;
         transition: none !important;
+        animation: none !important;
     }}
-    
+
     .stApp {{ background-color: #0e1117 !important; }}
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
@@ -139,13 +144,13 @@ st.markdown(f"""
         padding-left: 0.4rem !important; padding-right: 0.4rem !important;
     }}
 
-    /* ENCABEZADO DESTACADO */
+    /* ENCABEZADO DESTACADO Y COMPACTO */
     .header-logo-container {{
         display: flex; justify-content: center; align-items: center;
-        gap: 12px; margin-bottom: 6px; width: 100%; text-align: center;
+        gap: 12px; margin-bottom: 4px; width: 100%; text-align: center;
     }}
     
-    .header-logo-img {{ height: 45px !important; width: auto; object-fit: contain; }}
+    .header-logo-img {{ height: 42px !important; width: auto; object-fit: contain; }}
     .header-text-group {{ display: flex; flex-direction: column; align-items: center; justify-content: center; }}
 
     .header-title {{
@@ -153,22 +158,7 @@ st.markdown(f"""
         line-height: 1.1; letter-spacing: 0.8px; margin: 0; padding: 0; text-align: center; white-space: nowrap;
     }}
 
-    /* BOTONES DE ACCIÓN (BORRAR Y RESTAURAR) */
-    .btn-borrar button {{
-        height: 36px !important; font-size: 13px !important; font-weight: 800 !important;
-        background-color: #e55353 !important; color: #ffffff !important;
-        border-radius: 6px !important; border: none !important;
-    }}
-    .btn-borrar button:hover {{ background-color: #c93b3b !important; }}
-
-    .btn-restaurar button {{
-        height: 36px !important; font-size: 13px !important; font-weight: 800 !important;
-        background-color: #3b82f6 !important; color: #ffffff !important;
-        border-radius: 6px !important; border: none !important;
-    }}
-    .btn-restaurar button:hover {{ background-color: #2563eb !important; }}
-
-    /* MÉTRICAS */
+    /* MÉTRICAS EN LÍNEA */
     .metrics-row {{
         display: flex; justify-content: space-around; align-items: center;
         background-color: #1a1d24; border-radius: 6px; padding: 4px 8px;
@@ -189,12 +179,6 @@ st.markdown(f"""
         font-weight: 900;
         margin-bottom: 10px;
         box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-        animation: pulseGlow 2s infinite alternate;
-    }}
-
-    @keyframes pulseGlow {{
-        0% {{ transform: scale(0.99); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }}
-        100% {{ transform: scale(1.01); box-shadow: 0 6px 18px rgba(16, 185, 129, 0.7); }}
     }}
 
     /* SEPARADOR DE SECCIÓN COMPLETADOS */
@@ -238,7 +222,7 @@ st.markdown(f"""
         margin-bottom: 6px;
     }}
 
-    /* CAJA ORIGINAL DEL NÚMERO MASIVO GIGANTE (HTML PURO) */
+    /* CAJA DEL NÚMERO MASIVO GIGANTE */
     .num-box-masivo {{
         border-radius: 10px;
         height: 100px !important;
@@ -255,7 +239,7 @@ st.markdown(f"""
 
     .num-box-pendiente {{ background-color: #c93b3b !important; color: #ffffff !important; }}
     .num-box-completado {{ background-color: #059669 !important; color: #ffffff !important; opacity: 0.75; }}
-    .num-box-reciente {{ background-color: #1d4ed8 !important; color: #ffffff !important; }}
+    .num-box-reciente {{ background-color: #1d4ed8 !important; }}
 
     /* TARJETA PENDIENTE (ROJO) */
     .card-pendiente {{
@@ -277,12 +261,6 @@ st.markdown(f"""
         background-color: #2563eb !important;
         color: #ffffff !important;
         border: 2px solid #60a5fa !important;
-        animation: destelloUpdate 1.5s infinite alternate !important;
-    }}
-
-    @keyframes destelloUpdate {{
-        0% {{ box-shadow: 0 0 6px #3b82f6; transform: scale(0.99); }}
-        100% {{ box-shadow: 0 0 18px #60a5fa; transform: scale(1.01); }}
     }}
 
     /* BOTÓN TRANSPARENTE SUPERPUESTO */
@@ -311,6 +289,17 @@ st.markdown(f"""
         text-transform: uppercase !important;
         color: #ffffff !important;
         opacity: 0.95 !important;
+    }}
+
+    /* ESTILO BOTÓN DE CONFIGURACIÓN / DRAWER POP-OVER */
+    div[data-testid="stPopover"] button {{
+        height: 32px !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+        background-color: #262730 !important;
+        color: #cccccc !important;
+        border: 1px solid #3d424d !important;
+        border-radius: 6px !important;
     }}
 
     /* MÓVIL / VERTICAL */
@@ -404,27 +393,28 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # Encabezado estático
-    st.markdown(f"""
-        <div class="header-logo-container">
-            <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
-            <div class="header-text-group">
-                <h1 class="header-title">TABLA DE PRODUCCIÓN</h1>
-                <span style="font-size:10px; color:#a0a0a0;">🔄 Sincronizado | {datetime.now().strftime('%H:%M:%S')}</span>
+    # ENCABEZADO CON DRAWER / POPOVER DE CONFIGURACIÓN INTEGRADO EN LA MISMA LÍNEA
+    col_hdr_left, col_hdr_center, col_hdr_right = st.columns([0.15, 0.70, 0.15])
+    
+    with col_hdr_center:
+        st.markdown(f"""
+            <div class="header-logo-container">
+                <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
+                <div class="header-text-group">
+                    <h1 class="header-title">TABLA DE PRODUCCIÓN</h1>
+                    <span style="font-size:10px; color:#a0a0a0;">🔄 Sincronizado | {datetime.now().strftime('%H:%M:%S')}</span>
+                </div>
             </div>
-        </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
-    # Botones de Acción
-    col_b1, col_b2 = st.columns(2)
-    with col_b1:
-        st.markdown('<div class="btn-borrar">', unsafe_allow_html=True)
-        st.button("🗑️ Borrar todo", use_container_width=True, on_click=borrar_todo)
-        st.markdown('</div>', unsafe_allow_html=True)
-    with col_b2:
-        st.markdown('<div class="btn-restaurar">', unsafe_allow_html=True)
-        st.button("↩️ Restaurar", use_container_width=True, on_click=restaurar_estado)
-        st.markdown('</div>', unsafe_allow_html=True)
+    with col_hdr_right:
+        # Menú desplegable oculto (Popover / Drawer) para ganar el espacio superior
+        with st.popover("⚙️ Opciones", use_container_width=True):
+            st.markdown("### Acciones de Tablero")
+            if st.button("🗑️ Borrar todo", use_container_width=True):
+                borrar_todo()
+            if st.button("↩️ Restaurar", use_container_width=True):
+                restaurar_estado()
 
     # Cálculo de métricas
     piezas_pendientes = 0
