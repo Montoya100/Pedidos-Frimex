@@ -34,22 +34,40 @@ def obtener_base64_imagen(ruta_imagen):
 LOGO_URL = obtener_base64_imagen("logo.png")
 
 # ==========================================
-# 2. ESTADO GLOBAL EN MEMORIA
+# 2. ESTADO GLOBAL EN MEMORIA CON RESPALDO
 # ==========================================
 @st.cache_resource
 def obtener_estado_global():
     return {
         "completados": set(),
         "cantidades_al_completar": {},
-        "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
+        "respaldo": None  # Para permitir la restauración si borran por error
     }
 
 estado_global = obtener_estado_global()
 
-def reiniciar_contador():
+def borrar_todo():
+    # Guardar copia de respaldo antes de limpiar
+    estado_global["respaldo"] = {
+        "completados": estado_global["completados"].copy(),
+        "cantidades_al_completar": estado_global["cantidades_al_completar"].copy(),
+        "hora_corte_utc": estado_global["hora_corte_utc"]
+    }
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
     estado_global["completados"].clear()
     estado_global["cantidades_al_completar"].clear()
+    st.toast("🗑️ Tablero limpiado. Puedes restaurarlo si fue un error.", icon="ℹ️")
+
+def restaurar_estado():
+    if estado_global["respaldo"]:
+        estado_global["completados"] = estado_global["respaldo"]["completados"].copy()
+        estado_global["cantidades_al_completar"] = estado_global["respaldo"]["cantidades_al_completar"].copy()
+        estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
+        estado_global["respaldo"] = None
+        st.toast("↩️ Tablero restaurado con éxito.", icon="✅")
+    else:
+        st.toast("⚠️ No hay respaldo anterior para restaurar.", icon="⚠️")
 
 def alternar_estado(producto, cantidad_actual):
     if producto in estado_global["completados"]:
@@ -96,7 +114,7 @@ def reproducir_sonido_notificacion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS PERSONALIZADOS
+# 3. ESTILOS CSS PERSONALIZADOS Y ANIMACIONES
 # ==========================================
 st.markdown(f"""
     <style>
@@ -150,6 +168,25 @@ st.markdown(f"""
         line-height: 1; letter-spacing: 0.5px; margin: 0; padding: 0; text-align: center; white-space: nowrap;
     }}
 
+    /* BOTONES DE ACCIÓN (BORRAR Y RESTAURAR) */
+    .btn-acciones-container {{
+        display: flex; gap: 8px; margin-bottom: 6px;
+    }}
+    
+    .btn-borrar button {{
+        height: 32px !important; font-size: 12px !important; font-weight: 700 !important;
+        background-color: #ef4444 !important; color: #ffffff !important;
+        border-radius: 6px !important; border: none !important;
+    }}
+    .btn-borrar button:hover {{ background-color: #dc2626 !important; }}
+
+    .btn-restaurar button {{
+        height: 32px !important; font-size: 12px !important; font-weight: 700 !important;
+        background-color: #3b82f6 !important; color: #ffffff !important;
+        border-radius: 6px !important; border: none !important;
+    }}
+    .btn-restaurar button:hover {{ background-color: #2563eb !important; }}
+
     /* MÉTRICAS */
     .metrics-row {{
         display: flex; justify-content: space-around; align-items: center;
@@ -160,11 +197,23 @@ st.markdown(f"""
     .metric-inline {{ display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #ffffff; }}
     .metric-inline .val {{ font-size: 16px; font-weight: 900; color: #ff4b4b; }}
 
-    /* BOTÓN REINICIAR */
-    .btn-reiniciar-wrap button {{
-        height: 32px !important; font-size: 12px !important; font-weight: 700 !important;
-        background-color: #ffffff !important; color: #2c3e50 !important;
-        border-radius: 6px !important; border: none !important; margin-bottom: 6px !important;
+    /* BANNER DE FELICITACIONES CUANDO TODO ESTÁ LISTO */
+    .banner-felicidades {{
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: #ffffff;
+        padding: 10px 14px;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 15px;
+        font-weight: 900;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        animation: pulseGlow 2s infinite alternate;
+    }}
+
+    @keyframes pulseGlow {{
+        0% {{ transform: scale(0.99); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }}
+        100% {{ transform: scale(1.01); box-shadow: 0 6px 18px rgba(16, 185, 129, 0.7); }}
     }}
 
     /* TARJETA DE TEXTO (PRODUCTO) */
@@ -186,6 +235,20 @@ st.markdown(f"""
         text-overflow: ellipsis;
         margin-bottom: 6px;
         border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }}
+
+    /* ANIMACIÓN Y RESPLANDOR PARA PRODUCTO ACTUALIZADO */
+    .card-actualizada {{
+        border: 2px solid #3b82f6 !important;
+        background-color: #eff6ff !important;
+        color: #1d4ed8 !important;
+        animation: destelloUpdate 1.5s infinite alternate !important;
+    }}
+
+    @keyframes destelloUpdate {{
+        0% {{ box-shadow: 0 0 4px #3b82f6; }}
+        100% {{ box-shadow: 0 0 16px #3b82f6; }}
     }}
 
     /* ESTILOS DE BASE PARA BOTONES NUMÉRICOS */
@@ -302,7 +365,8 @@ def renderizar_tablero():
                 estado_global["completados"].remove(prod)
                 estado_global["cantidades_al_completar"].pop(prod, None)
 
-    # Notificación de nuevo pedido
+    # Identificar productos que se acaban de actualizar para destacarlos
+    productos_actualizados = set()
     if "ultimo_conteo" not in st.session_state:
         st.session_state.ultimo_conteo = conteo_productos.copy()
     else:
@@ -311,7 +375,7 @@ def renderizar_tablero():
             cant_anterior = st.session_state.ultimo_conteo.get(prod, 0)
             if cant > cant_anterior:
                 nuevo_pedido_detectado = True
-                break
+                productos_actualizados.add(prod)
 
         if nuevo_pedido_detectado:
             reproducir_sonido_notificacion()
@@ -330,10 +394,16 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # Botón de Reiniciar
-    st.markdown('<div class="btn-reiniciar-wrap">', unsafe_allow_html=True)
-    st.button("Reiniciar", use_container_width=True, on_click=reiniciar_contador)
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Botones de Acción (Borrar y Restaurar)
+    col_b1, col_b2 = st.columns(2)
+    with col_b1:
+        st.markdown('<div class="btn-borrar">', unsafe_allow_html=True)
+        st.button("🗑️ Borrar todo", use_container_width=True, on_click=borrar_todo)
+        st.markdown('</div>', unsafe_allow_html=True)
+    with col_b2:
+        st.markdown('<div class="btn-restaurar">', unsafe_allow_html=True)
+        st.button("↩️ Restaurar", use_container_width=True, on_click=restaurar_estado)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # Cálculo de métricas
     piezas_pendientes = 0
@@ -360,6 +430,14 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
+    # Banner de Felicitación si todo está listo
+    if conteo_productos and piezas_pendientes == 0:
+        st.markdown("""
+            <div class="banner-felicidades">
+                🎉 ¡Felicidades! Hacemos un gran equipo, logramos terminar todo.
+            </div>
+        """, unsafe_allow_html=True)
+
     if conteo_productos:
         productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1], reverse=True)
 
@@ -374,18 +452,21 @@ def renderizar_tablero():
                     cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
 
-                    # ETIQUETA CON EMOJI IDENTIFICADOR (NATIVO EN STREAMLIT)
-                    # Verde = Completado / Listo
-                    # Rojo = Pendiente
+                    # ETIQUETA CON EMOJI IDENTIFICADOR
                     icono = "🟢" if es_completado else "🔴"
                     texto_boton = f"{icono} {cant_mostrar}"
+
+                    # Verificar si este producto tuvo actualización reciente para aplicar resplandor
+                    es_actualizado = producto in productos_actualizados
+                    clase_card_update = "card-actualizada" if es_actualizado else ""
+                    tag_update = "✨ " if es_actualizado else ""
 
                     col_txt, col_btn = st.columns([0.74, 0.26], gap="small")
 
                     with col_txt:
                         st.markdown(f"""
-                            <div class="card-box-img">
-                                {producto}
+                            <div class="card-box-img {clase_card_update}">
+                                {tag_update}{producto}
                             </div>
                         """, unsafe_allow_html=True)
 
