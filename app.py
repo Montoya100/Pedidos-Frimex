@@ -217,21 +217,21 @@ st.markdown(f"""
         100% {{ transform: scale(1.01); box-shadow: 0 6px 18px rgba(16, 185, 129, 0.7); }}
     }}
 
-    /* TARJETA DE TEXTO BASE (PRODUCTO) */
+    /* TARJETA DE TEXTO DEL PRODUCTO (AJUSTADA) */
     .card-box-img {{
         border-radius: 12px;
-        height: 90px !important;
+        height: 110px !important;
         display: flex;
         align-items: center;
         justify-content: center;
         text-align: center;
-        padding: 0 10px;
-        font-size: 16px;
-        font-weight: 900 !important;
+        padding: 0 8px;
+        font-size: 15px;
+        font-weight: 800 !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         white-space: normal;
         word-wrap: break-word;
-        line-height: 1.2;
+        line-height: 1.25;
         margin-bottom: 8px;
         transition: all 0.3s ease;
     }}
@@ -263,20 +263,20 @@ st.markdown(f"""
         100% {{ box-shadow: 0 0 18px #60a5fa; transform: scale(1.01); }}
     }}
 
-    /* CONTENEDOR Y BOTÓN DEL NÚMERO GIGANTE */
+    /* CONTENEDOR Y BOTÓN DEL NÚMERO GIGANTESCO */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
-        height: 90px !important;
+        height: 110px !important;
     }}
 
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
-        height: 90px !important;
-        min-height: 90px !important;
-        max-height: 90px !important;
+        height: 110px !important;
+        min-height: 110px !important;
+        max-height: 110px !important;
         border-radius: 12px !important;
         border: none !important;
-        font-size: 72px !important; /* NÚMERO MASIVO GIGANTE */
-        font-weight: 900 !important; /* NEGRITA EXTREMA */
-        line-height: 90px !important;
+        font-size: 95px !important; /* NÚMERO GIGANTE ULTRA VISIBLE */
+        font-weight: 900 !important; /* NEGRITA ABSOLUTA */
+        line-height: 110px !important;
         padding: 0px !important;
         color: #ffffff !important;
         box-shadow: 0 4px 8px rgba(0,0,0,0.4) !important;
@@ -287,7 +287,7 @@ st.markdown(f"""
     }}
 
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button p {{
-        font-size: 72px !important;
+        font-size: 95px !important;
         font-weight: 900 !important;
         line-height: 1 !important;
         margin: 0 !important;
@@ -499,7 +499,8 @@ def renderizar_tablero():
                     valor_mostrar = "∞" if cant_mostrar == 1 else str(cant_mostrar)
                     tag_update = "✨ " if es_reciente else ""
 
-                    col_txt, col_btn = st.columns([0.65, 0.35], gap="small")
+                    # REPROPORCIONADO: 40% Nombre del producto / 60% Número Gigante
+                    col_txt, col_btn = st.columns([0.40, 0.60], gap="small")
 
                     with col_txt:
                         st.markdown(f"""
