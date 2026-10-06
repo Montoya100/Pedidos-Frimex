@@ -256,41 +256,31 @@ st.markdown(f"""
         border: 1px solid #3b82f6;
     }}
 
-    /* ESTILO PANTALLA FLOTANTE GLASSMORPHISM EN NARANJA NEÓN */
-    .overlay-glassmorphism {{
-        position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(11, 13, 19, 0.92);
-        backdrop-filter: blur(14px);
-        z-index: 99999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    /* ESTILO PANTALLA DIALOG DIALOG NATIVO DE STREAMLIT (ESTILO ORANGE NEON) */
+    div[role="dialog"] {{
+        background: linear-gradient(180deg, #18131a 0%, #0d0e14 100%) !important;
+        border: 2px solid #f97316 !important;
+        border-radius: 20px !important;
+        box-shadow: 0 0 60px rgba(249, 115, 22, 0.45) !important;
+        text-align: center !important;
     }}
 
-    .card-popup-orange {{
-        background: linear-gradient(180deg, #18131a 0%, #0d0e14 100%);
-        border: 2px solid #f97316;
-        border-radius: 20px;
-        padding: 36px 32px;
-        text-align: center;
-        max-width: 480px;
-        width: 88%;
-        box-shadow: 0 0 60px rgba(249, 115, 22, 0.4);
-        color: #ffffff;
+    div[data-testid="stModalBackdrop"] {{
+        background-color: rgba(11, 13, 19, 0.92) !important;
+        backdrop-filter: blur(14px) !important;
     }}
 
     .modal-logo-img {{
         height: 72px !important;
         width: auto;
-        margin-bottom: 14px;
+        margin-bottom: 12px;
         filter: drop-shadow(0 4px 12px rgba(249, 115, 22, 0.4));
     }}
 
     .celebration-title-orange {{
         font-size: 26px !important;
         font-weight: 900 !important;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
         color: #fb923c;
         letter-spacing: 1.2px;
         text-transform: uppercase;
@@ -301,11 +291,11 @@ st.markdown(f"""
         font-weight: 700 !important;
         color: #94a3b8;
         line-height: 1.5;
-        margin-bottom: 22px;
+        margin-bottom: 20px;
     }}
 
-    /* ESTILO BOTÓN DE REGRESO NARANJA NEÓN */
-    div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_overlay_full"]) button {{
+    /* BOTÓN NARANJA NEÓN NATIVO DENTRO DEL DIALOG */
+    div[role="dialog"] button[key="btn_dialog_cerrar"] {{
         background-color: #f97316 !important;
         color: #ffffff !important;
         border: 1px solid #fb923c !important;
@@ -318,7 +308,7 @@ st.markdown(f"""
         transition: all 0.2s ease !important;
     }}
 
-    div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_overlay_full"]) button:hover {{
+    div[role="dialog"] button[key="btn_dialog_cerrar"]:hover {{
         background-color: #ea580c !important;
         border-color: #fdba74 !important;
         box-shadow: 0 6px 28px rgba(249, 115, 22, 0.65) !important;
@@ -595,6 +585,25 @@ def obtener_recibos_hoy():
     return todos_los_recibos
 
 # ==========================================
+# CONTENEDOR POP-UP DIALOG NATIVO E INTERACTIVO
+# ==========================================
+@st.dialog(" ")
+def mostrar_modal_celebracion():
+    st.markdown(f"""
+        <div style="text-align: center;">
+            <img src="{LOGO_URL}" class="modal-logo-img" alt="Logo Mostacho">
+            <div class="celebration-title-orange">PRODUCCIÓN FINALIZADA</div>
+            <div class="celebration-sub-orange">
+                Se han completado todos los pedidos pendientes de la jornada.
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    if st.button("REVISAR PENDIENTES", key="btn_dialog_cerrar", use_container_width=True):
+        st.session_state.cerrar_modal_celebracion = True
+        st.rerun()
+
+# ==========================================
 # 5. TABLERO DE PEDIDOS EN TIEMPO REAL
 # ==========================================
 @st.fragment(run_every=10)
@@ -730,24 +739,9 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # POP-UP PANTALLA COMPLETA GLASSMORPHISM EN NARANJA NEÓN + BOTÓN DE REGRESO 100% VISIBLE
+    # DISPARAR DIALOG POP-UP 100% GARANTIZADO E INTERACTIVO
     if conteo_productos and piezas_pendientes == 0 and not st.session_state.cerrar_modal_celebracion:
-        st.markdown(f"""
-            <div class="overlay-glassmorphism">
-                <div class="card-popup-orange">
-                    <img src="{LOGO_URL}" class="modal-logo-img" alt="Logo Mostacho">
-                    <div class="celebration-title-orange">PRODUCCIÓN FINALIZADA</div>
-                    <div class="celebration-sub-orange">
-                        Se han completado todos los pedidos pendientes de la jornada.
-                    </div>
-                    <div id="btn-anchor-modal"></div>
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-
-        if st.button("REVISAR PENDIENTES", key="btn_cerrar_overlay_full", use_container_width=True):
-            st.session_state.cerrar_modal_celebracion = True
-            st.rerun()
+        mostrar_modal_celebracion()
 
     if conteo_productos:
         activos = []
