@@ -119,11 +119,11 @@ def reproducir_sonido_notificacion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS ESTÁTICOS (SIN PARPADEO)
+# 3. ESTILOS CSS ESTÁTICOS PULIDOS
 # ==========================================
 st.markdown(f"""
     <style>
-    /* ELIMINAR EL PARPADEO / OPACIDAD DURANTE EL REFRESCADO */
+    /* ELIMINAR PARPADEO Y OPACIDAD DURANTE REFRESCADOS */
     div[data-testid="stAppViewContainer"],
     div[data-testid="stMain"],
     section[data-testid="stSidebar"],
@@ -144,53 +144,123 @@ st.markdown(f"""
         padding-left: 0.4rem !important; padding-right: 0.4rem !important;
     }}
 
-    /* ENCABEZADO DESTACADO Y COMPACTO */
+    /* ENCABEZADO DESTACADO Y AMPLIADO CON LOGO Y RELOJ */
     .header-logo-container {{
-        display: flex; justify-content: center; align-items: center;
-        gap: 12px; margin-bottom: 4px; width: 100%; text-align: center;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 6px; width: 100%; padding: 0 10px;
     }}
     
-    .header-logo-img {{ height: 42px !important; width: auto; object-fit: contain; }}
-    .header-text-group {{ display: flex; flex-direction: column; align-items: center; justify-content: center; }}
-
-    .header-title {{
-        color: #ffffff; font-weight: 900; font-size: 22px !important;
-        line-height: 1.1; letter-spacing: 0.8px; margin: 0; padding: 0; text-align: center; white-space: nowrap;
+    .header-left-group {{
+        display: flex; align-items: center; gap: 14px;
     }}
 
-    /* MÉTRICAS EN LÍNEA (AMPLIADAS PARA MAYOR VISIBILIDAD) */
+    .header-logo-img {{ height: 58px !important; width: auto; object-fit: contain; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.6)); }}
+
+    .header-title {{
+        color: #ffffff; font-weight: 900; font-size: 24px !important;
+        line-height: 1.1; letter-spacing: 1px; margin: 0; padding: 0; white-space: nowrap;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }}
+
+    /* RELOJ DIGITAL ESTILIZADO */
+    .header-clock {{
+        background: linear-gradient(180deg, #1f232d 0%, #14171d 100%);
+        border: 1px solid #3d424d;
+        border-radius: 8px;
+        padding: 6px 14px;
+        color: #60a5fa;
+        font-size: 19px !important;
+        font-weight: 900 !important;
+        letter-spacing: 1.5px;
+        box-shadow: inset 0 1px 2px rgba(255,255,255,0.05), 0 3px 8px rgba(0,0,0,0.4);
+        display: flex; align-items: center; gap: 8px;
+    }}
+
+    /* POP-UP FLOTANTE DE NUEVOS INCREMENTOS (30 SEC) */
+    .popup-alerta-incremento {{
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: #ffffff;
+        padding: 12px 18px;
+        border-radius: 10px;
+        border: 2px solid #60a5fa;
+        font-size: 15px;
+        font-weight: 900;
+        margin-bottom: 12px;
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+        display: flex; align-items: center; justify-content: space-between;
+        animation: slideDown 0.4s ease-out;
+    }}
+
+    @keyframes slideDown {{
+        from {{ transform: translateY(-15px); opacity: 0; }}
+        to {{ transform: translateY(0); opacity: 1; }}
+    }}
+
+    /* MODAL POP-UP FLOTANTE DE CELEBRACIÓN (GRANDE Y CENTRADO) */
+    .celebration-overlay {{
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(8px);
+        z-index: 99999;
+        display: flex; align-items: center; justify-content: center;
+        animation: fadeInModal 0.4s ease-out;
+    }}
+
+    .celebration-card {{
+        background: linear-gradient(145deg, #059669 0%, #047857 100%);
+        border: 3px solid #34d399;
+        border-radius: 20px;
+        padding: 40px 30px;
+        text-align: center;
+        max-width: 600px; width: 90%;
+        box-shadow: 0 10px 40px rgba(16, 185, 129, 0.6);
+        color: #ffffff;
+    }}
+
+    .celebration-title {{
+        font-size: 36px !important;
+        font-weight: 900 !important;
+        margin-bottom: 15px;
+        text-shadow: 0 3px 6px rgba(0,0,0,0.4);
+    }}
+
+    .celebration-sub {{
+        font-size: 20px !important;
+        font-weight: 700 !important;
+        opacity: 0.95;
+        line-height: 1.4;
+    }}
+
+    @keyframes fadeInModal {{
+        from {{ opacity: 0; transform: scale(0.9); }}
+        to {{ opacity: 1; transform: scale(1); }}
+    }}
+
+    /* MÉTRICAS EN LÍNEA ESTILIZADAS */
     .metrics-row {{
         display: flex; justify-content: space-around; align-items: center;
-        background-color: #1a1d24; border-radius: 8px; padding: 6px 12px;
-        margin-bottom: 10px; border: 1px solid #2d3139;
+        background: linear-gradient(180deg, #1f232d 0%, #14171d 100%);
+        border-radius: 10px; padding: 8px 16px;
+        margin-bottom: 12px; border: 1px solid #2d323e;
+        box-shadow: inset 0 1px 1px rgba(255,255,255,0.05), 0 4px 10px rgba(0,0,0,0.3);
     }}
 
     .metric-inline {{ 
         display: flex; 
         align-items: center; 
-        gap: 8px; 
-        font-size: 16px !important; /* TEXTO DE ETIQUETA MÁS GRANDE */
+        gap: 10px; 
+        font-size: 16px !important; 
         font-weight: 800 !important; 
-        color: #ffffff; 
+        color: #e2e8f0; 
+        letter-spacing: 0.5px;
     }}
 
     .metric-inline .val {{ 
-        font-size: 22px !important; /* NÚMERO MÁS GRANDE */
+        font-size: 24px !important; 
         font-weight: 900 !important; 
         color: #e55353; 
-    }}
-
-    /* BANNER DE FELICITACIONES */
-    .banner-felicidades {{
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: #ffffff;
-        padding: 10px 14px;
-        border-radius: 8px;
-        text-align: center;
-        font-size: 15px;
-        font-weight: 900;
-        margin-bottom: 10px;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        text-shadow: 0 0 10px rgba(229, 83, 83, 0.3);
     }}
 
     /* SEPARADOR DE SECCIÓN COMPLETADOS */
@@ -201,42 +271,44 @@ st.markdown(f"""
         color: #10b981;
         font-size: 12px;
         font-weight: 900;
-        letter-spacing: 1.5px;
-        margin: 12px 0 8px 0;
+        letter-spacing: 2px;
+        margin: 16px 0 10px 0;
     }}
 
     .divider-completados::before, .divider-completados::after {{
         content: '';
         flex: 1;
         border-bottom: 2px dashed #10b981;
-        opacity: 0.4;
+        opacity: 0.35;
     }}
 
     .divider-completados span {{
-        padding: 0 10px;
+        padding: 0 12px;
+        background-color: #0e1117;
     }}
 
     /* TARJETA DE TEXTO DEL PRODUCTO */
     .card-box-img {{
-        border-radius: 10px;
+        border-radius: 12px;
         height: 100px !important;
         display: flex;
         align-items: center;
         justify-content: center;
         text-align: center;
-        padding: 0 10px;
+        padding: 0 12px;
         font-size: 30px !important;
         font-weight: 900 !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         white-space: normal;
         word-wrap: break-word;
         line-height: 1.15;
         margin-bottom: 6px;
+        letter-spacing: 0.5px;
     }}
 
     /* CAJA DEL NÚMERO MASIVO GIGANTE */
     .num-box-masivo {{
-        border-radius: 10px;
+        border-radius: 12px;
         height: 100px !important;
         display: flex;
         align-items: center;
@@ -244,35 +316,49 @@ st.markdown(f"""
         font-size: 68px !important;
         font-weight: 900 !important;
         line-height: 1 !important;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.35);
         margin-bottom: 6px;
         user-select: none;
     }}
 
-    .num-box-pendiente {{ background-color: #c93b3b !important; color: #ffffff !important; }}
-    .num-box-completado {{ background-color: #059669 !important; color: #ffffff !important; opacity: 0.75; }}
-    .num-box-reciente {{ background-color: #1d4ed8 !important; }}
+    .num-box-pendiente {{ 
+        background: linear-gradient(145deg, #d94343, #b83232) !important; 
+        color: #ffffff !important; 
+        border: 1px solid #e55353 !important;
+    }}
+    .num-box-completado {{ 
+        background: linear-gradient(145deg, #059669, #047857) !important; 
+        color: #ffffff !important; 
+        opacity: 0.75; 
+        border: 1px solid #10b981 !important;
+    }}
+    .num-box-reciente {{ 
+        background: linear-gradient(145deg, #2563eb, #1d4ed8) !important; 
+        color: #ffffff !important;
+        border: 1px solid #60a5fa !important;
+    }}
 
     /* TARJETA PENDIENTE (ROJO) */
     .card-pendiente {{
-        background-color: #e55353 !important;
+        background: linear-gradient(145deg, #e55353, #c93b3b) !important;
         color: #ffffff !important;
-        border: 1px solid #c93b3b !important;
+        border: 1px solid #f87171 !important;
     }}
 
     /* TARJETA COMPLETADA (VERDE) */
     .card-completado {{
-        background-color: #10b981 !important;
+        background: linear-gradient(145deg, #10b981, #059669) !important;
         color: #ffffff !important;
-        border: 1px solid #059669 !important;
+        border: 1px solid #34d399 !important;
         opacity: 0.75;
     }}
 
     /* ESTADO TEMPORAL AZUL (NUEVO PRODUCTO) */
     .card-nueva-orden {{
-        background-color: #2563eb !important;
+        background: linear-gradient(145deg, #3b82f6, #1d4ed8) !important;
         color: #ffffff !important;
-        border: 2px solid #60a5fa !important;
+        border: 2px solid #93c5fd !important;
+        box-shadow: 0 0 12px rgba(59, 130, 246, 0.5) !important;
     }}
 
     /* BOTÓN TRANSPARENTE SUPERPUESTO */
@@ -290,28 +376,35 @@ st.markdown(f"""
         display: flex !important;
         align-items: flex-end !important;
         justify-content: center !important;
-        padding-bottom: 6px !important;
+        padding-bottom: 8px !important;
     }}
 
     /* ETIQUETA EN BOTÓN TRANSPARENTE */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button * {{
         font-size: 11px !important;
         font-weight: 900 !important;
-        letter-spacing: 1.2px !important;
+        letter-spacing: 1.5px !important;
         text-transform: uppercase !important;
         color: #ffffff !important;
         opacity: 0.95 !important;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.6);
     }}
 
     /* ESTILO BOTÓN DE CONFIGURACIÓN / DRAWER POP-OVER */
     div[data-testid="stPopover"] button {{
-        height: 32px !important;
+        height: 36px !important;
         font-size: 12px !important;
         font-weight: 800 !important;
-        background-color: #262730 !important;
-        color: #cccccc !important;
+        background-color: #1f232d !important;
+        color: #e2e8f0 !important;
         border: 1px solid #3d424d !important;
-        border-radius: 6px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+    }}
+    
+    div[data-testid="stPopover"] button:hover {{
+        border-color: #60a5fa !important;
+        color: #ffffff !important;
     }}
 
     /* MÓVIL / VERTICAL */
@@ -388,33 +481,47 @@ def renderizar_tablero():
     if "tiempos_actualizacion" not in st.session_state:
         st.session_state.tiempos_actualizacion = {}
 
+    if "popups_nuevos" not in st.session_state:
+        st.session_state.popups_nuevos = {}
+
+    ahora = datetime.now()
+
     if "ultimo_conteo" not in st.session_state:
         st.session_state.ultimo_conteo = conteo_productos.copy()
     else:
         nuevo_pedido_detectado = False
-        ahora = datetime.now()
         for prod, cant in conteo_productos.items():
             cant_anterior = st.session_state.ultimo_conteo.get(prod, 0)
             if cant > cant_anterior:
+                diferencia = cant - cant_anterior
                 nuevo_pedido_detectado = True
                 st.session_state.tiempos_actualizacion[prod] = ahora
+                st.session_state.popups_nuevos[prod] = {
+                    "incremento": diferencia,
+                    "hora": ahora
+                }
 
         if nuevo_pedido_detectado:
             reproducir_sonido_notificacion()
-            st.toast("🔔 ¡Nuevo pedido recibido!", icon="🔔")
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # ENCABEZADO
-    col_hdr_left, col_hdr_center, col_hdr_right = st.columns([0.15, 0.70, 0.15])
+    # ENCABEZADO MEJORADO HORIZONTAL CON LOGO MÁS GRANDE Y RELOJ
+    hora_actual_str = ahora.strftime("%H:%M:%S")
+    col_hdr_left, col_hdr_right = st.columns([0.80, 0.20])
     
-    with col_hdr_center:
+    with col_hdr_left:
         st.markdown(f"""
             <div class="header-logo-container">
-                <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
-                <div class="header-text-group">
-                    <h1 class="header-title">TABLA DE PRODUCCIÓN</h1>
-                    <span style="font-size:10px; color:#a0a0a0;">🔄 Sincronizado | {datetime.now().strftime('%H:%M:%S')}</span>
+                <div class="header-left-group">
+                    <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
+                    <div>
+                        <h1 class="header-title">TABLA DE PRODUCCIÓN</h1>
+                        <span style="font-size:11px; color:#a0a0a0; font-weight: 700;">MOSTACHO BOTANAS</span>
+                    </div>
+                </div>
+                <div class="header-clock">
+                    <span>🕒</span> <span>{hora_actual_str}</span>
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -426,6 +533,24 @@ def renderizar_tablero():
                 borrar_todo()
             if st.button("↩️ Restaurar", use_container_width=True):
                 restaurar_estado()
+
+    # REVISAR POP-UPS ACTIVOS (< 30 SEGUNDOS)
+    popups_activos = []
+    for prod, info in list(st.session_state.popups_nuevos.items()):
+        segundos_transcurridos = (ahora - info["hora"]).total_seconds()
+        if segundos_transcurridos < 30:
+            popups_activos.append((prod, info["incremento"]))
+        else:
+            st.session_state.popups_nuevos.pop(prod, None)
+
+    if popups_activos:
+        for prod, inc in popups_activos:
+            st.markdown(f"""
+                <div class="popup-alerta-incremento">
+                    <span>🔔 ¡NUEVO PEDIDO! Se agregaron <strong>+{inc}</strong> unidad(es) de <strong>{prod}</strong></span>
+                    <span style="font-size:12px; opacity:0.8;">hace un momento</span>
+                </div>
+            """, unsafe_allow_html=True)
 
     # Cálculo de métricas
     piezas_pendientes = 0
@@ -452,10 +577,18 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
+    # MODAL POP-UP FLOTANTE DE CELEBRACIÓN A PANTALLA COMPLETA AL TERMINAR TODO
     if conteo_productos and piezas_pendientes == 0:
         st.markdown("""
-            <div class="banner-felicidades">
-                🎉 ¡Felicidades! Hacemos un gran equipo, logramos terminar todo.
+            <div class="celebration-overlay">
+                <div class="celebration-card">
+                    <div style="font-size: 60px; margin-bottom: 10px;">🎉 🏆 👏</div>
+                    <div class="celebration-title">¡FELICIDADES!</div>
+                    <div class="celebration-sub">
+                        Hemos acabado todo el trabajo pendiente.<br>
+                        ¡Excelente esfuerzo y gran trabajo en equipo!
+                    </div>
+                </div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -472,8 +605,6 @@ def renderizar_tablero():
         activos.sort(key=lambda x: x[1], reverse=True)
         completados.sort(key=lambda x: x[1], reverse=True)
 
-        ahora_actual = datetime.now()
-
         def renderizar_lista_productos(lista):
             for i in range(0, len(lista), 3):
                 grupo = lista[i:i+3]
@@ -487,7 +618,7 @@ def renderizar_tablero():
 
                         ultima_upd = st.session_state.tiempos_actualizacion.get(producto)
                         es_reciente = False
-                        if ultima_upd and (ahora_actual - ultima_upd).total_seconds() < 120 and not es_completado:
+                        if ultima_upd and (ahora - ultima_upd).total_seconds() < 120 and not es_completado:
                             es_reciente = True
 
                         if es_reciente:
