@@ -57,6 +57,8 @@ def borrar_todo():
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
     estado_global["completados"].clear()
     estado_global["cantidades_al_completar"].clear()
+    if "cerrar_modal_celebracion" in st.session_state:
+        st.session_state.cerrar_modal_celebracion = False
     st.toast("Tablero limpiado", icon="ℹ️")
 
 def restaurar_estado():
@@ -65,6 +67,8 @@ def restaurar_estado():
         estado_global["cantidades_al_completar"] = estado_global["respaldo"]["cantidades_al_completar"].copy()
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
+        if "cerrar_modal_celebracion" in st.session_state:
+            st.session_state.cerrar_modal_celebracion = False
         st.toast("Tablero restaurado", icon="✅")
     else:
         st.toast("Sin respaldo previo", icon="⚠️")
@@ -76,6 +80,10 @@ def alternar_estado(producto, cantidad_actual):
     else:
         estado_global["completados"].add(producto)
         estado_global["cantidades_al_completar"][producto] = cantidad_actual
+    
+    # Restablece la visibilidad del modal para la próxima vez que quede en 0
+    if "cerrar_modal_celebracion" in st.session_state:
+        st.session_state.cerrar_modal_celebracion = False
 
 def reproducir_sonido_notificacion():
     sound_js = """
@@ -249,7 +257,7 @@ st.markdown(f"""
         border: 1px solid #3b82f6;
     }}
 
-    /* MODAL POP-UP FLOTANTE DE CELEBRACIÓN MINIMALISTA */
+    /* MODAL POP-UP FLOTANTE DE CELEBRACIÓN CON BOTÓN DE RETROCESO */
     .celebration-overlay {{
         position: fixed;
         top: 0; left: 0; width: 100vw; height: 100vh;
@@ -263,26 +271,46 @@ st.markdown(f"""
         background: linear-gradient(180deg, #121824 0%, #0d121c 100%);
         border: 1px solid #10b981;
         border-radius: 16px;
-        padding: 40px;
+        padding: 36px 30px;
         text-align: center;
-        max-width: 520px; width: 90%;
+        max-width: 500px; width: 90%;
         box-shadow: 0 0 40px rgba(16, 185, 129, 0.25);
         color: #ffffff;
     }}
 
     .celebration-title {{
-        font-size: 28px !important;
+        font-size: 26px !important;
         font-weight: 900 !important;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
         color: #34d399;
         letter-spacing: 1px;
     }}
 
     .celebration-sub {{
-        font-size: 16px !important;
+        font-size: 15px !important;
         font-weight: 700 !important;
         color: #94a3b8;
         line-height: 1.5;
+        margin-bottom: 24px;
+    }}
+
+    /* BOTÓN DENTRO DEL MODAL */
+    div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_modal"]) button {{
+        background-color: #161922 !important;
+        color: #38bdf8 !important;
+        border: 1px solid #2a2e39 !important;
+        border-radius: 8px !important;
+        font-weight: 800 !important;
+        font-size: 13px !important;
+        letter-spacing: 1px !important;
+        height: 42px !important;
+        transition: all 0.2s ease !important;
+    }}
+
+    div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_modal"]) button:hover {{
+        border-color: #38bdf8 !important;
+        background-color: #1e293b !important;
+        color: #ffffff !important;
     }}
 
     /* MÉTRICAS EN LÍNEA CON BARRA DE PROGRESO EN NARANJA NEÓN SUAVE */
@@ -591,6 +619,9 @@ def renderizar_tablero():
     if "popups_nuevos" not in st.session_state:
         st.session_state.popups_nuevos = {}
 
+    if "cerrar_modal_celebracion" not in st.session_state:
+        st.session_state.cerrar_modal_celebracion = False
+
     ahora_utc = datetime.now(timezone.utc)
     tz_mexico = zoneinfo.ZoneInfo("America/Mexico_City")
     ahora_mexico = datetime.now(tz_mexico)
@@ -614,6 +645,7 @@ def renderizar_tablero():
 
         if nuevo_pedido_detectado:
             reproducir_sonido_notificacion()
+            st.session_state.cerrar_modal_celebracion = False
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
@@ -687,8 +719,8 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # MODAL FLOTANTE DE CELEBRACIÓN
-    if conteo_productos and piezas_pendientes == 0:
+    # MODAL FLOTANTE DE CELEBRACIÓN CON BOTÓN DE CIERRE
+    if conteo_productos and piezas_pendientes == 0 and not st.session_state.cerrar_modal_celebracion:
         st.markdown("""
             <div class="celebration-overlay">
                 <div class="celebration-card">
@@ -696,6 +728,13 @@ def renderizar_tablero():
                     <div class="celebration-sub">
                         Se han completado todos los pedidos pendientes de la jornada.
                     </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("REVISAR PENDIENTES", key="btn_cerrar_modal", use_container_width=True):
+            st.session_state.cerrar_modal_celebracion = True
+            st.rerun()
+
+        st.markdown("""
                 </div>
             </div>
         """, unsafe_allow_html=True)
