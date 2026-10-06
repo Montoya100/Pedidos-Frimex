@@ -81,7 +81,6 @@ def alternar_estado(producto, cantidad_actual):
         estado_global["completados"].add(producto)
         estado_global["cantidades_al_completar"][producto] = cantidad_actual
     
-    # Restablece la visibilidad del modal para la próxima vez que quede en 0
     if "cerrar_modal_celebracion" in st.session_state:
         st.session_state.cerrar_modal_celebracion = False
 
@@ -257,25 +256,30 @@ st.markdown(f"""
         border: 1px solid #3b82f6;
     }}
 
-    /* MODAL POP-UP FLOTANTE DE CELEBRACIÓN CON BOTÓN DE RETROCESO */
-    .celebration-overlay {{
-        position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(11, 13, 19, 0.88);
-        backdrop-filter: blur(10px);
-        z-index: 99999;
-        display: flex; align-items: center; justify-content: center;
+    /* CONTENEDOR MODAL DE CELEBRACIÓN ROBUSTO Y FLOTANTE */
+    div[data-testid="stVerticalBlock"]:has(button[key="btn_cerrar_modal"]) {{
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(11, 13, 19, 0.92) !important;
+        backdrop-filter: blur(12px) !important;
+        z-index: 999999 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }}
 
-    .celebration-card {{
-        background: linear-gradient(180deg, #121824 0%, #0d121c 100%);
-        border: 1px solid #10b981;
-        border-radius: 16px;
-        padding: 36px 30px;
-        text-align: center;
-        max-width: 500px; width: 90%;
-        box-shadow: 0 0 40px rgba(16, 185, 129, 0.25);
-        color: #ffffff;
+    div[data-testid="stVerticalBlock"]:has(button[key="btn_cerrar_modal"]) > div {{
+        background: linear-gradient(180deg, #121824 0%, #0d121c 100%) !important;
+        border: 1px solid #10b981 !important;
+        border-radius: 16px !important;
+        padding: 36px 32px !important;
+        text-align: center !important;
+        max-width: 480px !important;
+        width: 90% !important;
+        box-shadow: 0 0 50px rgba(16, 185, 129, 0.3) !important;
     }}
 
     .celebration-title {{
@@ -291,26 +295,26 @@ st.markdown(f"""
         font-weight: 700 !important;
         color: #94a3b8;
         line-height: 1.5;
-        margin-bottom: 24px;
+        margin-bottom: 20px;
     }}
 
     /* BOTÓN DENTRO DEL MODAL */
     div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_modal"]) button {{
         background-color: #161922 !important;
         color: #38bdf8 !important;
-        border: 1px solid #2a2e39 !important;
+        border: 1px solid #38bdf8 !important;
         border-radius: 8px !important;
-        font-weight: 800 !important;
+        font-weight: 900 !important;
         font-size: 13px !important;
-        letter-spacing: 1px !important;
-        height: 42px !important;
+        letter-spacing: 1.2px !important;
+        height: 44px !important;
         transition: all 0.2s ease !important;
     }}
 
     div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_modal"]) button:hover {{
-        border-color: #38bdf8 !important;
-        background-color: #1e293b !important;
-        color: #ffffff !important;
+        background-color: #38bdf8 !important;
+        color: #0b0d13 !important;
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.5) !important;
     }}
 
     /* MÉTRICAS EN LÍNEA CON BARRA DE PROGRESO EN NARANJA NEÓN SUAVE */
@@ -719,25 +723,20 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # MODAL FLOTANTE DE CELEBRACIÓN CON BOTÓN DE CIERRE
+    # MODAL FLOTANTE NATIVO DE CELEBRACIÓN CON BOTÓN TOTALMENTE FUNCIONAL
     if conteo_productos and piezas_pendientes == 0 and not st.session_state.cerrar_modal_celebracion:
-        st.markdown("""
-            <div class="celebration-overlay">
-                <div class="celebration-card">
-                    <div class="celebration-title">PRODUCCIÓN FINALIZADA</div>
-                    <div class="celebration-sub">
-                        Se han completado todos los pedidos pendientes de la jornada.
-                    </div>
-        """, unsafe_allow_html=True)
-        
-        if st.button("REVISAR PENDIENTES", key="btn_cerrar_modal", use_container_width=True):
-            st.session_state.cerrar_modal_celebracion = True
-            st.rerun()
-
-        st.markdown("""
+        modal_container = st.container()
+        with modal_container:
+            st.markdown("""
+                <div class="celebration-title">PRODUCCIÓN FINALIZADA</div>
+                <div class="celebration-sub">
+                    Se han completado todos los pedidos pendientes de la jornada.
                 </div>
-            </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
+            
+            if st.button("REVISAR PENDIENTES", key="btn_cerrar_modal", use_container_width=True):
+                st.session_state.cerrar_modal_celebracion = True
+                st.rerun()
 
     if conteo_productos:
         activos = []
