@@ -4,6 +4,7 @@ import requests
 import streamlit as st
 import streamlit.components.v1 as components
 from datetime import datetime, timezone, timedelta
+import zoneinfo
 
 # ==========================================
 # 1. CONFIGURACIÓN DE PÁGINA
@@ -17,7 +18,7 @@ st.set_page_config(
 
 LOYVERSE_TOKEN = "13d9288fbc264fb88a8112094407486a"
 HEADERS_LOYVERSE = {
-    "Authorization": f"Bearer {LOYVERSE_TOKEN}",
+    "Authorization": f"Bearer {HEADERS_LOYVERSE_TOKEN}" if 'HEADERS_LOYVERSE_TOKEN' in locals() else f"Bearer {LOYVERSE_TOKEN}",
     "Content-Type": "application/json",
 }
 
@@ -162,7 +163,29 @@ st.markdown(f"""
         text-transform: uppercase;
     }}
 
-    /* RELOJ DIGITAL MINIMALISTA */
+    /* DUAL CLOCK CONTAINER */
+    .clocks-group {{
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }}
+
+    /* RELOJ SUTIL DE REFRESCADO DE TABLA (GRIS) */
+    .reloj-tabla-sutil {{
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        letter-spacing: 0.8px;
+        background: #12151e;
+        padding: 5px 10px;
+        border-radius: 6px;
+        border: 1px solid #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }}
+
+    /* RELOJ TIEMPO REAL MÉXICO (DESTACADO) */
     .header-clock {{
         background: #161922;
         border: 1px solid #2a2e39;
@@ -171,8 +194,9 @@ st.markdown(f"""
         color: #38bdf8;
         font-size: 18px !important;
         font-weight: 800 !important;
-        letter-spacing: 1.5px;
+        letter-spacing: 1.2px;
         display: flex; align-items: center; gap: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }}
 
     .status-dot {{
@@ -181,6 +205,13 @@ st.markdown(f"""
         border-radius: 50%;
         display: inline-block;
         box-shadow: 0 0 8px #10b981;
+        animation: pulseDot 2s infinite;
+    }}
+
+    @keyframes pulseDot {{
+        0% {{ opacity: 0.4; }}
+        50% {{ opacity: 1; }}
+        100% {{ opacity: 0.4; }}
     }}
 
     /* ANIMACIÓN DE PULSO DE LUZ NEÓN EN CAMBIOS NUEVOS */
@@ -252,12 +283,22 @@ st.markdown(f"""
         line-height: 1.5;
     }}
 
-    /* MÉTRICAS EN LÍNEA */
+    /* MÉTRICAS EN LÍNEA CON BORDE ANIMADO */
     .metrics-row {{
         display: flex; justify-content: space-around; align-items: center;
         background: #161922;
         border-radius: 8px; padding: 8px 16px;
         margin-bottom: 12px; border: 1px solid #2a2e39;
+        position: relative;
+        overflow: hidden;
+    }}
+
+    .metrics-row::before {{
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 2px;
+        background: linear-gradient(90deg, #38bdf8, #10b981, #f87171);
+        opacity: 0.7;
     }}
 
     .metric-inline {{ 
@@ -301,7 +342,7 @@ st.markdown(f"""
         background-color: #0e1117;
     }}
 
-    /* TARJETA DE TEXTO DEL PRODUCTO */
+    /* TARJETA DE TEXTO DEL PRODUCTO CON EFECTO HOVER */
     .card-box-img {{
         border-radius: 10px;
         height: 100px !important;
@@ -318,9 +359,15 @@ st.markdown(f"""
         line-height: 1.15;
         margin-bottom: 6px;
         letter-spacing: 0.5px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }}
 
-    /* CAJA DEL NÚMERO MASIVO GIGANTE */
+    .card-box-img:hover {{
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }}
+
+    /* CAJA DEL NÚMERO MASIVO GIGANTE CON EFECTO HOVER */
     .num-box-masivo {{
         border-radius: 10px;
         height: 100px !important;
@@ -333,6 +380,12 @@ st.markdown(f"""
         box-shadow: 0 2px 6px rgba(0,0,0,0.35);
         margin-bottom: 6px;
         user-select: none;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }}
+
+    .num-box-masivo:hover {{
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }}
 
     .num-box-pendiente {{ 
@@ -496,7 +549,12 @@ def renderizar_tablero():
     if "popups_nuevos" not in st.session_state:
         st.session_state.popups_nuevos = {}
 
-    ahora = datetime.now()
+    ahora_utc = datetime.now(timezone.utc)
+    # HORA LOCAL DE MÉXICO EN FORMATO 12 HORAS
+    tz_mexico = zoneinfo.ZoneInfo("America/Mexico_City")
+    ahora_mexico = datetime.now(tz_mexico)
+    hora_mexico_12h = ahora_mexico.strftime("%I:%M:%S %p")
+    hora_sincro_tabla = ahora_mexico.strftime("%H:%M:%S")
 
     if "ultimo_conteo" not in st.session_state:
         st.session_state.ultimo_conteo = conteo_productos.copy()
@@ -507,10 +565,10 @@ def renderizar_tablero():
             if cant > cant_anterior:
                 diferencia = cant - cant_anterior
                 nuevo_pedido_detectado = True
-                st.session_state.tiempos_actualizacion[prod] = ahora
+                st.session_state.tiempos_actualizacion[prod] = ahora_utc
                 st.session_state.popups_nuevos[prod] = {
                     "incremento": diferencia,
-                    "hora": ahora
+                    "hora": ahora_utc
                 }
 
         if nuevo_pedido_detectado:
@@ -518,8 +576,7 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # ENCABEZADO MINIMALISTA
-    hora_actual_str = ahora.strftime("%H:%M:%S")
+    # ENCABEZADO CON DOS RELOJES (TIEMPO REAL MÉXICO + HORARIO DE REFRESCADO SUTIL)
     col_hdr_left, col_hdr_right = st.columns([0.82, 0.18])
     
     with col_hdr_left:
@@ -532,8 +589,13 @@ def renderizar_tablero():
                         <span style="font-size:11px; color:#64748b; font-weight: 800; letter-spacing: 1px;">MOSTACHO BOTANAS</span>
                     </div>
                 </div>
-                <div class="header-clock">
-                    <span class="status-dot"></span> <span>{hora_actual_str}</span>
+                <div class="clocks-group">
+                    <div class="reloj-tabla-sutil" title="Última sincronización de datos">
+                        <span>Sync:</span> <span>{hora_sincro_tabla}</span>
+                    </div>
+                    <div class="header-clock" title="Hora local de México">
+                        <span class="status-dot"></span> <span>{hora_mexico_12h}</span>
+                    </div>
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -548,7 +610,7 @@ def renderizar_tablero():
 
     # LIMPIEZA DE NOTIFICACIONES EXPIRADAS (> 30 SEG)
     for prod, info in list(st.session_state.popups_nuevos.items()):
-        if (ahora - info["hora"]).total_seconds() >= 30:
+        if (ahora_utc - info["hora"]).total_seconds() >= 30:
             st.session_state.popups_nuevos.pop(prod, None)
 
     # CÁLCULO DE MÉTRICAS
@@ -615,7 +677,7 @@ def renderizar_tablero():
 
                         ultima_upd = st.session_state.tiempos_actualizacion.get(producto)
                         es_reciente = False
-                        if ultima_upd and (ahora - ultima_upd).total_seconds() < 120 and not es_completado:
+                        if ultima_upd and (ahora_utc - ultima_upd).total_seconds() < 120 and not es_completado:
                             es_reciente = True
 
                         if es_reciente:
