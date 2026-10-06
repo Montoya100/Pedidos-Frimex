@@ -256,65 +256,86 @@ st.markdown(f"""
         border: 1px solid #3b82f6;
     }}
 
-    /* CONTENEDOR MODAL DE CELEBRACIÓN ROBUSTO Y FLOTANTE */
-    div[data-testid="stVerticalBlock"]:has(button[key="btn_cerrar_modal"]) {{
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        background: rgba(11, 13, 19, 0.92) !important;
-        backdrop-filter: blur(12px) !important;
-        z-index: 999999 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
+    /* PANTALLA COMPLETA GLASSMORPHISM DE CELEBRACIÓN CON TEMA NARANJA NEÓN */
+    .celebration-overlay-full {{
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(11, 13, 19, 0.90);
+        backdrop-filter: blur(14px);
+        z-index: 99998;
+        display: flex; align-items: center; justify-content: center;
+        flex-direction: column;
     }}
 
-    div[data-testid="stVerticalBlock"]:has(button[key="btn_cerrar_modal"]) > div {{
-        background: linear-gradient(180deg, #121824 0%, #0d121c 100%) !important;
-        border: 1px solid #10b981 !important;
-        border-radius: 16px !important;
-        padding: 36px 32px !important;
-        text-align: center !important;
-        max-width: 480px !important;
-        width: 90% !important;
-        box-shadow: 0 0 50px rgba(16, 185, 129, 0.3) !important;
+    .celebration-card-orange {{
+        background: linear-gradient(180deg, #18131a 0%, #0d0e14 100%);
+        border: 1px solid #f97316;
+        border-radius: 20px;
+        padding: 40px 36px;
+        text-align: center;
+        max-width: 500px; width: 90%;
+        box-shadow: 0 0 50px rgba(249, 115, 22, 0.35);
+        color: #ffffff;
+        position: relative;
     }}
 
-    .celebration-title {{
-        font-size: 26px !important;
+    .modal-logo-img {{
+        height: 70px !important;
+        width: auto;
+        margin-bottom: 16px;
+        filter: drop-shadow(0 4px 10px rgba(249, 115, 22, 0.3));
+    }}
+
+    .celebration-title-orange {{
+        font-size: 28px !important;
         font-weight: 900 !important;
         margin-bottom: 10px;
-        color: #34d399;
-        letter-spacing: 1px;
+        color: #fb923c;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
     }}
 
-    .celebration-sub {{
+    .celebration-sub-orange {{
         font-size: 15px !important;
         font-weight: 700 !important;
         color: #94a3b8;
         line-height: 1.5;
-        margin-bottom: 20px;
+        margin-bottom: 26px;
     }}
 
-    /* BOTÓN DENTRO DEL MODAL */
-    div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_modal"]) button {{
-        background-color: #161922 !important;
-        color: #38bdf8 !important;
-        border: 1px solid #38bdf8 !important;
-        border-radius: 8px !important;
+    /* BOTÓN TRANSPARENTE FLOTANTE SOBRE EL MODAL DE PANTALLA COMPLETA */
+    div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_overlay_full"]) {{
+        position: fixed !important;
+        top: 0 !important; left: 0 !important;
+        width: 100vw !important; height: 100vh !important;
+        z-index: 99999 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        pointer-events: none !important;
+    }}
+
+    div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_overlay_full"]) button {{
+        pointer-events: auto !important;
+        margin-top: 180px !important;
+        width: 280px !important;
+        height: 46px !important;
+        background-color: #f97316 !important;
+        color: #ffffff !important;
+        border: 1px solid #fb923c !important;
+        border-radius: 10px !important;
         font-weight: 900 !important;
         font-size: 13px !important;
         letter-spacing: 1.2px !important;
-        height: 44px !important;
+        box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4) !important;
         transition: all 0.2s ease !important;
     }}
 
-    div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_modal"]) button:hover {{
-        background-color: #38bdf8 !important;
-        color: #0b0d13 !important;
-        box-shadow: 0 0 12px rgba(56, 189, 248, 0.5) !important;
+    div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_overlay_full"]) button:hover {{
+        background-color: #ea580c !important;
+        border-color: #fdba74 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 25px rgba(249, 115, 22, 0.6) !important;
     }}
 
     /* MÉTRICAS EN LÍNEA CON BARRA DE PROGRESO EN NARANJA NEÓN SUAVE */
@@ -723,20 +744,23 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # MODAL FLOTANTE NATIVO DE CELEBRACIÓN CON BOTÓN TOTALMENTE FUNCIONAL
+    # CELEBRACIÓN DE PANTALLA COMPLETA EN NARANJA NEÓN CON LOGO Y BOTÓN DE REGRESO
     if conteo_productos and piezas_pendientes == 0 and not st.session_state.cerrar_modal_celebracion:
-        modal_container = st.container()
-        with modal_container:
-            st.markdown("""
-                <div class="celebration-title">PRODUCCIÓN FINALIZADA</div>
-                <div class="celebration-sub">
-                    Se han completado todos los pedidos pendientes de la jornada.
+        st.markdown(f"""
+            <div class="celebration-overlay-full">
+                <div class="celebration-card-orange">
+                    <img src="{LOGO_URL}" class="modal-logo-img" alt="Logo Mostacho">
+                    <div class="celebration-title-orange">PRODUCCIÓN FINALIZADA</div>
+                    <div class="celebration-sub-orange">
+                        Se han completado todos los pedidos pendientes de la jornada.
+                    </div>
                 </div>
-            """, unsafe_allow_html=True)
-            
-            if st.button("REVISAR PENDIENTES", key="btn_cerrar_modal", use_container_width=True):
-                st.session_state.cerrar_modal_celebracion = True
-                st.rerun()
+            </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("VOLVER AL TABLERO", key="btn_cerrar_overlay_full"):
+            st.session_state.cerrar_modal_celebracion = True
+            st.rerun()
 
     if conteo_productos:
         activos = []
