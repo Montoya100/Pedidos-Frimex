@@ -119,7 +119,7 @@ def reproducir_sonido_notificacion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS ESTÁTICOS MINIMALISTAS
+# 3. ESTILOS CSS ESTÁTICOS Y ANIMACIONES
 # ==========================================
 st.markdown(f"""
     <style>
@@ -144,7 +144,7 @@ st.markdown(f"""
         padding-left: 0.4rem !important; padding-right: 0.4rem !important;
     }}
 
-    /* ENCABEZADO MINIMALISTA Y ELEGANTE */
+    /* ENCABEZADO MINIMALISTA */
     .header-logo-container {{
         display: flex; justify-content: space-between; align-items: center;
         margin-bottom: 8px; width: 100%; padding: 0 4px;
@@ -183,32 +183,37 @@ st.markdown(f"""
         box-shadow: 0 0 8px #10b981;
     }}
 
-    /* INSIGNIA FLOTANTE DE NUEVO PEDIDO / INCREMENTO (COMPACTA) */
-    .card-wrapper {{
-        position: relative;
-        width: 100%;
+    /* ANIMACIÓN DE PULSO DE LUZ NEÓN EN CAMBIOS NUEVOS */
+    @keyframes pulseGlow {{
+        0% {{
+            box-shadow: 0 0 4px rgba(56, 189, 248, 0.4);
+            border-color: #38bdf8;
+        }}
+        50% {{
+            box-shadow: 0 0 18px rgba(56, 189, 248, 0.9);
+            border-color: #60a5fa;
+        }}
+        100% {{
+            box-shadow: 0 0 4px rgba(56, 189, 248, 0.4);
+            border-color: #38bdf8;
+        }}
     }}
 
-    .badge-incremento {{
-        position: absolute;
-        top: -10px;
-        left: 8px;
-        z-index: 10;
-        background: #2563eb;
-        color: #ffffff;
-        border: 1px solid #60a5fa;
-        font-size: 11px !important;
+    .anim-pulso-nuevo {{
+        animation: pulseGlow 1.2s infinite ease-in-out !important;
+    }}
+
+    /* ETIQUETA EN LÍNEA DE UNIDADES NUEVAS */
+    .txt-incremento {{
+        display: inline-block;
+        background-color: #1e3a8a;
+        color: #93c5fd;
+        font-size: 18px !important;
         font-weight: 900 !important;
         padding: 2px 8px;
         border-radius: 6px;
-        letter-spacing: 0.8px;
-        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.6);
-        animation: pulseBadge 1.5s infinite alternate;
-    }}
-
-    @keyframes pulseBadge {{
-        0% {{ transform: scale(0.96); }}
-        100% {{ transform: scale(1.04); }}
+        margin-left: 6px;
+        border: 1px solid #3b82f6;
     }}
 
     /* MODAL POP-UP FLOTANTE DE CELEBRACIÓN MINIMALISTA */
@@ -247,7 +252,7 @@ st.markdown(f"""
         line-height: 1.5;
     }}
 
-    /* MÉTRICAS EN LÍNEA ESTILIZADAS */
+    /* MÉTRICAS EN LÍNEA */
     .metrics-row {{
         display: flex; justify-content: space-around; align-items: center;
         background: #161922;
@@ -513,7 +518,7 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # ENCABEZADO MINIMALISTA CON RELOJ Y LOGO
+    # ENCABEZADO MINIMALISTA
     hora_actual_str = ahora.strftime("%H:%M:%S")
     col_hdr_left, col_hdr_right = st.columns([0.82, 0.18])
     
@@ -536,12 +541,12 @@ def renderizar_tablero():
     with col_hdr_right:
         with st.popover("⚙️ Opciones", use_container_width=True):
             st.markdown("### Acciones de Tablero")
-            if st.button("🗑️️ Borrar todo", use_container_width=True):
+            if st.button("🗑 Borrar todo", use_container_width=True):
                 borrar_todo()
             if st.button("↩️ Restaurar", use_container_width=True):
                 restaurar_estado()
 
-    # LIMPIEZA DE INSIGNIAS EXPIRADAS (> 30 SEG)
+    # LIMPIEZA DE NOTIFICACIONES EXPIRADAS (> 30 SEG)
     for prod, info in list(st.session_state.popups_nuevos.items()):
         if (ahora - info["hora"]).total_seconds() >= 30:
             st.session_state.popups_nuevos.pop(prod, None)
@@ -571,7 +576,7 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # MODAL FLOTANTE DE CELEBRACIÓN MINIMALISTA
+    # MODAL FLOTANTE DE CELEBRACIÓN
     if conteo_productos and piezas_pendientes == 0:
         st.markdown("""
             <div class="celebration-overlay">
@@ -628,28 +633,27 @@ def renderizar_tablero():
 
                         valor_mostrar = "∞" if cant_mostrar == 1 else str(cant_mostrar)
 
-                        # VERIFICAR SI TIENE INSIGNIA DE INCREMENTO (< 30s)
+                        # INDICADOR EN LÍNEA + ANIMACIÓN DE PULSO (< 30s)
                         info_popup = st.session_state.popups_nuevos.get(producto)
-                        html_badge = ""
+                        clase_pulso = ""
+                        html_incremento = ""
                         if info_popup and not es_completado:
                             inc = info_popup["incremento"]
-                            html_badge = f'<div class="badge-incremento">+{inc} NUEVO</div>'
+                            clase_pulso = "anim-pulso-nuevo"
+                            html_incremento = f'<span class="txt-incremento">+{inc}</span>'
 
                         col_txt, col_btn = st.columns([0.70, 0.30], gap="small")
 
                         with col_txt:
                             st.markdown(f"""
-                                <div class="card-wrapper">
-                                    {html_badge}
-                                    <div class="card-box-img {clase_estado}">
-                                        {producto}
-                                    </div>
+                                <div class="card-box-img {clase_estado} {clase_pulso}">
+                                    {producto} {html_incremento}
                                 </div>
                             """, unsafe_allow_html=True)
 
                         with col_btn:
                             st.markdown(f"""
-                                <div class="num-box-masivo {clase_num_box}">
+                                <div class="num-box-masivo {clase_num_box} {clase_pulso}">
                                     {valor_mostrar}
                                 </div>
                             """, unsafe_allow_html=True)
