@@ -124,6 +124,8 @@ def reproducir_sonido_notificacion():
 # ==========================================
 st.markdown(f"""
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@800;900&display=swap');
+
     /* ELIMINAR PARPADEO Y OPACIDAD DURANTE REFRESCADOS */
     div[data-testid="stAppViewContainer"],
     div[data-testid="stMain"],
@@ -135,13 +137,13 @@ st.markdown(f"""
         animation: none !important;
     }}
 
-    .stApp {{ background-color: #0e1117 !important; }}
+    .stApp {{ background-color: #0b0d13 !important; }}
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     header {{visibility: hidden;}}
     
     .block-container {{
-        padding-top: 0.4rem !important; padding-bottom: 0rem !important;
+        padding-top: 0.4rem !important; padding-bottom: 2.5rem !important;
         padding-left: 0.4rem !important; padding-right: 0.4rem !important;
     }}
 
@@ -251,7 +253,7 @@ st.markdown(f"""
     .celebration-overlay {{
         position: fixed;
         top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(14, 17, 23, 0.85);
+        background: rgba(11, 13, 19, 0.88);
         backdrop-filter: blur(10px);
         z-index: 99999;
         display: flex; align-items: center; justify-content: center;
@@ -286,9 +288,9 @@ st.markdown(f"""
     /* MÉTRICAS EN LÍNEA CON BARRA DE PROGRESO EN NARANJA NEÓN SUAVE */
     .metrics-row {{
         display: flex; justify-content: space-around; align-items: center;
-        background: #161922;
-        border-radius: 8px; padding: 10px 16px 14px 16px;
-        margin-bottom: 12px; border: 1px solid #2a2e39;
+        background: #141822;
+        border-radius: 10px; padding: 10px 16px 14px 16px;
+        margin-bottom: 14px; border: 1px solid #232936;
         position: relative;
         overflow: hidden;
     }}
@@ -344,7 +346,7 @@ st.markdown(f"""
         font-size: 11px;
         font-weight: 900;
         letter-spacing: 2px;
-        margin: 16px 0 10px 0;
+        margin: 18px 0 12px 0;
     }}
 
     .divider-completados::before, .divider-completados::after {{
@@ -356,10 +358,10 @@ st.markdown(f"""
 
     .divider-completados span {{
         padding: 0 12px;
-        background-color: #0e1117;
+        background-color: #0b0d13;
     }}
 
-    /* TARJETA DE TEXTO DEL PRODUCTO CON EFECTO HOVER */
+    /* TARJETA DE TEXTO DEL PRODUCTO CON ELEVACIÓN SUTIL */
     .card-box-img {{
         border-radius: 10px;
         height: 100px !important;
@@ -370,7 +372,7 @@ st.markdown(f"""
         padding: 0 12px;
         font-size: 30px !important;
         font-weight: 900 !important;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.35);
         white-space: normal;
         word-wrap: break-word;
         line-height: 1.15;
@@ -381,28 +383,30 @@ st.markdown(f"""
 
     .card-box-img:hover {{
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.5);
     }}
 
-    /* CAJA DEL NÚMERO MASIVO GIGANTE CON EFECTO HOVER */
+    /* CAJA DEL NÚMERO MASIVO GIGANTE CON TIPOGRAFÍA IMPACTO MONOSPACE */
     .num-box-masivo {{
         border-radius: 10px;
         height: 100px !important;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 68px !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 66px !important;
         font-weight: 900 !important;
         line-height: 1 !important;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
         margin-bottom: 6px;
         user-select: none;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+        letter-spacing: -2px;
     }}
 
     .num-box-masivo:hover {{
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.55);
     }}
 
     .num-box-pendiente {{ 
@@ -478,9 +482,9 @@ st.markdown(f"""
         height: 36px !important;
         font-size: 12px !important;
         font-weight: 800 !important;
-        background-color: #161922 !important;
+        background-color: #141822 !important;
         color: #94a3b8 !important;
-        border: 1px solid #2a2e39 !important;
+        border: 1px solid #232936 !important;
         border-radius: 8px !important;
         letter-spacing: 1px;
     }}
@@ -488,6 +492,26 @@ st.markdown(f"""
     div[data-testid="stPopover"] button:hover {{
         border-color: #38bdf8 !important;
         color: #ffffff !important;
+    }}
+
+    /* FOOTER SUTIL DE PROCESADAS HOY */
+    .footer-sutil {{
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: #090b10;
+        border-top: 1px solid #181d28;
+        padding: 5px 16px;
+        text-align: center;
+        font-size: 11px !important;
+        font-weight: 800 !important;
+        color: #64748b !important;
+        letter-spacing: 1.5px;
+        z-index: 999;
+    }}
+
+    .footer-sutil span {{
+        color: #10b981 !important;
+        font-weight: 900 !important;
     }}
 
     /* MÓVIL / VERTICAL */
@@ -686,6 +710,7 @@ def renderizar_tablero():
             else:
                 activos.append((prod, cant_total))
 
+        # ORDENAMIENTO POR CANTIDAD TOTAL (MAYOR A MENOR)
         activos.sort(key=lambda x: x[1], reverse=True)
         completados.sort(key=lambda x: x[1], reverse=True)
 
@@ -766,5 +791,12 @@ def renderizar_tablero():
 
     else:
         st.info("No hay pedidos registrados en este periodo.")
+
+    # FOOTER DISCRETO Y SUTIL EN LA PARTE INFERIOR
+    st.markdown(f"""
+        <div class="footer-sutil">
+            PROCESADAS HOY: <span>{piezas_completadas}</span> DE <span>{piezas_totales}</span> PIEZAS
+        </div>
+    """, unsafe_allow_html=True)
 
 renderizar_tablero()
