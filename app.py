@@ -256,27 +256,30 @@ st.markdown(f"""
         border: 1px solid #3b82f6;
     }}
 
-    /* PANTALLA COMPLETA GLASSMORPHISM DE CELEBRACIÓN CON TEMA NARANJA NEÓN */
-    .celebration-overlay-full {{
-        position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(11, 13, 19, 0.90);
-        backdrop-filter: blur(14px);
-        z-index: 99998;
-        display: flex; align-items: center; justify-content: center;
-        flex-direction: column;
+    /* CONTENEDOR MODAL GLASSMORPHISM EN PANTALLA COMPLETA */
+    div[data-testid="stVerticalBlock"]:has(button[key="btn_cerrar_overlay_full"]) {{
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(11, 13, 19, 0.92) !important;
+        backdrop-filter: blur(14px) !important;
+        z-index: 999999 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }}
 
-    .celebration-card-orange {{
-        background: linear-gradient(180deg, #18131a 0%, #0d0e14 100%);
-        border: 1px solid #f97316;
-        border-radius: 20px;
-        padding: 40px 36px;
-        text-align: center;
-        max-width: 500px; width: 90%;
-        box-shadow: 0 0 50px rgba(249, 115, 22, 0.35);
-        color: #ffffff;
-        position: relative;
+    div[data-testid="stVerticalBlock"]:has(button[key="btn_cerrar_overlay_full"]) > div {{
+        background: linear-gradient(180deg, #18131a 0%, #0d0e14 100%) !important;
+        border: 1px solid #f97316 !important;
+        border-radius: 20px !important;
+        padding: 40px 36px !important;
+        text-align: center !important;
+        max-width: 480px !important;
+        width: 90% !important;
+        box-shadow: 0 0 50px rgba(249, 115, 22, 0.35) !important;
     }}
 
     .modal-logo-img {{
@@ -300,26 +303,11 @@ st.markdown(f"""
         font-weight: 700 !important;
         color: #94a3b8;
         line-height: 1.5;
-        margin-bottom: 26px;
+        margin-bottom: 24px;
     }}
 
-    /* BOTÓN TRANSPARENTE FLOTANTE SOBRE EL MODAL DE PANTALLA COMPLETA */
-    div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_overlay_full"]) {{
-        position: fixed !important;
-        top: 0 !important; left: 0 !important;
-        width: 100vw !important; height: 100vh !important;
-        z-index: 99999 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        pointer-events: none !important;
-    }}
-
+    /* BOTÓN NARANJA NEÓN VISIBLE DENTRO DEL MODAL */
     div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_overlay_full"]) button {{
-        pointer-events: auto !important;
-        margin-top: 180px !important;
-        width: 280px !important;
-        height: 46px !important;
         background-color: #f97316 !important;
         color: #ffffff !important;
         border: 1px solid #fb923c !important;
@@ -327,6 +315,7 @@ st.markdown(f"""
         font-weight: 900 !important;
         font-size: 13px !important;
         letter-spacing: 1.2px !important;
+        height: 46px !important;
         box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4) !important;
         transition: all 0.2s ease !important;
     }}
@@ -744,23 +733,21 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # CELEBRACIÓN DE PANTALLA COMPLETA EN NARANJA NEÓN CON LOGO Y BOTÓN DE REGRESO
+    # CELEBRACIÓN DE PANTALLA COMPLETA EN NARANJA NEÓN CON LOGO Y BOTÓN PERFECTAMENTE INTEGRADO
     if conteo_productos and piezas_pendientes == 0 and not st.session_state.cerrar_modal_celebracion:
-        st.markdown(f"""
-            <div class="celebration-overlay-full">
-                <div class="celebration-card-orange">
-                    <img src="{LOGO_URL}" class="modal-logo-img" alt="Logo Mostacho">
-                    <div class="celebration-title-orange">PRODUCCIÓN FINALIZADA</div>
-                    <div class="celebration-sub-orange">
-                        Se han completado todos los pedidos pendientes de la jornada.
-                    </div>
+        modal_full = st.container()
+        with modal_full:
+            st.markdown(f"""
+                <img src="{LOGO_URL}" class="modal-logo-img" alt="Logo Mostacho">
+                <div class="celebration-title-orange">PRODUCCIÓN FINALIZADA</div>
+                <div class="celebration-sub-orange">
+                    Se han completado todos los pedidos pendientes de la jornada.
                 </div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        if st.button("VOLVER AL TABLERO", key="btn_cerrar_overlay_full"):
-            st.session_state.cerrar_modal_celebracion = True
-            st.rerun()
+            """, unsafe_allow_html=True)
+            
+            if st.button("REVISAR PENDIENTES", key="btn_cerrar_overlay_full", use_container_width=True):
+                st.session_state.cerrar_modal_celebracion = True
+                st.rerun()
 
     if conteo_productos:
         activos = []
