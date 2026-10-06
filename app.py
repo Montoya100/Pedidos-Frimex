@@ -18,7 +18,7 @@ st.set_page_config(
 
 LOYVERSE_TOKEN = "13d9288fbc264fb88a8112094407486a"
 HEADERS_LOYVERSE = {
-    "Authorization": f"Bearer {HEADERS_LOYVERSE_TOKEN}" if 'HEADERS_LOYVERSE_TOKEN' in locals() else f"Bearer {LOYVERSE_TOKEN}",
+    "Authorization": f"Bearer {LOYVERSE_TOKEN}",
     "Content-Type": "application/json",
 }
 
@@ -283,22 +283,28 @@ st.markdown(f"""
         line-height: 1.5;
     }}
 
-    /* MÉTRICAS EN LÍNEA CON BORDE ANIMADO */
+    /* MÉTRICAS EN LÍNEA CON BARRA DE PROGRESO INFERIOR DINÁMICA */
     .metrics-row {{
         display: flex; justify-content: space-around; align-items: center;
         background: #161922;
-        border-radius: 8px; padding: 8px 16px;
+        border-radius: 8px; padding: 10px 16px 14px 16px;
         margin-bottom: 12px; border: 1px solid #2a2e39;
         position: relative;
         overflow: hidden;
     }}
 
-    .metrics-row::before {{
-        content: '';
+    .progress-bar-bg {{
         position: absolute;
-        top: 0; left: 0; right: 0; height: 2px;
-        background: linear-gradient(90deg, #38bdf8, #10b981, #f87171);
-        opacity: 0.7;
+        bottom: 0; left: 0; right: 0;
+        height: 4px;
+        background: #1f2430;
+    }}
+
+    .progress-bar-fill {{
+        height: 100%;
+        background: linear-gradient(90deg, #38bdf8 0%, #10b981 100%);
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
+        transition: width 0.5s ease-in-out;
     }}
 
     .metric-inline {{ 
@@ -316,6 +322,17 @@ st.markdown(f"""
         font-size: 22px !important; 
         font-weight: 900 !important; 
         color: #f87171; 
+    }}
+
+    .pct-avance {{
+        font-size: 12px !important;
+        font-weight: 900 !important;
+        color: #38bdf8 !important;
+        letter-spacing: 1px;
+        background: #12151e;
+        padding: 3px 8px;
+        border-radius: 4px;
+        border: 1px solid #1e293b;
     }}
 
     /* SEPARADOR DE SECCIÓN COMPLETADOS */
@@ -456,7 +473,7 @@ st.markdown(f"""
         text-shadow: 0 1px 3px rgba(0,0,0,0.6);
     }}
 
-    /* ESTILO BOTÓN DE CONFIGURACIÓN / DRAWER POP-OVER */
+    /* ESTILO BOTÓN DE CONFIGURACIÓN SIN EMOJIS */
     div[data-testid="stPopover"] button {{
         height: 36px !important;
         font-size: 12px !important;
@@ -465,6 +482,7 @@ st.markdown(f"""
         color: #94a3b8 !important;
         border: 1px solid #2a2e39 !important;
         border-radius: 8px !important;
+        letter-spacing: 1px;
     }}
     
     div[data-testid="stPopover"] button:hover {{
@@ -550,7 +568,6 @@ def renderizar_tablero():
         st.session_state.popups_nuevos = {}
 
     ahora_utc = datetime.now(timezone.utc)
-    # HORA LOCAL DE MÉXICO EN FORMATO 12 HORAS
     tz_mexico = zoneinfo.ZoneInfo("America/Mexico_City")
     ahora_mexico = datetime.now(tz_mexico)
     hora_mexico_12h = ahora_mexico.strftime("%I:%M:%S %p")
@@ -576,7 +593,7 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # ENCABEZADO CON DOS RELOJES (TIEMPO REAL MÉXICO + HORARIO DE REFRESCADO SUTIL)
+    # ENCABEZADO MINIMALISTA SIN EMOJIS
     col_hdr_left, col_hdr_right = st.columns([0.82, 0.18])
     
     with col_hdr_left:
@@ -591,7 +608,7 @@ def renderizar_tablero():
                 </div>
                 <div class="clocks-group">
                     <div class="reloj-tabla-sutil" title="Última sincronización de datos">
-                        <span>Sync:</span> <span>{hora_sincro_tabla}</span>
+                        <span>SYNC:</span> <span>{hora_sincro_tabla}</span>
                     </div>
                     <div class="header-clock" title="Hora local de México">
                         <span class="status-dot"></span> <span>{hora_mexico_12h}</span>
@@ -601,11 +618,11 @@ def renderizar_tablero():
         """, unsafe_allow_html=True)
 
     with col_hdr_right:
-        with st.popover("⚙️ Opciones", use_container_width=True):
+        with st.popover("OPCIONES", use_container_width=True):
             st.markdown("### Acciones de Tablero")
-            if st.button("🗑 Borrar todo", use_container_width=True):
+            if st.button("Borrar todo", use_container_width=True):
                 borrar_todo()
-            if st.button("↩️ Restaurar", use_container_width=True):
+            if st.button("Restaurar", use_container_width=True):
                 restaurar_estado()
 
     # LIMPIEZA DE NOTIFICACIONES EXPIRADAS (> 30 SEG)
@@ -613,8 +630,10 @@ def renderizar_tablero():
         if (ahora_utc - info["hora"]).total_seconds() >= 30:
             st.session_state.popups_nuevos.pop(prod, None)
 
-    # CÁLCULO DE MÉTRICAS
+    # CÁLCULO DE MÉTRICAS Y PROGRESO REAL DE PRODUCCIÓN
+    piezas_totales = sum(conteo_productos.values())
     piezas_pendientes = 0
+    
     for prod, cant_total in conteo_productos.items():
         if prod in estado_global["completados"]:
             cant_marcada = estado_global["cantidades_al_completar"].get(prod, cant_total)
@@ -623,17 +642,23 @@ def renderizar_tablero():
             cant_marcada = estado_global["cantidades_al_completar"].get(prod, 0)
             piezas_pendientes += (cant_total - cant_marcada)
 
-    # MÉTRICAS DESTACADAS
+    piezas_completadas = max(0, piezas_totales - piezas_pendientes)
+    pct_progreso = int((piezas_completadas / piezas_totales * 100)) if piezas_totales > 0 else 100
+
+    # MÉTRICAS DESTACADAS CON BARRA DE PROGRESO DINÁMICA
     st.markdown(f"""
         <div class="metrics-row">
             <div class="metric-inline">
                 <span>Tickets:</span>
                 <span class="val" style="color: #38bdf8;">{len(recibos)}</span>
             </div>
-            <div style="border-left: 1px solid #2a2e39; height: 16px;"></div>
+            <div class="pct-avance">{pct_progreso}% COMPLETADO</div>
             <div class="metric-inline">
                 <span>Pendientes:</span>
                 <span class="val" style="color: {'#10b981' if piezas_pendientes == 0 else '#f87171'};">{piezas_pendientes}</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: {pct_progreso}%;"></div>
             </div>
         </div>
     """, unsafe_allow_html=True)
