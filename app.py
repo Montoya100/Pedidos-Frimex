@@ -256,40 +256,46 @@ st.markdown(f"""
         border: 1px solid #3b82f6;
     }}
 
-    /* FONDO TRASLÚCIDO MÁS OSCURO */
-    div[data-testid="stModalBackdrop"] {{
-        background-color: rgba(7, 9, 13, 0.95) !important;
-        backdrop-filter: blur(16px) !important;
+    /* FORZAR FONDO ULTRA OSCURO TRASLÚCIDO CON ALTA PRIORIDAD */
+    div[data-testid="stModalBackdrop"],
+    .stDialogBackdrop {{
+        background-color: rgba(5, 7, 10, 0.96) !important;
+        backdrop-filter: blur(18px) !important;
+        -webkit-backdrop-filter: blur(18px) !important;
     }}
 
-    /* VENTANA FLOTANTE MÁS GRANDE */
-    div[role="dialog"] {{
+    /* FORZAR VENTANA FLOTANTE MÁS GRANDE Y ANCHA */
+    div[role="dialog"],
+    div[data-testid="stDialog"] > div {{
         background: linear-gradient(180deg, #18131a 0%, #0d0e14 100%) !important;
         border: 2px solid #f97316 !important;
         border-radius: 24px !important;
         box-shadow: 0 0 70px rgba(249, 115, 22, 0.5) !important;
         text-align: center !important;
-        max-width: 650px !important;
-        width: 90% !important;
-        padding: 40px 32px !important;
+        max-width: 680px !important;
+        width: 92% !important;
+        padding: 42px 36px !important;
     }}
 
-    /* ELIMINAR/OCULTAR BOTÓN DE TACHE (X) DEL DIALOG */
+    /* ELIMINAR TOTALMENTE EL BOTÓN DE TACHE (X) */
     div[role="dialog"] button[aria-label="Close"],
-    div[role="dialog"] button[data-testid="stDialogCloseButton"] {{
+    div[role="dialog"] button[data-testid="stDialogCloseButton"],
+    div[data-testid="stDialog"] button[aria-label="Close"] {{
         display: none !important;
         visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
     }}
 
     .modal-logo-img-large {{
-        height: 90px !important;
+        height: 96px !important;
         width: auto;
-        margin-bottom: 18px;
-        filter: drop-shadow(0 6px 16px rgba(249, 115, 22, 0.45));
+        margin-bottom: 20px;
+        filter: drop-shadow(0 6px 18px rgba(249, 115, 22, 0.5));
     }}
 
     .celebration-title-orange-large {{
-        font-size: 32px !important;
+        font-size: 34px !important;
         font-weight: 900 !important;
         margin-bottom: 12px;
         color: #fb923c;
@@ -298,11 +304,11 @@ st.markdown(f"""
     }}
 
     .celebration-sub-orange-large {{
-        font-size: 17px !important;
+        font-size: 18px !important;
         font-weight: 700 !important;
         color: #94a3b8;
         line-height: 1.6;
-        margin-bottom: 28px;
+        margin-bottom: 30px;
     }}
 
     /* BOTÓN NARANJA NEÓN NATIVO DENTRO DEL DIALOG */
@@ -312,9 +318,9 @@ st.markdown(f"""
         border: 1px solid #fb923c !important;
         border-radius: 12px !important;
         font-weight: 900 !important;
-        font-size: 15px !important;
+        font-size: 16px !important;
         letter-spacing: 1.5px !important;
-        height: 52px !important;
+        height: 54px !important;
         box-shadow: 0 4px 22px rgba(249, 115, 22, 0.45) !important;
         transition: all 0.2s ease !important;
     }}
