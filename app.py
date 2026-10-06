@@ -256,42 +256,53 @@ st.markdown(f"""
         border: 1px solid #3b82f6;
     }}
 
-    /* ESTILO PANTALLA DIALOG DIALOG NATIVO DE STREAMLIT (ESTILO ORANGE NEON) */
+    /* FONDO TRASLÚCIDO MÁS OSCURO */
+    div[data-testid="stModalBackdrop"] {{
+        background-color: rgba(7, 9, 13, 0.95) !important;
+        backdrop-filter: blur(16px) !important;
+    }}
+
+    /* VENTANA FLOTANTE MÁS GRANDE */
     div[role="dialog"] {{
         background: linear-gradient(180deg, #18131a 0%, #0d0e14 100%) !important;
         border: 2px solid #f97316 !important;
-        border-radius: 20px !important;
-        box-shadow: 0 0 60px rgba(249, 115, 22, 0.45) !important;
+        border-radius: 24px !important;
+        box-shadow: 0 0 70px rgba(249, 115, 22, 0.5) !important;
         text-align: center !important;
+        max-width: 650px !important;
+        width: 90% !important;
+        padding: 40px 32px !important;
     }}
 
-    div[data-testid="stModalBackdrop"] {{
-        background-color: rgba(11, 13, 19, 0.92) !important;
-        backdrop-filter: blur(14px) !important;
+    /* ELIMINAR/OCULTAR BOTÓN DE TACHE (X) DEL DIALOG */
+    div[role="dialog"] button[aria-label="Close"],
+    div[role="dialog"] button[data-testid="stDialogCloseButton"] {{
+        display: none !important;
+        visibility: hidden !important;
     }}
 
-    .modal-logo-img {{
-        height: 72px !important;
+    .modal-logo-img-large {{
+        height: 90px !important;
         width: auto;
-        margin-bottom: 12px;
-        filter: drop-shadow(0 4px 12px rgba(249, 115, 22, 0.4));
+        margin-bottom: 18px;
+        filter: drop-shadow(0 6px 16px rgba(249, 115, 22, 0.45));
     }}
 
-    .celebration-title-orange {{
-        font-size: 26px !important;
+    .celebration-title-orange-large {{
+        font-size: 32px !important;
         font-weight: 900 !important;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
         color: #fb923c;
-        letter-spacing: 1.2px;
+        letter-spacing: 1.5px;
         text-transform: uppercase;
     }}
 
-    .celebration-sub-orange {{
-        font-size: 15px !important;
+    .celebration-sub-orange-large {{
+        font-size: 17px !important;
         font-weight: 700 !important;
         color: #94a3b8;
-        line-height: 1.5;
-        margin-bottom: 20px;
+        line-height: 1.6;
+        margin-bottom: 28px;
     }}
 
     /* BOTÓN NARANJA NEÓN NATIVO DENTRO DEL DIALOG */
@@ -299,19 +310,20 @@ st.markdown(f"""
         background-color: #f97316 !important;
         color: #ffffff !important;
         border: 1px solid #fb923c !important;
-        border-radius: 10px !important;
+        border-radius: 12px !important;
         font-weight: 900 !important;
-        font-size: 13px !important;
-        letter-spacing: 1.2px !important;
-        height: 46px !important;
-        box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4) !important;
+        font-size: 15px !important;
+        letter-spacing: 1.5px !important;
+        height: 52px !important;
+        box-shadow: 0 4px 22px rgba(249, 115, 22, 0.45) !important;
         transition: all 0.2s ease !important;
     }}
 
     div[role="dialog"] button[key="btn_dialog_cerrar"]:hover {{
         background-color: #ea580c !important;
         border-color: #fdba74 !important;
-        box-shadow: 0 6px 28px rgba(249, 115, 22, 0.65) !important;
+        box-shadow: 0 6px 30px rgba(249, 115, 22, 0.7) !important;
+        transform: translateY(-2px) !important;
     }}
 
     /* MÉTRICAS EN LÍNEA CON BARRA DE PROGRESO EN NARANJA NEÓN SUAVE */
@@ -585,15 +597,15 @@ def obtener_recibos_hoy():
     return todos_los_recibos
 
 # ==========================================
-# CONTENEDOR POP-UP DIALOG NATIVO E INTERACTIVO
+# CONTENEDOR POP-UP DIALOG AMPLIADO SIN BOTÓN DE TACHE
 # ==========================================
 @st.dialog(" ")
 def mostrar_modal_celebracion():
     st.markdown(f"""
         <div style="text-align: center;">
-            <img src="{LOGO_URL}" class="modal-logo-img" alt="Logo Mostacho">
-            <div class="celebration-title-orange">PRODUCCIÓN FINALIZADA</div>
-            <div class="celebration-sub-orange">
+            <img src="{LOGO_URL}" class="modal-logo-img-large" alt="Logo Mostacho">
+            <div class="celebration-title-orange-large">PRODUCCIÓN FINALIZADA</div>
+            <div class="celebration-sub-orange-large">
                 Se han completado todos los pedidos pendientes de la jornada.
             </div>
         </div>
