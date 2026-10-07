@@ -159,7 +159,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS ESTÁTICOS
+# 3. ESTILOS CSS ESTÁTICOS Y RESPONSIVOS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -188,7 +188,7 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* TARJETA PANTALLA COMPLETA CELEBRACIÓN CON BOTÓN INTEGRADO */
+    /* ESTRUCTURA BASE VISTA CELEBRACIÓN */
     .full-screen-celebracion {{
         background: linear-gradient(180deg, #161219 0%, #0c0d12 100%);
         border: 2px solid #f97316;
@@ -201,6 +201,33 @@ st.markdown(f"""
         flex-direction: column;
         align-items: center;
         justify-content: center;
+    }}
+
+    /* AJUSTES EXCLUSIVOS PARA PANTALLAS HORIZONTALES / ESCRITORIO */
+    @media (min-width: 769px) {{
+        .full-screen-celebracion {{
+            min-height: 65vh !important;
+            padding: 60px 40px !important;
+            justify-content: center !important;
+        }}
+        .img-celebracion-logo {{
+            height: 150px !important;
+            margin-bottom: 24px !important;
+        }}
+        .txt-celebracion-titulo {{
+            font-size: 42px !important;
+            letter-spacing: 3px !important;
+            margin-bottom: 12px !important;
+        }}
+        .txt-celebracion-sub {{
+            font-size: 20px !important;
+            margin-bottom: 36px !important;
+        }}
+        /* BOTÓN MÁS ANGOSTO Y CENTRADO EN HORIZONTAL */
+        div[data-testid="stElementContainer"]:has(button[key="btn_pantalla_completa_cerrar"]) {{
+            max-width: 280px !important;
+            margin: 0 auto !important;
+        }}
     }}
 
     .header-logo-container {{
@@ -317,7 +344,7 @@ st.markdown(f"""
 
     .footer-sutil span {{ color: #10b981 !important; font-weight: 900 !important; }}
 
-    /* GARANTIZAR VISIBILIDAD DE LOGO EN MÓVIL */
+    /* VERSIÓN MÓVIL SIN MODIFICACIONES */
     @media (max-width: 768px) {{
         .block-container {{ padding-left: 6px !important; padding-right: 6px !important; }}
         div[data-testid="column"] {{ width: 100% !important; flex: 1 1 100% !important; margin-bottom: 4px !important; }}
@@ -346,6 +373,9 @@ st.markdown(f"""
         .full-screen-celebracion {{
             padding: 28px 16px 20px 16px !important;
         }}
+        .img-celebracion-logo {{ height: 100px !important; margin-bottom: 16px !important; }}
+        .txt-celebracion-titulo {{ font-size: 28px !important; margin-bottom: 8px !important; }}
+        .txt-celebracion-sub {{ font-size: 16px !important; margin-bottom: 24px !important; }}
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -529,7 +559,7 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # VISTA DE PANTALLA COMPLETA CON EL BOTÓN DENTRO DE LA NOTIFICACIÓN
+    # VISTA DE CELEBRACIÓN CON DENSIDAD RESPONSIVA
     if conteo_productos and piezas_pendientes == 0 and not estado_global["descartar_celebracion"]:
         if not st.session_state.reproducido_modal_audio:
             reproducir_sonido_celebracion()
@@ -537,13 +567,13 @@ def renderizar_tablero():
 
         st.markdown(f"""
             <div class="full-screen-celebracion">
-                <img src="{LOGO_URL}" style="height: 100px; width: auto; margin-bottom: 16px; filter: drop-shadow(0 6px 20px rgba(249, 115, 22, 0.7));" alt="Logo">
-                <h2 style="color: #fb923c; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; font-size: 28px; margin-bottom: 8px;">PRODUCCIÓN FINALIZADA</h2>
-                <p style="color: #94a3b8; font-weight: 700; font-size: 16px; margin-bottom: 24px;">Se han completado todos los pedidos pendientes.</p>
+                <img src="{LOGO_URL}" class="img-celebracion-logo" style="width: auto; filter: drop-shadow(0 6px 20px rgba(249, 115, 22, 0.7));" alt="Logo">
+                <h2 class="txt-celebracion-titulo" style="color: #fb923c; font-weight: 900; text-transform: uppercase;">PRODUCCIÓN FINALIZADA</h2>
+                <p class="txt-celebracion-sub" style="color: #94a3b8; font-weight: 700;">Se han completado todos los pedidos pendientes.</p>
             </div>
         """, unsafe_allow_html=True)
 
-        # BOTÓN INTEGRADO DENTRO DEL FLUJO
+        # BOTÓN CON ANCHO CONTROLADO EN HORIZONTAL
         if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_pantalla_completa_cerrar"):
             estado_global["descartar_celebracion"] = True
             st.rerun()
