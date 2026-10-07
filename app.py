@@ -569,7 +569,7 @@ def renderizar_tablero():
             <div class="full-screen-celebracion">
                 <img src="{LOGO_URL}" class="img-celebracion-logo" style="width: auto; filter: drop-shadow(0 6px 20px rgba(249, 115, 22, 0.7));" alt="Logo">
                 <h2 class="txt-celebracion-titulo" style="color: #fb923c; font-weight: 900; text-transform: uppercase;">PRODUCCIÓN FINALIZADA</h2>
-                <p class="txt-celebracion-sub" style="color: #94a3b8; font-weight: 700;">Se han completado todos los pedidos pendientes.</p>
+                <p class="txt-celebracion-sub" style="color: #94a3b8; font-weight: 700;">Se han completado todos los pedidos pendientes !BUEN TRABAJO EN EQUIPO¡.</p>
             </div>
         """, unsafe_allow_html=True)
 
