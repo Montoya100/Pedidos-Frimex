@@ -126,6 +126,42 @@ def reproducir_sonido_notificacion():
     """
     components.html(sound_js, height=0, width=0)
 
+def reproducir_sonido_celebracion():
+    sound_js = """
+    <script>
+    (function() {
+        function celebrar() {
+            try {
+                var AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                var ctx = new AudioContext();
+                if (ctx.state === 'suspended') { ctx.resume(); }
+
+                var notas = [523.25, 659.25, 783.99, 1046.50]; // Do, Mi, Sol, Do alto
+                var tiempoInicio = ctx.currentTime;
+
+                notas.forEach(function(freq, index) {
+                    var osc = ctx.createOscillator();
+                    var gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, tiempoInicio + (index * 0.12));
+                    
+                    gain.gain.setValueAtTime(0.4, tiempoInicio + (index * 0.12));
+                    gain.gain.exponentialRampToValueAtTime(0.001, tiempoInicio + (index * 0.12) + 0.35);
+                    
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(tiempoInicio + (index * 0.12));
+                    osc.stop(tiempoInicio + (index * 0.12) + 0.35);
+                });
+            } catch(e) {}
+        }
+        celebrar();
+    })();
+    </script>
+    """
+    components.html(sound_js, height=0, width=0)
+
 # ==========================================
 # 3. ESTILOS CSS ESTÁTICOS Y ANIMACIONES
 # ==========================================
@@ -154,21 +190,21 @@ st.markdown(f"""
         padding-left: 0.4rem !important; padding-right: 0.4rem !important;
     }}
 
-    /* ENCABEZADO MINIMALISTA */
+    /* ENCABEZADO RESPONSIVE */
     .header-logo-container {{
         display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 8px; width: 100%; padding: 0 4px;
+        margin-bottom: 8px; width: 100%; padding: 0 4px; flex-wrap: wrap; gap: 8px;
     }}
     
     .header-left-group {{
-        display: flex; align-items: center; gap: 14px;
+        display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
     }}
 
-    .header-logo-img {{ height: 58px !important; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }}
+    .header-logo-img {{ height: 50px !important; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }}
 
     .header-title {{
-        color: #ffffff; font-weight: 900; font-size: 22px !important;
-        line-height: 1.1; letter-spacing: 1.2px; margin: 0; padding: 0; white-space: nowrap;
+        color: #ffffff; font-weight: 900; font-size: 18px !important;
+        line-height: 1.1; letter-spacing: 1px; margin: 0; padding: 0; white-space: nowrap;
         text-transform: uppercase;
     }}
 
@@ -176,22 +212,24 @@ st.markdown(f"""
     .clocks-group {{
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 8px;
+        flex-wrap: wrap;
     }}
 
     /* RELOJ SUTIL DE REFRESCADO DE TABLA (GRIS) */
     .reloj-tabla-sutil {{
-        font-size: 11px !important;
+        font-size: 10px !important;
         font-weight: 700 !important;
         color: #64748b !important;
         letter-spacing: 0.8px;
         background: #12151e;
-        padding: 5px 10px;
+        padding: 4px 8px;
         border-radius: 6px;
         border: 1px solid #1e293b;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 4px;
+        white-space: nowrap;
     }}
 
     /* RELOJ TIEMPO REAL MÉXICO (DESTACADO) */
@@ -199,17 +237,18 @@ st.markdown(f"""
         background: #161922;
         border: 1px solid #2a2e39;
         border-radius: 8px;
-        padding: 6px 14px;
+        padding: 5px 10px;
         color: #38bdf8;
-        font-size: 18px !important;
+        font-size: 15px !important;
         font-weight: 800 !important;
-        letter-spacing: 1.2px;
-        display: flex; align-items: center; gap: 8px;
+        letter-spacing: 1px;
+        display: flex; align-items: center; gap: 6px;
         box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        white-space: nowrap;
     }}
 
     .status-dot {{
-        height: 8px; width: 8px;
+        height: 7px; width: 7px;
         background-color: #10b981;
         border-radius: 50%;
         display: inline-block;
@@ -256,76 +295,73 @@ st.markdown(f"""
         border: 1px solid #3b82f6;
     }}
 
-    /* FORZAR FONDO ULTRA OSCURO TRASLÚCIDO CON ALTA PRIORIDAD */
-    div[data-testid="stModalBackdrop"],
-    .stDialogBackdrop {{
+    /* MODAL FLOTANTE ULTRA OSCURO TRASLÚCIDO EN PANTALLA COMPLETA */
+    .custom-modal-overlay {{
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
         background-color: rgba(5, 7, 10, 0.96) !important;
         backdrop-filter: blur(18px) !important;
         -webkit-backdrop-filter: blur(18px) !important;
+        z-index: 999999 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }}
 
-    /* FORZAR VENTANA FLOTANTE MÁS GRANDE Y ANCHA */
-    div[role="dialog"],
-    div[data-testid="stDialog"] > div {{
+    .custom-modal-box {{
         background: linear-gradient(180deg, #18131a 0%, #0d0e14 100%) !important;
         border: 2px solid #f97316 !important;
         border-radius: 24px !important;
         box-shadow: 0 0 70px rgba(249, 115, 22, 0.5) !important;
         text-align: center !important;
-        max-width: 680px !important;
-        width: 92% !important;
-        padding: 42px 36px !important;
-    }}
-
-    /* ELIMINAR TOTALMENTE EL BOTÓN DE TACHE (X) */
-    div[role="dialog"] button[aria-label="Close"],
-    div[role="dialog"] button[data-testid="stDialogCloseButton"],
-    div[data-testid="stDialog"] button[aria-label="Close"] {{
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
+        max-width: 580px !important;
+        width: 88% !important;
+        padding: 36px 28px !important;
+        margin: auto !important;
     }}
 
     .modal-logo-img-large {{
-        height: 96px !important;
+        height: 80px !important;
         width: auto;
-        margin-bottom: 20px;
+        margin-bottom: 16px;
         filter: drop-shadow(0 6px 18px rgba(249, 115, 22, 0.5));
     }}
 
     .celebration-title-orange-large {{
-        font-size: 34px !important;
+        font-size: 28px !important;
         font-weight: 900 !important;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
         color: #fb923c;
         letter-spacing: 1.5px;
         text-transform: uppercase;
     }}
 
     .celebration-sub-orange-large {{
-        font-size: 18px !important;
+        font-size: 16px !important;
         font-weight: 700 !important;
         color: #94a3b8;
-        line-height: 1.6;
-        margin-bottom: 30px;
+        line-height: 1.5;
+        margin-bottom: 24px;
     }}
 
-    /* BOTÓN NARANJA NEÓN NATIVO DENTRO DEL DIALOG */
-    div[role="dialog"] button[key="btn_dialog_cerrar"] {{
+    /* ESTILO DEL BOTÓN DEL MODAL */
+    div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_custom_modal"]) button {{
         background-color: #f97316 !important;
         color: #ffffff !important;
         border: 1px solid #fb923c !important;
         border-radius: 12px !important;
         font-weight: 900 !important;
-        font-size: 16px !important;
+        font-size: 15px !important;
         letter-spacing: 1.5px !important;
-        height: 54px !important;
+        height: 52px !important;
         box-shadow: 0 4px 22px rgba(249, 115, 22, 0.45) !important;
         transition: all 0.2s ease !important;
     }}
 
-    div[role="dialog"] button[key="btn_dialog_cerrar"]:hover {{
+    div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_custom_modal"]) button:hover {{
         background-color: #ea580c !important;
         border-color: #fdba74 !important;
         box-shadow: 0 6px 30px rgba(249, 115, 22, 0.7) !important;
@@ -561,14 +597,26 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* MÓVIL / VERTICAL */
+    /* ADAPTACIONES ESPECÍFICAS PARA VISTA MÓVIL (VERTICAL) */
     @media (max-width: 768px) {{
         div[data-testid="stHorizontalBlock"] {{
             flex-direction: column !important;
-            gap: 0px !important;
+            gap: 8px !important;
         }}
         div[data-testid="column"] {{
             width: 100% !important;
+        }}
+        .header-logo-container {{
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 10px !important;
+        }}
+        .clocks-group {{
+            width: 100% !important;
+            justify-content: space-between !important;
+        }}
+        .header-title {{
+            font-size: 16px !important;
         }}
     }}
     </style>
@@ -601,25 +649,6 @@ def obtener_recibos_hoy():
         pass
 
     return todos_los_recibos
-
-# ==========================================
-# CONTENEDOR POP-UP DIALOG AMPLIADO SIN BOTÓN DE TACHE
-# ==========================================
-@st.dialog(" ")
-def mostrar_modal_celebracion():
-    st.markdown(f"""
-        <div style="text-align: center;">
-            <img src="{LOGO_URL}" class="modal-logo-img-large" alt="Logo Mostacho">
-            <div class="celebration-title-orange-large">PRODUCCIÓN FINALIZADA</div>
-            <div class="celebration-sub-orange-large">
-                Se han completado todos los pedidos pendientes de la jornada.
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    if st.button("REVISAR PENDIENTES", key="btn_dialog_cerrar", use_container_width=True):
-        st.session_state.cerrar_modal_celebracion = True
-        st.rerun()
 
 # ==========================================
 # 5. TABLERO DE PEDIDOS EN TIEMPO REAL
@@ -660,6 +689,9 @@ def renderizar_tablero():
     if "cerrar_modal_celebracion" not in st.session_state:
         st.session_state.cerrar_modal_celebracion = False
 
+    if "reproducido_modal_audio" not in st.session_state:
+        st.session_state.reproducido_modal_audio = False
+
     ahora_utc = datetime.now(timezone.utc)
     tz_mexico = zoneinfo.ZoneInfo("America/Mexico_City")
     ahora_mexico = datetime.now(tz_mexico)
@@ -684,6 +716,7 @@ def renderizar_tablero():
         if nuevo_pedido_detectado:
             reproducir_sonido_notificacion()
             st.session_state.cerrar_modal_celebracion = False
+            st.session_state.reproducido_modal_audio = False
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
@@ -757,9 +790,29 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # DISPARAR DIALOG POP-UP 100% GARANTIZADO E INTERACTIVO
+    # POP-UP NATIVO EN PANTALLA COMPLETA FUNCIONAL CON EFECTO AUDIO
     if conteo_productos and piezas_pendientes == 0 and not st.session_state.cerrar_modal_celebracion:
-        mostrar_modal_celebracion()
+        if not st.session_state.reproducido_modal_audio:
+            reproducir_sonido_celebracion()
+            st.session_state.reproducido_modal_audio = True
+
+        st.markdown(f"""
+            <div class="custom-modal-overlay">
+                <div class="custom-modal-box">
+                    <img src="{LOGO_URL}" class="modal-logo-img-large" alt="Logo Mostacho">
+                    <div class="celebration-title-orange-large">PRODUCCIÓN FINALIZADA</div>
+                    <div class="celebration-sub-orange-large">
+                        Se han completado todos los pedidos pendientes de la jornada.
+                    </div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        modal_btn_col1, modal_btn_col2, modal_btn_col3 = st.columns([0.15, 0.70, 0.15])
+        with modal_btn_col2:
+            if st.button("REVISAR PENDIENTES", key="btn_cerrar_custom_modal", use_container_width=True):
+                st.session_state.cerrar_modal_celebracion = True
+                st.rerun()
 
     if conteo_productos:
         activos = []
