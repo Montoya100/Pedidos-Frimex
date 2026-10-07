@@ -188,15 +188,15 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* VISTA DE PANTALLA COMPLETA AL FINALIZAR PRODUCCIÓN */
+    /* TARJETA PANTALLA COMPLETA CELEBRACIÓN CON BOTÓN INTEGRADO */
     .full-screen-celebracion {{
         background: linear-gradient(180deg, #161219 0%, #0c0d12 100%);
         border: 2px solid #f97316;
         border-radius: 24px;
         box-shadow: 0 0 60px rgba(249, 115, 22, 0.5);
-        padding: 50px 20px;
+        padding: 40px 24px 28px 24px;
         text-align: center;
-        margin: 20px 0 30px 0;
+        margin: 10px 0 20px 0;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -342,6 +342,10 @@ st.markdown(f"""
         .header-title {{ font-size: 14px !important; }}
         .sub-brand-line {{ font-size: 10px !important; }}
         .pct-avance {{ font-size: 11px !important; }}
+
+        .full-screen-celebracion {{
+            padding: 28px 16px 20px 16px !important;
+        }}
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -460,7 +464,6 @@ def renderizar_tablero():
                     "hora": ahora_utc
                 }
 
-        # SI ENTRA PRODUCTO NUEVO, RESETEAR DESCARTE DE CELEBRACIÓN
         if nuevo_pedido_detectado:
             reproducir_sonido_notificacion()
             estado_global["descartar_celebracion"] = False
@@ -526,7 +529,7 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # VISTA EXCLUSIVA DE PANTALLA COMPLETA (OCULTA LAS TARJETAS MIENTRAS DURE LA CELEBRACIÓN)
+    # VISTA DE PANTALLA COMPLETA CON EL BOTÓN DENTRO DE LA NOTIFICACIÓN
     if conteo_productos and piezas_pendientes == 0 and not estado_global["descartar_celebracion"]:
         if not st.session_state.reproducido_modal_audio:
             reproducir_sonido_celebracion()
@@ -534,19 +537,18 @@ def renderizar_tablero():
 
         st.markdown(f"""
             <div class="full-screen-celebracion">
-                <img src="{LOGO_URL}" style="height: 110px; width: auto; margin-bottom: 20px; filter: drop-shadow(0 6px 20px rgba(249, 115, 22, 0.7));" alt="Logo">
-                <h2 style="color: #fb923c; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; font-size: 32px; margin-bottom: 12px;">PRODUCCIÓN FINALIZADA</h2>
-                <p style="color: #94a3b8; font-weight: 700; font-size: 18px; margin-bottom: 28px;">Se han completado todos los pedidos pendientes.</p>
+                <img src="{LOGO_URL}" style="height: 100px; width: auto; margin-bottom: 16px; filter: drop-shadow(0 6px 20px rgba(249, 115, 22, 0.7));" alt="Logo">
+                <h2 style="color: #fb923c; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; font-size: 28px; margin-bottom: 8px;">PRODUCCIÓN FINALIZADA</h2>
+                <p style="color: #94a3b8; font-weight: 700; font-size: 16px; margin-bottom: 24px;">Se han completado todos los pedidos pendientes.</p>
             </div>
         """, unsafe_allow_html=True)
 
-        col_c1, col_c2, col_c3 = st.columns([0.2, 0.6, 0.2])
-        with col_c2:
-            if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_pantalla_completa_cerrar"):
-                estado_global["descartar_celebracion"] = True
-                st.rerun()
+        # BOTÓN INTEGRADO DENTRO DEL FLUJO
+        if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_pantalla_completa_cerrar"):
+            estado_global["descartar_celebracion"] = True
+            st.rerun()
 
-    # RENDERIZADO DE TARJETAS (SOLO SE MUESTRAN SI HAY PENDIENTES O SI SE DESCARTÓ LA CELEBRACIÓN)
+    # RENDERIZADO DE TARJETAS DE PRODUCTOS
     else:
         if conteo_productos:
             activos = []
