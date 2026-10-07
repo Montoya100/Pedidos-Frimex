@@ -137,7 +137,7 @@ def reproducir_sonido_celebracion():
                 var ctx = new AudioContext();
                 if (ctx.state === 'suspended') { ctx.resume(); }
 
-                var notas = [523.25, 659.25, 783.99, 1046.50]; // Do, Mi, Sol, Do alto
+                var notas = [523.25, 659.25, 783.99, 1046.50];
                 var tiempoInicio = ctx.currentTime;
 
                 notas.forEach(function(freq, index) {
@@ -186,8 +186,11 @@ st.markdown(f"""
     header {{visibility: hidden;}}
     
     .block-container {{
-        padding-top: 0.4rem !important; padding-bottom: 2.5rem !important;
-        padding-left: 0.4rem !important; padding-right: 0.4rem !important;
+        padding-top: 0.4rem !important; 
+        padding-bottom: 2.5rem !important;
+        padding-left: 0.4rem !important; 
+        padding-right: 0.4rem !important;
+        max-width: 100% !important;
     }}
 
     /* ENCABEZADO RESPONSIVE */
@@ -597,26 +600,37 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* REGLAS EXCLUSIVAS PARA MÓVIL / PANTALLA VERTICAL */
+    /* REGLAS EXCLUSIVAS PARA ELIMINAR EL MARGEN VACÍO A LA DERECHA EN MÓVIL */
     @media (max-width: 768px) {{
-        /* EXPANDIR COLUMNAS AL 100% PARA QUE NO HAYA ESPACIO A LA DERECHA */
+        .block-container {{
+            padding-left: 0.2rem !important;
+            padding-right: 0.2rem !important;
+        }}
+        
         div[data-testid="column"] {{
             width: 100% !important;
             flex: 1 1 100% !important;
+            padding-left: 0px !important;
+            padding-right: 0px !important;
         }}
+        
         div[data-testid="stHorizontalBlock"] {{
             flex-direction: column !important;
-            gap: 12px !important;
+            gap: 10px !important;
+            width: 100% !important;
         }}
+        
         /* OCULTAR EL RELOJ DE 12 HORAS EN MÓVIL */
         .header-clock {{
             display: none !important;
         }}
+        
         .header-logo-container {{
             flex-direction: row !important;
             justify-content: space-between !important;
             align-items: center !important;
         }}
+        
         .header-title {{
             font-size: 15px !important;
         }}
