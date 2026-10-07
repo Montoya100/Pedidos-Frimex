@@ -214,7 +214,7 @@ st.markdown(f"""
     .sub-brand-line {{
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
         font-size: 11px;
         color: #64748b;
         font-weight: 800;
@@ -226,28 +226,12 @@ st.markdown(f"""
         font-weight: 700;
     }}
 
-    /* DUAL CLOCK CONTAINER */
+    /* CLOCK CONTAINER */
     .clocks-group {{
         display: flex;
         align-items: center;
         gap: 12px;
         flex-wrap: wrap;
-    }}
-
-    /* RELOJ SUTIL DE REFRESCADO DE TABLA EN ESCRITORIO */
-    .reloj-tabla-sutil {{
-        font-size: 11px !important;
-        font-weight: 700 !important;
-        color: #64748b !important;
-        letter-spacing: 0.8px;
-        background: #12151e;
-        padding: 6px 10px;
-        border-radius: 6px;
-        border: 1px solid #1e293b;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        white-space: nowrap;
     }}
 
     /* RELOJ TIEMPO REAL MÉXICO (ESCRITORIO) */
@@ -386,7 +370,7 @@ st.markdown(f"""
         transform: translateY(-2px) !important;
     }}
 
-    /* MÉTRICAS EN LÍNEA CON BARRA DE PROGRESO EN NARANJA NEÓN SUAVE */
+    /* MÉTRICAS EN LÍNEA CON BARRA DE PROGRESO (TICKETS -> PENDIENTES -> % COMPLETADO A LA DERECHA) */
     .metrics-row {{
         display: flex; justify-content: space-around; align-items: center;
         background: #141822;
@@ -427,15 +411,15 @@ st.markdown(f"""
         color: #f87171; 
     }}
 
-    /* INDICADOR DE PORCENTAJE SUTIL */
+    /* INDICADOR DE PORCENTAJE A LA DERECHA */
     .pct-avance {{
-        font-size: 11px !important;
-        font-weight: 700 !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
         color: #94a3b8 !important;
         letter-spacing: 0.8px;
         background: transparent;
         padding: 2px 6px;
-        opacity: 0.8;
+        text-transform: uppercase;
     }}
 
     /* SEPARADOR DE SECCIÓN COMPLETADOS */
@@ -615,7 +599,7 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* REGLAS EXCLUSIVAS PARA MÓVIL (TEXTO SYNC EN LÍNEA SIN BOTÓN) */
+    /* REGLAS EXCLUSIVAS PARA MÓVIL */
     @media (max-width: 768px) {{
         .block-container {{
             padding-left: 6px !important;
@@ -636,12 +620,10 @@ st.markdown(f"""
             gap: 6px !important;
         }}
 
-        /* OCULTAR EL BLOQUE DE RELOJES DE ESCRITORIO EN MÓVIL */
         .clocks-group {{
             display: none !important;
         }}
 
-        /* AJUSTAR EL TAMAÑO DEL NOMBRE Y NÚMERO DENTRO DE LA TARJETA EN MÓVIL */
         .card-box-img {{
             font-size: 22px !important;
             height: 90px !important;
@@ -671,6 +653,10 @@ st.markdown(f"""
         
         .header-title {{
             font-size: 15px !important;
+        }}
+
+        .pct-avance {{
+            font-size: 11px !important;
         }}
     }}
     </style>
@@ -774,7 +760,7 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # ENCABEZADO MINIMALISTA SIN EMOJIS
+    # ENCABEZADO MINIMALISTA
     col_hdr_left, col_hdr_right = st.columns([0.82, 0.18])
     
     with col_hdr_left:
@@ -791,9 +777,6 @@ def renderizar_tablero():
                     </div>
                 </div>
                 <div class="clocks-group">
-                    <div class="reloj-tabla-sutil" title="Última sincronización de datos">
-                        <span>SYNC:</span> <span>{hora_sincro_tabla}</span>
-                    </div>
                     <div class="header-clock" title="Hora local de México">
                         <span class="status-dot"></span> <span>{hora_mexico_12h}</span>
                     </div>
@@ -829,25 +812,25 @@ def renderizar_tablero():
     piezas_completadas = max(0, piezas_totales - piezas_pendientes)
     pct_progreso = int((piezas_completadas / piezas_totales * 100)) if piezas_totales > 0 else 100
 
-    # MÉTRICAS DESTACADAS CON BARRA DE PROGRESO EN NARANJA NEÓN SUAVE Y TEXTO SUTIL
+    # MÉTRICAS REORDENADAS: TICKETS -> PENDIENTES -> % COMPLETADO
     st.markdown(f"""
         <div class="metrics-row">
             <div class="metric-inline">
                 <span>Tickets:</span>
                 <span class="val" style="color: #38bdf8;">{len(recibos)}</span>
             </div>
-            <div class="pct-avance">{pct_progreso}% COMPLETADO</div>
             <div class="metric-inline">
                 <span>Pendientes:</span>
                 <span class="val" style="color: {'#10b981' if piezas_pendientes == 0 else '#f87171'};">{piezas_pendientes}</span>
             </div>
+            <div class="pct-avance">{pct_progreso}% COMPLETADO</div>
             <div class="progress-bar-bg">
                 <div class="progress-bar-fill" style="width: {pct_progreso}%;"></div>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
-    # POP-UP NATIVO EN PANTALLA COMPLETA FUNCIONAL CON EFECTO AUDIO
+    # POP-UP NATIVO EN PANTALLA COMPLETA
     if conteo_productos and piezas_pendientes == 0 and not st.session_state.cerrar_modal_celebracion:
         if not st.session_state.reproducido_modal_audio:
             reproducir_sonido_celebracion()
@@ -964,7 +947,7 @@ def renderizar_tablero():
     else:
         st.info("No hay pedidos registrados en este periodo.")
 
-    # FOOTER DISCRETO Y SUTIL EN LA PARTE INFERIOR
+    # FOOTER DISCRETO EN LA PARTE INFERIOR
     st.markdown(f"""
         <div class="footer-sutil">
             PROCESADAS HOY: <span>{piezas_completadas}</span> DE <span>{piezas_totales}</span> PIEZAS
