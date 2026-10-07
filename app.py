@@ -163,17 +163,17 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. MODAL NATIVO DE CELEBRACIÓN (st.dialog)
+# 3. MODAL NATIVO DE CELEBRACIÓN LIMPIO
 # ==========================================
-@st.dialog("🎉 MOSTACHO BOTANAS")
+@st.dialog(" ")
 def modal_celebracion_nativo():
     st.markdown(f"""
-        <div style="text-align: center; padding: 10px 0;">
-            <img src="{LOGO_URL}" style="height: 75px; width: auto; margin-bottom: 12px; filter: drop-shadow(0 4px 14px rgba(249, 115, 22, 0.6));">
-            <h2 style="color: #fb923c; font-weight: 900; font-size: 24px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">
+        <div style="text-align: center; padding: 10px 0 5px 0;">
+            <img src="{LOGO_URL}" style="height: 80px; width: auto; margin-bottom: 16px; filter: drop-shadow(0 4px 18px rgba(249, 115, 22, 0.65));">
+            <h2 style="color: #fb923c; font-weight: 900; font-size: 26px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1.5px;">
                 PRODUCCIÓN FINALIZADA
             </h2>
-            <p style="color: #94a3b8; font-weight: 700; font-size: 15px; line-height: 1.4; margin-bottom: 18px;">
+            <p style="color: #94a3b8; font-weight: 700; font-size: 15px; line-height: 1.4; margin-bottom: 22px;">
                 Se han completado todos los pedidos pendientes de la jornada.
             </p>
         </div>
@@ -184,7 +184,7 @@ def modal_celebracion_nativo():
         st.rerun()
 
 # ==========================================
-# 4. ESTILOS CSS ESTÁTICOS
+# 4. ESTILOS CSS ESTÁTICOS Y PERSONALIZACIÓN DE MODAL
 # ==========================================
 st.markdown(f"""
     <style>
@@ -214,12 +214,25 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* PERSONALIZACIÓN DEL MODAL NATIVO ST.DIALOG */
+    /* OCULTAR ENCABEZADO Y BOTÓN 'X' EN MODAL NATIVO */
+    div[role="dialog"] header {{
+        display: none !important;
+    }}
+
+    /* FONDO TRASLÚCIDO CON DESENFOQUE DETRÁS DEL MODAL */
+    div[data-testid="stModalContainer"] {{
+        background-color: rgba(5, 7, 10, 0.92) !important;
+        backdrop-filter: blur(14px) !important;
+        -webkit-backdrop-filter: blur(14px) !important;
+    }}
+
+    /* TARJETA DEL MODAL NATIVO ULTRA OSCURA */
     div[role="dialog"] {{
-        background-color: #0d0e14 !important;
+        background: linear-gradient(180deg, #161219 0%, #0c0d12 100%) !important;
         border: 2px solid #f97316 !important;
-        border-radius: 20px !important;
-        box-shadow: 0 0 60px rgba(249, 115, 22, 0.45) !important;
+        border-radius: 22px !important;
+        box-shadow: 0 0 65px rgba(249, 115, 22, 0.5) !important;
+        padding: 24px 20px 28px 20px !important;
     }}
 
     div[role="dialog"] button[kind="primary"] {{
@@ -231,13 +244,13 @@ st.markdown(f"""
         font-size: 16px !important;
         letter-spacing: 1.5px !important;
         height: 52px !important;
-        box-shadow: 0 4px 20px rgba(249, 115, 22, 0.6) !important;
+        box-shadow: 0 4px 22px rgba(249, 115, 22, 0.65) !important;
         transition: all 0.2s ease !important;
     }}
 
     div[role="dialog"] button[kind="primary"]:hover {{
         background: linear-gradient(90deg, #c2410c 0%, #ea580c 100%) !important;
-        box-shadow: 0 6px 28px rgba(249, 115, 22, 0.8) !important;
+        box-shadow: 0 6px 30px rgba(249, 115, 22, 0.85) !important;
     }}
 
     /* ENCABEZADO RESPONSIVE */
