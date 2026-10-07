@@ -211,6 +211,21 @@ st.markdown(f"""
         text-transform: uppercase;
     }}
 
+    .sub-brand-line {{
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 11px;
+        color: #64748b;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }}
+
+    .sync-text-inline {{
+        color: #38bdf8;
+        font-weight: 700;
+    }}
+
     /* DUAL CLOCK CONTAINER */
     .clocks-group {{
         display: flex;
@@ -219,7 +234,7 @@ st.markdown(f"""
         flex-wrap: wrap;
     }}
 
-    /* RELOJ SUTIL DE REFRESCADO DE TABLA (GRIS) */
+    /* RELOJ SUTIL DE REFRESCADO DE TABLA EN ESCRITORIO */
     .reloj-tabla-sutil {{
         font-size: 11px !important;
         font-weight: 700 !important;
@@ -231,12 +246,11 @@ st.markdown(f"""
         border: 1px solid #1e293b;
         display: flex;
         align-items: center;
-        justify-content: center;
         gap: 6px;
         white-space: nowrap;
     }}
 
-    /* RELOJ TIEMPO REAL MÉXICO (MÁS GRANDE Y CON NÚMEROS BLANCOS EN ESCRITORIO) */
+    /* RELOJ TIEMPO REAL MÉXICO (ESCRITORIO) */
     .header-clock {{
         background: #161922;
         border: 1px solid #2a2e39;
@@ -601,7 +615,7 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* REGLAS MÓVILES EXCLUSIVAS (LISTA FLUIDA + RELOJ DE SYNC CENTRADO DE BORDES COMPLETOS) */
+    /* REGLAS EXCLUSIVAS PARA MÓVIL (TEXTO SYNC EN LÍNEA SIN BOTÓN) */
     @media (max-width: 768px) {{
         .block-container {{
             padding-left: 6px !important;
@@ -622,17 +636,9 @@ st.markdown(f"""
             gap: 6px !important;
         }}
 
-        /* RELOJ DE SYNC EN MÓVIL: ANCHO COMPLETO Y CENTRADO PERFECTO */
+        /* OCULTAR EL BLOQUE DE RELOJES DE ESCRITORIO EN MÓVIL */
         .clocks-group {{
-            width: 100% !important;
-            margin-top: 4px !important;
-        }}
-
-        .reloj-tabla-sutil {{
-            width: 100% !important;
-            text-align: center !important;
-            justify-content: center !important;
-            padding: 8px 12px !important;
+            display: none !important;
         }}
 
         /* AJUSTAR EL TAMAÑO DEL NOMBRE Y NÚMERO DENTRO DE LA TARJETA EN MÓVIL */
@@ -656,11 +662,6 @@ st.markdown(f"""
             min-height: 90px !important;
         }}
 
-        /* OCULTAR EL RELOJ DE 12 HORAS EN MÓVIL */
-        .header-clock {{
-            display: none !important;
-        }}
-        
         .header-logo-container {{
             flex-direction: row !important;
             justify-content: space-between !important;
@@ -783,7 +784,10 @@ def renderizar_tablero():
                     <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
                     <div>
                         <h1 class="header-title">TABLA DE PRODUCCIÓN</h1>
-                        <span style="font-size:11px; color:#64748b; font-weight: 800; letter-spacing: 1px;">MOSTACHO BOTANAS</span>
+                        <div class="sub-brand-line">
+                            <span>MOSTACHO BOTANAS</span>
+                            <span class="sync-text-inline">| SYNC: {hora_sincro_tabla}</span>
+                        </div>
                     </div>
                 </div>
                 <div class="clocks-group">
