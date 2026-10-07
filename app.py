@@ -35,7 +35,7 @@ def obtener_base64_imagen(ruta_imagen):
 LOGO_URL = obtener_base64_imagen("logo.png")
 
 # ==========================================
-# 2. ESTADO GLOBAL EN MEMORIA COMPARTIDO MULTI-DISPOSITIVO
+# 2. ESTADO GLOBAL EN MEMORIA
 # ==========================================
 @st.cache_resource
 def obtener_estado_global():
@@ -44,14 +44,10 @@ def obtener_estado_global():
         "cantidades_al_completar": {},
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
-        "modal_celebracion_abierto": False, # Estado global para sincronizar todas las pantallas
-        "ultimo_total_pendientes": -1
+        "cerrar_modal_forzado": False
     }
 
 estado_global = obtener_estado_global()
-
-def cerrar_modal_globalmente():
-    estado_global["modal_celebracion_abierto"] = False
 
 def borrar_todo():
     estado_global["respaldo"] = {
@@ -62,7 +58,7 @@ def borrar_todo():
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
     estado_global["completados"].clear()
     estado_global["cantidades_al_completar"].clear()
-    estado_global["modal_celebracion_abierto"] = False
+    estado_global["cerrar_modal_forzado"] = True
     st.toast("Tablero limpiado", icon="ℹ️")
 
 def restaurar_estado():
@@ -71,12 +67,12 @@ def restaurar_estado():
         estado_global["cantidades_al_completar"] = estado_global["respaldo"]["cantidades_al_completar"].copy()
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
-        estado_global["modal_celebracion_abierto"] = False
+        estado_global["cerrar_modal_forzado"] = True
         st.toast("Tablero restaurado", icon="✅")
     else:
         st.toast("Sin respaldo previo", icon="⚠️")
 
-def alternar_estado(producto, cantidad_actual, conteo_actual):
+def alternar_estado(producto, cantidad_actual):
     if producto in estado_global["completados"]:
         estado_global["completados"].remove(producto)
         estado_global["cantidades_al_completar"].pop(producto, None)
@@ -84,23 +80,8 @@ def alternar_estado(producto, cantidad_actual, conteo_actual):
         estado_global["completados"].add(producto)
         estado_global["cantidades_al_completar"][producto] = cantidad_actual
 
-    # CÁLCULO EN TIEMPO REAL SI SE HA CONCLUIDO TODO EL TABLERO
-    pendientes_restantes = 0
-    for prod, cant_tot in conteo_actual.items():
-        if prod in estado_global["completados"]:
-            cant_m = estado_global["cantidades_al_completar"].get(prod, cant_tot)
-            pendientes_restantes += max(0, cant_tot - cant_m)
-        else:
-            cant_m = estado_global["cantidades_al_completar"].get(prod, 0)
-            pendientes_restantes += (cant_tot - cant_m)
-
-    if pendientes_restantes == 0 and len(conteo_actual) > 0:
-        # ACTIVAR MODAL PARA TODAS LAS PANTALLAS
-        estado_global["modal_celebracion_abierto"] = True
-        st.session_state.reproducido_modal_audio = False
-    else:
-        # SI AÚN HAY PENDIENTES, ASEGURAR QUE EL MODAL PERMANEZCA CERRADO EN TODAS
-        estado_global["modal_celebracion_abierto"] = False
+    # AL INTERACTUAR CON CUALQUIER TARJETA, RESETEAR FORZADO DE MODAL
+    estado_global["cerrar_modal_forzado"] = False
 
 def reproducir_sonido_notificacion():
     sound_js = """
@@ -111,9 +92,7 @@ def reproducir_sonido_notificacion():
                 var AudioContext = window.AudioContext || window.webkitAudioContext;
                 if (!AudioContext) return;
                 var ctx = new AudioContext();
-                if (ctx.state === 'suspended') {
-                    ctx.resume();
-                }
+                if (ctx.state === 'suspended') { ctx.resume(); }
                 
                 var osc1 = ctx.createOscillator();
                 var gain1 = ctx.createGain();
@@ -198,7 +177,7 @@ def modal_celebracion_nativo():
     """, unsafe_allow_html=True)
     
     if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_dialog_cerrar"):
-        cerrar_modal_globalmente()
+        estado_global["cerrar_modal_forzado"] = True
         st.rerun()
 
 # ==========================================
@@ -208,7 +187,6 @@ st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@800;900&display=swap');
 
-    /* ELIMINAR PARPADEO Y OPACIDAD DURANTE REFRESCADOS */
     div[data-testid="stAppViewContainer"],
     div[data-testid="stMain"],
     section[data-testid="stSidebar"],
@@ -232,19 +210,10 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* KEYFRAMES ANIMACIÓN POP-IN SUAVE Y ELEGANTE */
     @keyframes modalPopIn {{
-        0% {{
-            opacity: 0;
-            transform: scale(0.82) translateY(20px);
-        }}
-        70% {{
-            transform: scale(1.02) translateY(-4px);
-        }}
-        100% {{
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }}
+        0% {{ opacity: 0; transform: scale(0.82) translateY(20px); }}
+        70% {{ transform: scale(1.02) translateY(-4px); }}
+        100% {{ opacity: 1; transform: scale(1) translateY(0); }}
     }}
 
     @keyframes fadeInBg {{
@@ -252,7 +221,6 @@ st.markdown(f"""
         to {{ opacity: 1; }}
     }}
 
-    /* CAPA FIJA SUPERPUESTA MEDIANTE PSEUDO-ELEMENTO ::BEFORE EN EL MODAL */
     div[data-testid="stModalContainer"]::before {{
         content: "" !important;
         position: fixed !important;
@@ -271,7 +239,6 @@ st.markdown(f"""
         background-color: transparent !important;
     }}
 
-    /* OCULTAR TACHE ("X") Y HEADER EN MODAL NATIVO */
     div[role="dialog"] header,
     div[role="dialog"] button[aria-label="Close"],
     div[role="dialog"] [data-testid="stModalCloseButton"],
@@ -279,13 +246,10 @@ st.markdown(f"""
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
-        color: #0c0d12 !important;
-        fill: #0c0d12 !important;
         height: 0px !important;
         width: 0px !important;
     }}
 
-    /* TARJETA DEL MODAL NATIVO ULTRA OSCURA Y ANIMADA */
     div[role="dialog"] {{
         background: linear-gradient(180deg, #161219 0%, #0c0d12 100%) !important;
         border: 2px solid #f97316 !important;
@@ -295,40 +259,21 @@ st.markdown(f"""
         animation: modalPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
     }}
 
-    /* ESCALADO MÁS GRANDE PARA VERSIÓN HORIZONTAL (ESCRITORIO / TABLET) */
     @media (min-width: 769px) {{
         div[role="dialog"] {{
             max-width: 680px !important;
             width: 680px !important;
             padding: 36px 32px 40px 32px !important;
         }}
-        .logo-modal-celebracion {{
-            height: 105px !important;
-            margin-bottom: 20px !important;
-        }}
-        .titulo-modal-celebracion {{
-            font-size: 32px !important;
-            margin-bottom: 14px !important;
-        }}
-        .sub-modal-celebracion {{
-            font-size: 17px !important;
-            margin-bottom: 28px !important;
-        }}
+        .logo-modal-celebracion {{ height: 105px !important; margin-bottom: 20px !important; }}
+        .titulo-modal-celebracion {{ font-size: 32px !important; margin-bottom: 14px !important; }}
+        .sub-modal-celebracion {{ font-size: 17px !important; margin-bottom: 28px !important; }}
     }}
 
     @media (max-width: 768px) {{
-        .logo-modal-celebracion {{
-            height: 80px !important;
-            margin-bottom: 14px !important;
-        }}
-        .titulo-modal-celebracion {{
-            font-size: 24px !important;
-            margin-bottom: 10px !important;
-        }}
-        .sub-modal-celebracion {{
-            font-size: 15px !important;
-            margin-bottom: 20px !important;
-        }}
+        .logo-modal-celebracion {{ height: 80px !important; margin-bottom: 14px !important; }}
+        .titulo-modal-celebracion {{ font-size: 24px !important; margin-bottom: 10px !important; }}
+        .sub-modal-celebracion {{ font-size: 15px !important; margin-bottom: 20px !important; }}
     }}
 
     .logo-modal-celebracion {{
@@ -362,21 +307,12 @@ st.markdown(f"""
         transition: all 0.2s ease !important;
     }}
 
-    div[role="dialog"] button[kind="primary"]:hover {{
-        background: linear-gradient(90deg, #c2410c 0%, #ea580c 100%) !important;
-        box-shadow: 0 6px 32px rgba(249, 115, 22, 0.85) !important;
-    }}
-
-    /* ENCABEZADO RESPONSIVE */
     .header-logo-container {{
         display: flex; justify-content: space-between; align-items: center;
         margin-bottom: 8px; width: 100%; padding: 0 4px; flex-wrap: wrap; gap: 8px;
     }}
     
-    .header-left-group {{
-        display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    }}
-
+    .header-left-group {{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }}
     .header-logo-img {{ height: 50px !important; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }}
 
     .header-title {{
@@ -385,380 +321,118 @@ st.markdown(f"""
         text-transform: uppercase;
     }}
 
-    .sub-brand-line {{
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 11px;
-        color: #64748b;
-        font-weight: 800;
-        letter-spacing: 1px;
-    }}
+    .sub-brand-line {{ display: flex; align-items: center; gap: 10px; font-size: 11px; color: #64748b; font-weight: 800; letter-spacing: 1px; }}
+    .sync-text-inline {{ color: #38bdf8; font-weight: 700; }}
+    .clocks-group {{ display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }}
 
-    .sync-text-inline {{
-        color: #38bdf8;
-        font-weight: 700;
-    }}
-
-    /* CLOCK CONTAINER */
-    .clocks-group {{
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-    }}
-
-    /* RELOJ TIEMPO REAL MÉXICO (ESCRITORIO) */
     .header-clock {{
-        background: #161922;
-        border: 1px solid #2a2e39;
-        border-radius: 8px;
-        padding: 6px 14px;
-        color: #ffffff !important;
-        font-size: 22px !important;
-        font-weight: 900 !important;
-        letter-spacing: 1.2px;
-        display: flex; align-items: center; gap: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-        white-space: nowrap;
+        background: #161922; border: 1px solid #2a2e39; border-radius: 8px; padding: 6px 14px;
+        color: #ffffff !important; font-size: 22px !important; font-weight: 900 !important;
+        letter-spacing: 1.2px; display: flex; align-items: center; gap: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.4); white-space: nowrap;
     }}
 
     .status-dot {{
-        height: 9px; width: 9px;
-        background-color: #10b981;
-        border-radius: 50%;
-        display: inline-block;
-        box-shadow: 0 0 8px #10b981;
-        animation: pulseDot 2s infinite;
+        height: 9px; width: 9px; background-color: #10b981; border-radius: 50%; display: inline-block;
+        box-shadow: 0 0 8px #10b981; animation: pulseDot 2s infinite;
     }}
 
-    @keyframes pulseDot {{
-        0% {{ opacity: 0.4; }}
-        50% {{ opacity: 1; }}
-        100% {{ opacity: 0.4; }}
-    }}
+    @keyframes pulseDot {{ 0% {{ opacity: 0.4; }} 50% {{ opacity: 1; }} 100% {{ opacity: 0.4; }} }}
 
-    /* ANIMACIÓN DE PULSO DE LUZ NEÓN EN CAMBIOS NUEVOS */
     @keyframes pulseGlow {{
-        0% {{
-            box-shadow: 0 0 4px rgba(56, 189, 248, 0.4);
-            border-color: #38bdf8;
-        }}
-        50% {{
-            box-shadow: 0 0 18px rgba(56, 189, 248, 0.9);
-            border-color: #60a5fa;
-        }}
-        100% {{
-            box-shadow: 0 0 4px rgba(56, 189, 248, 0.4);
-            border-color: #38bdf8;
-        }}
+        0% {{ box-shadow: 0 0 4px rgba(56, 189, 248, 0.4); border-color: #38bdf8; }}
+        50% {{ box-shadow: 0 0 18px rgba(56, 189, 248, 0.9); border-color: #60a5fa; }}
+        100% {{ box-shadow: 0 0 4px rgba(56, 189, 248, 0.4); border-color: #38bdf8; }}
     }}
 
-    .anim-pulso-nuevo {{
-        animation: pulseGlow 1.2s infinite ease-in-out !important;
-    }}
+    .anim-pulso-nuevo {{ animation: pulseGlow 1.2s infinite ease-in-out !important; }}
 
-    /* ETIQUETA EN LÍNEA DE UNIDADES NUEVAS */
     .txt-incremento {{
-        display: inline-block;
-        background-color: #1e3a8a;
-        color: #93c5fd;
-        font-size: 18px !important;
-        font-weight: 900 !important;
-        padding: 2px 8px;
-        border-radius: 6px;
-        margin-left: 6px;
-        border: 1px solid #3b82f6;
+        display: inline-block; background-color: #1e3a8a; color: #93c5fd;
+        font-size: 18px !important; font-weight: 900 !important; padding: 2px 8px;
+        border-radius: 6px; margin-left: 6px; border: 1px solid #3b82f6;
     }}
 
-    /* MÉTRICAS EN LÍNEA CON BARRA DE PROGRESO */
     .metrics-row {{
         display: flex; justify-content: space-around; align-items: center;
-        background: #141822;
-        border-radius: 10px; padding: 10px 16px 14px 16px;
-        margin-bottom: 14px; border: 1px solid #232936;
-        position: relative;
-        overflow: hidden;
+        background: #141822; border-radius: 10px; padding: 10px 16px 14px 16px;
+        margin-bottom: 14px; border: 1px solid #232936; position: relative; overflow: hidden;
     }}
 
-    .progress-bar-bg {{
-        position: absolute;
-        bottom: 0; left: 0; right: 0;
-        height: 4px;
-        background: #1f2430;
-    }}
-
+    .progress-bar-bg {{ position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: #1f2430; }}
     .progress-bar-fill {{
-        height: 100%;
-        background: linear-gradient(90deg, #fb923c 0%, #f97316 100%);
-        box-shadow: 0 0 8px rgba(249, 115, 22, 0.6);
-        transition: width 0.5s ease-in-out;
+        height: 100%; background: linear-gradient(90deg, #fb923c 0%, #f97316 100%);
+        box-shadow: 0 0 8px rgba(249, 115, 22, 0.6); transition: width 0.5s ease-in-out;
     }}
 
-    .metric-inline {{ 
-        display: flex; 
-        align-items: center; 
-        gap: 10px; 
-        font-size: 15px !important; 
-        font-weight: 800 !important; 
-        color: #94a3b8; 
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
+    .metric-inline {{
+        display: flex; align-items: center; gap: 10px; font-size: 15px !important;
+        font-weight: 800 !important; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase;
     }}
 
-    .metric-inline .val {{ 
-        font-size: 22px !important; 
-        font-weight: 900 !important; 
-        color: #f87171; 
-    }}
+    .metric-inline .val {{ font-size: 22px !important; font-weight: 900 !important; color: #f87171; }}
+    .pct-avance {{ font-size: 13px !important; font-weight: 800 !important; color: #94a3b8 !important; letter-spacing: 0.8px; text-transform: uppercase; }}
 
-    /* INDICADOR DE PORCENTAJE A LA DERECHA */
-    .pct-avance {{
-        font-size: 13px !important;
-        font-weight: 800 !important;
-        color: #94a3b8 !important;
-        letter-spacing: 0.8px;
-        background: transparent;
-        padding: 2px 6px;
-        text-transform: uppercase;
-    }}
-
-    /* SEPARADOR DE SECCIÓN COMPLETADOS */
     .divider-completados {{
-        display: flex;
-        align-items: center;
-        text-align: center;
-        color: #10b981;
-        font-size: 11px;
-        font-weight: 900;
-        letter-spacing: 2px;
-        margin: 18px 0 12px 0;
+        display: flex; align-items: center; text-align: center; color: #10b981;
+        font-size: 11px; font-weight: 900; letter-spacing: 2px; margin: 18px 0 12px 0;
     }}
 
-    .divider-completados::before, .divider-completados::after {{
-        content: '';
-        flex: 1;
-        border-bottom: 1px solid #10b981;
-        opacity: 0.3;
-    }}
+    .divider-completados::before, .divider-completados::after {{ content: ''; flex: 1; border-bottom: 1px solid #10b981; opacity: 0.3; }}
+    .divider-completados span {{ padding: 0 12px; background-color: #0b0d13; }}
 
-    .divider-completados span {{
-        padding: 0 12px;
-        background-color: #0b0d13;
-    }}
-
-    /* TARJETA DE TEXTO DEL PRODUCTO CON ELEVACIÓN SUTIL */
     .card-box-img {{
-        border-radius: 10px;
-        height: 100px !important;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        padding: 0 12px;
-        font-size: 28px !important;
-        font-weight: 900 !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.35);
-        white-space: normal;
-        word-wrap: break-word;
-        line-height: 1.15;
-        margin-bottom: 6px;
-        letter-spacing: 0.5px;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border-radius: 10px; height: 100px !important; display: flex; align-items: center; justify-content: center;
+        text-align: center; padding: 0 12px; font-size: 28px !important; font-weight: 900 !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.35); white-space: normal; word-wrap: break-word; line-height: 1.15; margin-bottom: 6px;
     }}
 
-    .card-box-img:hover {{
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0,0,0,0.5);
-    }}
-
-    /* CAJA DEL NÚMERO MASIVO GIGANTE CON TIPOGRAFÍA IMPACTO MONOSPACE */
     .num-box-masivo {{
-        border-radius: 10px;
-        height: 100px !important;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: 'JetBrains Mono', monospace !important;
-        font-size: 66px !important;
-        font-weight: 900 !important;
-        line-height: 1 !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-        margin-bottom: 6px;
-        user-select: none;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        letter-spacing: -2px;
+        border-radius: 10px; height: 100px !important; display: flex; align-items: center; justify-content: center;
+        font-family: 'JetBrains Mono', monospace !important; font-size: 66px !important; font-weight: 900 !important;
+        line-height: 1 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.4); margin-bottom: 6px; user-select: none;
     }}
 
-    .num-box-masivo:hover {{
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0,0,0,0.55);
-    }}
+    .num-box-pendiente {{ background: #dc2626 !important; color: #ffffff !important; border: 1px solid #ef4444 !important; }}
+    .num-box-completado {{ background: #059669 !important; color: #ffffff !important; opacity: 0.75; border: 1px solid #10b981 !important; }}
+    .num-box-reciente {{ background: #2563eb !important; color: #ffffff !important; border: 1px solid #60a5fa !important; }}
 
-    .num-box-pendiente {{ 
-        background: #dc2626 !important; 
-        color: #ffffff !important; 
-        border: 1px solid #ef4444 !important;
-    }}
-    .num-box-completado {{ 
-        background: #059669 !important; 
-        color: #ffffff !important; 
-        opacity: 0.75; 
-        border: 1px solid #10b981 !important;
-    }}
-    .num-box-reciente {{ 
-        background: #2563eb !important; 
-        color: #ffffff !important;
-        border: 1px solid #60a5fa !important;
-    }}
+    .card-pendiente {{ background: #ef4444 !important; color: #ffffff !important; border: 1px solid #f87171 !important; }}
+    .card-completado {{ background: #10b981 !important; color: #ffffff !important; border: 1px solid #34d399 !important; opacity: 0.75; }}
+    .card-nueva-orden {{ background: #2563eb !important; color: #ffffff !important; border: 2px solid #60a5fa !important; }}
 
-    /* TARJETA PENDIENTE (ROJO) */
-    .card-pendiente {{
-        background: #ef4444 !important;
-        color: #ffffff !important;
-        border: 1px solid #f87171 !important;
-    }}
-
-    /* TARJETA COMPLETADA (VERDE) */
-    .card-completado {{
-        background: #10b981 !important;
-        color: #ffffff !important;
-        border: 1px solid #34d399 !important;
-        opacity: 0.75;
-    }}
-
-    /* ESTADO TEMPORAL AZUL (NUEVO PRODUCTO) */
-    .card-nueva-orden {{
-        background: #2563eb !important;
-        color: #ffffff !important;
-        border: 2px solid #60a5fa !important;
-    }}
-
-    /* BOTÓN TRANSPARENTE SUPERPUESTO EN TARJETAS */
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
-        height: 100px !important;
-        margin-top: -106px !important;
-    }}
-
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{ height: 100px !important; margin-top: -106px !important; }}
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
-        height: 100px !important;
-        min-height: 100px !important;
-        background-color: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        display: flex !important;
-        align-items: flex-end !important;
-        justify-content: center !important;
-        padding-bottom: 8px !important;
+        height: 100px !important; min-height: 100px !important; background-color: transparent !important;
+        border: none !important; box-shadow: none !important; display: flex !important; align-items: flex-end !important; justify-content: center !important; padding-bottom: 8px !important;
     }}
 
-    /* ETIQUETA EN BOTÓN TRANSPARENTE */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button * {{
-        font-size: 11px !important;
-        font-weight: 900 !important;
-        letter-spacing: 1.5px !important;
-        text-transform: uppercase !important;
-        color: #ffffff !important;
-        opacity: 0.95 !important;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+        font-size: 11px !important; font-weight: 900 !important; letter-spacing: 1.5px !important; text-transform: uppercase !important; color: #ffffff !important; opacity: 0.95 !important;
     }}
 
-    /* ESTILO BOTÓN DE CONFIGURACIÓN SIN EMOJIS */
     div[data-testid="stPopover"] button {{
-        height: 36px !important;
-        font-size: 12px !important;
-        font-weight: 800 !important;
-        background-color: #141822 !important;
-        color: #94a3b8 !important;
-        border: 1px solid #232936 !important;
-        border-radius: 8px !important;
-        letter-spacing: 1px;
-    }}
-    
-    div[data-testid="stPopover"] button:hover {{
-        border-color: #38bdf8 !important;
-        color: #ffffff !important;
+        height: 36px !important; font-size: 12px !important; font-weight: 800 !important; background-color: #141822 !important; color: #94a3b8 !important; border: 1px solid #232936 !important; border-radius: 8px !important;
     }}
 
-    /* FOOTER SUTIL DE PROCESADAS HOY */
     .footer-sutil {{
-        position: fixed;
-        bottom: 0; left: 0; right: 0;
-        background: #090b10;
-        border-top: 1px solid #181d28;
-        padding: 5px 16px;
-        text-align: center;
-        font-size: 11px !important;
-        font-weight: 800 !important;
-        color: #64748b !important;
-        letter-spacing: 1.5px;
-        z-index: 999;
+        position: fixed; bottom: 0; left: 0; right: 0; background: #090b10; border-top: 1px solid #181d28; padding: 5px 16px; text-align: center; font-size: 11px !important; font-weight: 800 !important; color: #64748b !important; z-index: 999;
     }}
 
-    .footer-sutil span {{
-        color: #10b981 !important;
-        font-weight: 900 !important;
-    }}
+    .footer-sutil span {{ color: #10b981 !important; font-weight: 900 !important; }}
 
-    /* REGLAS EXCLUSIVAS PARA MÓVIL */
     @media (max-width: 768px) {{
-        .block-container {{
-            padding-left: 6px !important;
-            padding-right: 6px !important;
-        }}
-        
-        div[data-testid="column"] {{
-            width: 100% !important;
-            flex: 1 1 100% !important;
-            padding-left: 0px !important;
-            padding-right: 0px !important;
-            margin-bottom: 4px !important;
-        }}
-        
-        div[data-testid="stHorizontalBlock"] {{
-            flex-direction: row !important;
-            width: 100% !important;
-            gap: 6px !important;
-        }}
-
-        .clocks-group {{
-            display: none !important;
-        }}
-
-        .card-box-img {{
-            font-size: 22px !important;
-            height: 90px !important;
-        }}
-        
-        .num-box-masivo {{
-            font-size: 50px !important;
-            height: 90px !important;
-        }}
-
-        div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
-            height: 90px !important;
-            margin-top: -96px !important;
-        }}
-
-        div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
-            height: 90px !important;
-            min-height: 90px !important;
-        }}
-
-        .header-logo-container {{
-            flex-direction: row !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            padding: 0 4px !important;
-        }}
-        
-        .header-title {{
-            font-size: 15px !important;
-        }}
-
-        .pct-avance {{
-            font-size: 11px !important;
-        }}
+        .block-container {{ padding-left: 6px !important; padding-right: 6px !important; }}
+        div[data-testid="column"] {{ width: 100% !important; flex: 1 1 100% !important; margin-bottom: 4px !important; }}
+        div[data-testid="stHorizontalBlock"] {{ flex-direction: row !important; width: 100% !important; gap: 6px !important; }}
+        .clocks-group {{ display: none !important; }}
+        .card-box-img {{ font-size: 22px !important; height: 90px !important; }}
+        .num-box-masivo {{ font-size: 50px !important; height: 90px !important; }}
+        div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{ height: 90px !important; margin-top: -96px !important; }}
+        div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{ height: 90px !important; min-height: 90px !important; }}
+        .header-logo-container {{ flex-direction: row !important; justify-content: space-between !important; align-items: center !important; padding: 0 4px !important; }}
+        .header-title {{ font-size: 15px !important; }}
+        .pct-avance {{ font-size: 11px !important; }}
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -836,7 +510,7 @@ def renderizar_tablero():
     hora_mexico_12h = ahora_mexico.strftime("%I:%M:%S %p")
     hora_sincro_tabla = ahora_mexico.strftime("%H:%M:%S")
 
-    # CÁLCULO PREVIO DE PENDIENTES
+    # CÁLCULO DE PENDIENTES
     piezas_totales = sum(conteo_productos.values())
     piezas_pendientes = 0
     
@@ -847,13 +521,6 @@ def renderizar_tablero():
         else:
             cant_marcada = estado_global["cantidades_al_completar"].get(prod, 0)
             piezas_pendientes += (cant_total - cant_marcada)
-
-    # DETECCION DE PENDIENTES NUEVOS PARA DESACTIVAR EL MODAL
-    ultimo_pendientes = estado_global.get("ultimo_total_pendientes", -1)
-    if ultimo_pendientes != -1 and piezas_pendientes > ultimo_pendientes:
-        estado_global["modal_celebracion_abierto"] = False
-
-    estado_global["ultimo_total_pendientes"] = piezas_pendientes
 
     if "ultimo_conteo" not in st.session_state:
         st.session_state.ultimo_conteo = conteo_productos.copy()
@@ -870,10 +537,9 @@ def renderizar_tablero():
                     "hora": ahora_utc
                 }
 
-        # SI SURGIÓ UN NUEVO PEDIDO, REPRODUCIR SONIDO Y CERRAR MODAL GLOBALMENTE
         if nuevo_pedido_detectado:
             reproducir_sonido_notificacion()
-            estado_global["modal_celebracion_abierto"] = False
+            estado_global["cerrar_modal_forzado"] = False
             st.session_state.reproducido_modal_audio = False
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
@@ -918,7 +584,7 @@ def renderizar_tablero():
     piezas_completadas = max(0, piezas_totales - piezas_pendientes)
     pct_progreso = int((piezas_completadas / piezas_totales * 100)) if piezas_totales > 0 else 100
 
-    # MÉTRICAS REORDENADAS: TICKETS -> PENDIENTES -> % COMPLETADO
+    # MÉTRICAS REORDENADAS
     st.markdown(f"""
         <div class="metrics-row">
             <div class="metric-inline">
@@ -936,8 +602,8 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # DISPARAR MODAL SI ESTÁ COMPLETO Y EL ESTADO GLOBAL LO INDICA
-    if conteo_productos and piezas_pendientes == 0 and estado_global["modal_celebracion_abierto"]:
+    # DISPARO CONDICIONAL DEL MODAL DE CELEBRACIÓN
+    if conteo_productos and piezas_pendientes == 0 and not estado_global["cerrar_modal_forzado"]:
         if not st.session_state.reproducido_modal_audio:
             reproducir_sonido_celebracion()
             st.session_state.reproducido_modal_audio = True
@@ -953,7 +619,6 @@ def renderizar_tablero():
             else:
                 activos.append((prod, cant_total))
 
-        # ORDENAMIENTO POR CANTIDAD TOTAL (MAYOR A MENOR)
         activos.sort(key=lambda x: x[1], reverse=True)
         completados.sort(key=lambda x: x[1], reverse=True)
 
@@ -988,7 +653,6 @@ def renderizar_tablero():
 
                         valor_mostrar = "∞" if cant_mostrar == 1 else str(cant_mostrar)
 
-                        # INDICADOR EN LÍNEA + ANIMACIÓN DE PULSO (< 30s)
                         info_popup = st.session_state.popups_nuevos.get(producto)
                         clase_pulso = ""
                         html_incremento = ""
@@ -997,7 +661,6 @@ def renderizar_tablero():
                             clase_pulso = "anim-pulso-nuevo"
                             html_incremento = f'<span class="txt-incremento">+{inc}</span>'
 
-                        # RELACIÓN DE ASPECTO INTERNO FLUIDA PARA MÓVIL
                         col_txt, col_btn = st.columns([0.75, 0.25], gap="small")
 
                         with col_txt:
@@ -1018,7 +681,7 @@ def renderizar_tablero():
                                 texto_estado, 
                                 key=f"num_btn_{producto}", 
                                 on_click=alternar_estado, 
-                                args=(producto, cant_total, conteo_productos),
+                                args=(producto, cant_total),
                                 use_container_width=True
                             )
 
@@ -1036,7 +699,7 @@ def renderizar_tablero():
     else:
         st.info("No hay pedidos registrados en este periodo.")
 
-    # FOOTER DISCRETO EN LA PARTE INFERIOR
+    # FOOTER SUTIL
     st.markdown(f"""
         <div class="footer-sutil">
             PROCESADAS HOY: <span>{piezas_completadas}</span> DE <span>{piezas_totales}</span> PIEZAS
