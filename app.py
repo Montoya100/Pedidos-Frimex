@@ -203,7 +203,7 @@ st.markdown(f"""
     .header-logo-img {{ height: 50px !important; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }}
 
     .header-title {{
-        color: #ffffff; font-weight: 900; font-size: 18px !important;
+        color: #ffffff; font-weight: 900; font-size: 20px !important;
         line-height: 1.1; letter-spacing: 1px; margin: 0; padding: 0; white-space: nowrap;
         text-transform: uppercase;
     }}
@@ -212,43 +212,43 @@ st.markdown(f"""
     .clocks-group {{
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 12px;
         flex-wrap: wrap;
     }}
 
     /* RELOJ SUTIL DE REFRESCADO DE TABLA (GRIS) */
     .reloj-tabla-sutil {{
-        font-size: 10px !important;
+        font-size: 11px !important;
         font-weight: 700 !important;
         color: #64748b !important;
         letter-spacing: 0.8px;
         background: #12151e;
-        padding: 4px 8px;
+        padding: 6px 10px;
         border-radius: 6px;
         border: 1px solid #1e293b;
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 6px;
         white-space: nowrap;
     }}
 
-    /* RELOJ TIEMPO REAL MÉXICO (DESTACADO) */
+    /* RELOJ TIEMPO REAL MÉXICO (MÁS GRANDE Y CON NÚMEROS BLANCOS) */
     .header-clock {{
         background: #161922;
         border: 1px solid #2a2e39;
         border-radius: 8px;
-        padding: 5px 10px;
-        color: #38bdf8;
-        font-size: 15px !important;
-        font-weight: 800 !important;
-        letter-spacing: 1px;
-        display: flex; align-items: center; gap: 6px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        padding: 6px 14px;
+        color: #ffffff !important;
+        font-size: 22px !important;
+        font-weight: 900 !important;
+        letter-spacing: 1.2px;
+        display: flex; align-items: center; gap: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
         white-space: nowrap;
     }}
 
     .status-dot {{
-        height: 7px; width: 7px;
+        height: 9px; width: 9px;
         background-color: #10b981;
         border-radius: 50%;
         display: inline-block;
@@ -597,26 +597,28 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* ADAPTACIONES ESPECÍFICAS PARA VISTA MÓVIL (VERTICAL) */
+    /* REGLAS EXCLUSIVAS PARA MÓVIL / PANTALLA VERTICAL */
     @media (max-width: 768px) {{
-        div[data-testid="stHorizontalBlock"] {{
-            flex-direction: column !important;
-            gap: 8px !important;
-        }}
+        /* EXPANDIR COLUMNAS AL 100% PARA QUE NO HAYA ESPACIO A LA DERECHA */
         div[data-testid="column"] {{
             width: 100% !important;
+            flex: 1 1 100% !important;
+        }}
+        div[data-testid="stHorizontalBlock"] {{
+            flex-direction: column !important;
+            gap: 12px !important;
+        }}
+        /* OCULTAR EL RELOJ DE 12 HORAS EN MÓVIL */
+        .header-clock {{
+            display: none !important;
         }}
         .header-logo-container {{
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 10px !important;
-        }}
-        .clocks-group {{
-            width: 100% !important;
+            flex-direction: row !important;
             justify-content: space-between !important;
+            align-items: center !important;
         }}
         .header-title {{
-            font-size: 16px !important;
+            font-size: 15px !important;
         }}
     }}
     </style>
