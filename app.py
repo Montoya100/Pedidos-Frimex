@@ -35,7 +35,7 @@ def obtener_base64_imagen(ruta_imagen):
 LOGO_URL = obtener_base64_imagen("logo.png")
 
 # ==========================================
-# 2. ESTADO GLOBAL EN MEMORIA CON RESPALDO
+# 2. ESTADO GLOBAL EN MEMORIA COMPARTIDO MULTI-DISPOSITIVO
 # ==========================================
 @st.cache_resource
 def obtener_estado_global():
@@ -43,10 +43,15 @@ def obtener_estado_global():
         "completados": set(),
         "cantidades_al_completar": {},
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
-        "respaldo": None
+        "respaldo": None,
+        "modal_celebracion_abierto": False, # Estado global para sincronizar todas las pantallas
+        "ultimo_total_pendientes": -1
     }
 
 estado_global = obtener_estado_global()
+
+def cerrar_modal_globalmente():
+    estado_global["modal_celebracion_abierto"] = False
 
 def borrar_todo():
     estado_global["respaldo"] = {
@@ -57,7 +62,7 @@ def borrar_todo():
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
     estado_global["completados"].clear()
     estado_global["cantidades_al_completar"].clear()
-    st.session_state.cerrar_modal_celebracion = True
+    estado_global["modal_celebracion_abierto"] = False
     st.toast("Tablero limpiado", icon="ℹ️")
 
 def restaurar_estado():
@@ -66,7 +71,7 @@ def restaurar_estado():
         estado_global["cantidades_al_completar"] = estado_global["respaldo"]["cantidades_al_completar"].copy()
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
-        st.session_state.cerrar_modal_celebracion = True
+        estado_global["modal_celebracion_abierto"] = False
         st.toast("Tablero restaurado", icon="✅")
     else:
         st.toast("Sin respaldo previo", icon="⚠️")
@@ -79,7 +84,7 @@ def alternar_estado(producto, cantidad_actual, conteo_actual):
         estado_global["completados"].add(producto)
         estado_global["cantidades_al_completar"][producto] = cantidad_actual
 
-    # VERIFICAR SI TRAS ESTE CAMBIO YA NO QUEDAN PRODUCTOS PENDIENTES
+    # CÁLCULO EN TIEMPO REAL SI SE HA CONCLUIDO TODO EL TABLERO
     pendientes_restantes = 0
     for prod, cant_tot in conteo_actual.items():
         if prod in estado_global["completados"]:
@@ -90,12 +95,12 @@ def alternar_estado(producto, cantidad_actual, conteo_actual):
             pendientes_restantes += (cant_tot - cant_m)
 
     if pendientes_restantes == 0 and len(conteo_actual) > 0:
-        # ACTIVAR MODAL SI SE HA FINALIZADO TODO
-        st.session_state.cerrar_modal_celebracion = False
+        # ACTIVAR MODAL PARA TODAS LAS PANTALLAS
+        estado_global["modal_celebracion_abierto"] = True
         st.session_state.reproducido_modal_audio = False
     else:
-        # CERRAR SI AÚN HAY PENDIENTES
-        st.session_state.cerrar_modal_celebracion = True
+        # SI AÚN HAY PENDIENTES, ASEGURAR QUE EL MODAL PERMANEZCA CERRADO EN TODAS
+        estado_global["modal_celebracion_abierto"] = False
 
 def reproducir_sonido_notificacion():
     sound_js = """
@@ -193,11 +198,11 @@ def modal_celebracion_nativo():
     """, unsafe_allow_html=True)
     
     if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_dialog_cerrar"):
-        st.session_state.cerrar_modal_celebracion = True
+        cerrar_modal_globalmente()
         st.rerun()
 
 # ==========================================
-# 4. ESTILOS CSS ESTÁTICOS Y KEYFRAMES DE ANIMACIÓN
+# 4. ESTILOS CSS ESTÁTICOS Y ANIMACIONES
 # ==========================================
 st.markdown(f"""
     <style>
@@ -822,9 +827,6 @@ def renderizar_tablero():
     if "popups_nuevos" not in st.session_state:
         st.session_state.popups_nuevos = {}
 
-    if "cerrar_modal_celebracion" not in st.session_state:
-        st.session_state.cerrar_modal_celebracion = False
-
     if "reproducido_modal_audio" not in st.session_state:
         st.session_state.reproducido_modal_audio = False
 
@@ -846,9 +848,12 @@ def renderizar_tablero():
             cant_marcada = estado_global["cantidades_al_completar"].get(prod, 0)
             piezas_pendientes += (cant_total - cant_marcada)
 
-    # MONITOREO DE CAMBIOS AUTOMÁTICOS POR LLEGADA DE NUEVOS PEDIDOS
-    if "ultimo_pendientes" not in st.session_state:
-        st.session_state.ultimo_pendientes = piezas_pendientes
+    # DETECCION DE PENDIENTES NUEVOS PARA DESACTIVAR EL MODAL
+    ultimo_pendientes = estado_global.get("ultimo_total_pendientes", -1)
+    if ultimo_pendientes != -1 and piezas_pendientes > ultimo_pendientes:
+        estado_global["modal_celebracion_abierto"] = False
+
+    estado_global["ultimo_total_pendientes"] = piezas_pendientes
 
     if "ultimo_conteo" not in st.session_state:
         st.session_state.ultimo_conteo = conteo_productos.copy()
@@ -865,15 +870,13 @@ def renderizar_tablero():
                     "hora": ahora_utc
                 }
 
-        # SI SURGIÓ UN NUEVO PENDIENTE, OCULTAR MODAL DE INMEDIATO
-        if piezas_pendientes > st.session_state.ultimo_pendientes or nuevo_pedido_detectado:
+        # SI SURGIÓ UN NUEVO PEDIDO, REPRODUCIR SONIDO Y CERRAR MODAL GLOBALMENTE
+        if nuevo_pedido_detectado:
             reproducir_sonido_notificacion()
-            st.session_state.cerrar_modal_celebracion = True
+            estado_global["modal_celebracion_abierto"] = False
             st.session_state.reproducido_modal_audio = False
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
-
-    st.session_state.ultimo_pendientes = piezas_pendientes
 
     # ENCABEZADO MINIMALISTA
     col_hdr_left, col_hdr_right = st.columns([0.82, 0.18])
@@ -933,8 +936,8 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # EJECUCIÓN DEL MODAL NATIVO CUANDO SE COMPLETA LA PRODUCCIÓN
-    if conteo_productos and piezas_pendientes == 0 and not st.session_state.cerrar_modal_celebracion:
+    # DISPARAR MODAL SI ESTÁ COMPLETO Y EL ESTADO GLOBAL LO INDICA
+    if conteo_productos and piezas_pendientes == 0 and estado_global["modal_celebracion_abierto"]:
         if not st.session_state.reproducido_modal_audio:
             reproducir_sonido_celebracion()
             st.session_state.reproducido_modal_audio = True
