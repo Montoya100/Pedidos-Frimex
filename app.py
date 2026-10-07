@@ -80,7 +80,6 @@ def alternar_estado(producto, cantidad_actual):
         estado_global["completados"].add(producto)
         estado_global["cantidades_al_completar"][producto] = cantidad_actual
 
-    # AL MARCAR/DESMARCAR, PERMITIR QUE LA CELEBRACIÓN SE REEVALÚE REALTIME
     estado_global["descartar_celebracion"] = False
 
 def reproducir_sonido_notificacion():
@@ -189,15 +188,19 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* TARJETA DE CELEBRACIÓN SIN BLOQUEO */
-    .banner-celebracion-box {{
+    /* VISTA DE PANTALLA COMPLETA AL FINALIZAR PRODUCCIÓN */
+    .full-screen-celebracion {{
         background: linear-gradient(180deg, #161219 0%, #0c0d12 100%);
         border: 2px solid #f97316;
-        border-radius: 20px;
-        box-shadow: 0 0 50px rgba(249, 115, 22, 0.45);
-        padding: 24px 20px;
+        border-radius: 24px;
+        box-shadow: 0 0 60px rgba(249, 115, 22, 0.5);
+        padding: 50px 20px;
         text-align: center;
-        margin-bottom: 20px;
+        margin: 20px 0 30px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
     }}
 
     .header-logo-container {{
@@ -457,6 +460,7 @@ def renderizar_tablero():
                     "hora": ahora_utc
                 }
 
+        # SI ENTRA PRODUCTO NUEVO, RESETEAR DESCARTE DE CELEBRACIÓN
         if nuevo_pedido_detectado:
             reproducir_sonido_notificacion()
             estado_global["descartar_celebracion"] = False
@@ -504,7 +508,7 @@ def renderizar_tablero():
     piezas_completadas = max(0, piezas_totales - piezas_pendientes)
     pct_progreso = int((piezas_completadas / piezas_totales * 100)) if piezas_totales > 0 else 100
 
-    # MÉTRICAS REORDENADAS
+    # MÉTRICAS
     st.markdown(f"""
         <div class="metrics-row">
             <div class="metric-inline">
@@ -522,113 +526,117 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # BANNER CELEBRACIÓN NATIVO DE STREAMLIT (SISTEMA SIN BLOQUEOS)
+    # VISTA EXCLUSIVA DE PANTALLA COMPLETA (OCULTA LAS TARJETAS MIENTRAS DURE LA CELEBRACIÓN)
     if conteo_productos and piezas_pendientes == 0 and not estado_global["descartar_celebracion"]:
         if not st.session_state.reproducido_modal_audio:
             reproducir_sonido_celebracion()
             st.session_state.reproducido_modal_audio = True
 
         st.markdown(f"""
-            <div class="banner-celebracion-box">
-                <img src="{LOGO_URL}" style="height: 80px; width: auto; margin-bottom: 12px; filter: drop-shadow(0 4px 12px rgba(249, 115, 22, 0.6));" alt="Logo">
-                <h2 style="color: #fb923c; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; font-size: 26px; margin-bottom: 6px;">PRODUCCIÓN FINALIZADA</h2>
-                <p style="color: #94a3b8; font-weight: 700; font-size: 15px; margin-bottom: 16px;">Se han completado todos los pedidos pendientes.</p>
+            <div class="full-screen-celebracion">
+                <img src="{LOGO_URL}" style="height: 110px; width: auto; margin-bottom: 20px; filter: drop-shadow(0 6px 20px rgba(249, 115, 22, 0.7));" alt="Logo">
+                <h2 style="color: #fb923c; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; font-size: 32px; margin-bottom: 12px;">PRODUCCIÓN FINALIZADA</h2>
+                <p style="color: #94a3b8; font-weight: 700; font-size: 18px; margin-bottom: 28px;">Se han completado todos los pedidos pendientes.</p>
             </div>
         """, unsafe_allow_html=True)
 
-        if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_ocultar_banner"):
-            estado_global["descartar_celebracion"] = True
-            st.rerun()
+        col_c1, col_c2, col_c3 = st.columns([0.2, 0.6, 0.2])
+        with col_c2:
+            if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_pantalla_completa_cerrar"):
+                estado_global["descartar_celebracion"] = True
+                st.rerun()
 
-    if conteo_productos:
-        activos = []
-        completados = []
-
-        for prod, cant_total in conteo_productos.items():
-            if prod in estado_global["completados"]:
-                completados.append((prod, cant_total))
-            else:
-                activos.append((prod, cant_total))
-
-        activos.sort(key=lambda x: x[1], reverse=True)
-        completados.sort(key=lambda x: x[1], reverse=True)
-
-        def renderizar_lista_productos(lista):
-            for i in range(0, len(lista), 3):
-                grupo = lista[i:i+3]
-                cols = st.columns(3)
-
-                for idx, (producto, cant_total) in enumerate(grupo):
-                    with cols[idx]:
-                        es_completado = producto in estado_global["completados"]
-                        cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
-                        cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
-
-                        ultima_upd = st.session_state.tiempos_actualizacion.get(producto)
-                        es_reciente = False
-                        if ultima_upd and (ahora_utc - ultima_upd).total_seconds() < 120 and not es_completado:
-                            es_reciente = True
-
-                        if es_reciente:
-                            clase_estado = "card-nueva-orden"
-                            clase_num_box = "num-box-reciente"
-                            texto_estado = "NUEVO"
-                        elif es_completado:
-                            clase_estado = "card-completado"
-                            clase_num_box = "num-box-completado"
-                            texto_estado = "TERMINADO"
-                        else:
-                            clase_estado = "card-pendiente"
-                            clase_num_box = "num-box-pendiente"
-                            texto_estado = "PENDIENTE"
-
-                        valor_mostrar = "∞" if cant_mostrar == 1 else str(cant_mostrar)
-
-                        info_popup = st.session_state.popups_nuevos.get(producto)
-                        clase_pulso = ""
-                        html_incremento = ""
-                        if info_popup and not es_completado:
-                            inc = info_popup["incremento"]
-                            clase_pulso = "anim-pulso-nuevo"
-                            html_incremento = f'<span class="txt-incremento">+{inc}</span>'
-
-                        col_txt, col_btn = st.columns([0.75, 0.25], gap="small")
-
-                        with col_txt:
-                            st.markdown(f"""
-                                <div class="card-box-img {clase_estado} {clase_pulso}">
-                                    {producto} {html_incremento}
-                                </div>
-                            """, unsafe_allow_html=True)
-
-                        with col_btn:
-                            st.markdown(f"""
-                                <div class="num-box-masivo {clase_num_box} {clase_pulso}">
-                                    {valor_mostrar}
-                                </div>
-                            """, unsafe_allow_html=True)
-                            
-                            st.button(
-                                texto_estado, 
-                                key=f"num_btn_{producto}", 
-                                on_click=alternar_estado, 
-                                args=(producto, cant_total),
-                                use_container_width=True
-                            )
-
-        if activos:
-            renderizar_lista_productos(activos)
-
-        if completados:
-            st.markdown("""
-                <div class="divider-completados">
-                    <span>PRODUCTOS TERMINADOS</span>
-                </div>
-            """, unsafe_allow_html=True)
-            renderizar_lista_productos(completados)
-
+    # RENDERIZADO DE TARJETAS (SOLO SE MUESTRAN SI HAY PENDIENTES O SI SE DESCARTÓ LA CELEBRACIÓN)
     else:
-        st.info("No hay pedidos registrados en este periodo.")
+        if conteo_productos:
+            activos = []
+            completados = []
+
+            for prod, cant_total in conteo_productos.items():
+                if prod in estado_global["completados"]:
+                    completados.append((prod, cant_total))
+                else:
+                    activos.append((prod, cant_total))
+
+            activos.sort(key=lambda x: x[1], reverse=True)
+            completados.sort(key=lambda x: x[1], reverse=True)
+
+            def renderizar_lista_productos(lista):
+                for i in range(0, len(lista), 3):
+                    grupo = lista[i:i+3]
+                    cols = st.columns(3)
+
+                    for idx, (producto, cant_total) in enumerate(grupo):
+                        with cols[idx]:
+                            es_completado = producto in estado_global["completados"]
+                            cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
+                            cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
+
+                            ultima_upd = st.session_state.tiempos_actualizacion.get(producto)
+                            es_reciente = False
+                            if ultima_upd and (ahora_utc - ultima_upd).total_seconds() < 120 and not es_completado:
+                                es_reciente = True
+
+                            if es_reciente:
+                                clase_estado = "card-nueva-orden"
+                                clase_num_box = "num-box-reciente"
+                                texto_estado = "NUEVO"
+                            elif es_completado:
+                                clase_estado = "card-completado"
+                                clase_num_box = "num-box-completado"
+                                texto_estado = "TERMINADO"
+                            else:
+                                clase_estado = "card-pendiente"
+                                clase_num_box = "num-box-pendiente"
+                                texto_estado = "PENDIENTE"
+
+                            valor_mostrar = "∞" if cant_mostrar == 1 else str(cant_mostrar)
+
+                            info_popup = st.session_state.popups_nuevos.get(producto)
+                            clase_pulso = ""
+                            html_incremento = ""
+                            if info_popup and not es_completado:
+                                inc = info_popup["incremento"]
+                                clase_pulso = "anim-pulso-nuevo"
+                                html_incremento = f'<span class="txt-incremento">+{inc}</span>'
+
+                            col_txt, col_btn = st.columns([0.75, 0.25], gap="small")
+
+                            with col_txt:
+                                st.markdown(f"""
+                                    <div class="card-box-img {clase_estado} {clase_pulso}">
+                                        {producto} {html_incremento}
+                                    </div>
+                                """, unsafe_allow_html=True)
+
+                            with col_btn:
+                                st.markdown(f"""
+                                    <div class="num-box-masivo {clase_num_box} {clase_pulso}">
+                                        {valor_mostrar}
+                                    </div>
+                                """, unsafe_allow_html=True)
+                                
+                                st.button(
+                                    texto_estado, 
+                                    key=f"num_btn_{producto}", 
+                                    on_click=alternar_estado, 
+                                    args=(producto, cant_total),
+                                    use_container_width=True
+                                )
+
+            if activos:
+                renderizar_lista_productos(activos)
+
+            if completados:
+                st.markdown("""
+                    <div class="divider-completados">
+                        <span>PRODUCTOS TERMINADOS</span>
+                    </div>
+                """, unsafe_allow_html=True)
+                renderizar_lista_productos(completados)
+
+        else:
+            st.info("No hay pedidos registrados en este periodo.")
 
     # FOOTER SUTIL
     st.markdown(f"""
