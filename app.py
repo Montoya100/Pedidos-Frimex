@@ -57,8 +57,7 @@ def borrar_todo():
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
     estado_global["completados"].clear()
     estado_global["cantidades_al_completar"].clear()
-    if "cerrar_modal_celebracion" in st.session_state:
-        st.session_state.cerrar_modal_celebracion = False
+    st.session_state.cerrar_modal_celebracion = True
     st.toast("Tablero limpiado", icon="ℹ️")
 
 def restaurar_estado():
@@ -67,8 +66,7 @@ def restaurar_estado():
         estado_global["cantidades_al_completar"] = estado_global["respaldo"]["cantidades_al_completar"].copy()
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
-        if "cerrar_modal_celebracion" in st.session_state:
-            st.session_state.cerrar_modal_celebracion = False
+        st.session_state.cerrar_modal_celebracion = True
         st.toast("Tablero restaurado", icon="✅")
     else:
         st.toast("Sin respaldo previo", icon="⚠️")
@@ -81,8 +79,8 @@ def alternar_estado(producto, cantidad_actual):
         estado_global["completados"].add(producto)
         estado_global["cantidades_al_completar"][producto] = cantidad_actual
     
-    if "cerrar_modal_celebracion" in st.session_state:
-        st.session_state.cerrar_modal_celebracion = False
+    # CERRAR EL POP-UP AUTOMÁTICAMENTE ANTE CUALQUIER CAMBIO DE ESTADO
+    st.session_state.cerrar_modal_celebracion = True
 
 def reproducir_sonido_notificacion():
     sound_js = """
@@ -184,7 +182,7 @@ def modal_celebracion_nativo():
         st.rerun()
 
 # ==========================================
-# 4. ESTILOS CSS ESTÁTICOS Y OPCIÓN A DE DESENFOQUE
+# 4. ESTILOS CSS ESTÁTICOS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -214,7 +212,7 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* OPCIÓN A: CAPA FIJA SUPERPUESTA MEDIANTE PSEUDO-ELEMENTO ::BEFORE EN EL MODAL */
+    /* CAPA FIJA SUPERPUESTA MEDIANTE PSEUDO-ELEMENTO ::BEFORE EN EL MODAL */
     div[data-testid="stModalContainer"]::before {{
         content: "" !important;
         position: fixed !important;
@@ -232,7 +230,7 @@ st.markdown(f"""
         background-color: transparent !important;
     }}
 
-    /* OCULTAR / CAMUFLAR TACHE ("X") Y HEADER EN MODAL NATIVO */
+    /* OCULTAR TACHE ("X") Y HEADER EN MODAL NATIVO */
     div[role="dialog"] header,
     div[role="dialog"] button[aria-label="Close"],
     div[role="dialog"] [data-testid="stModalCloseButton"],
@@ -246,7 +244,7 @@ st.markdown(f"""
         width: 0px !important;
     }}
 
-    /* TARJETA DEL MODAL NATIVO ULTRA OSCURA Y ELEGANTE */
+    /* TARJETA DEL MODAL NATIVO ULTRA OSCURA */
     div[role="dialog"] {{
         background: linear-gradient(180deg, #161219 0%, #0c0d12 100%) !important;
         border: 2px solid #f97316 !important;
