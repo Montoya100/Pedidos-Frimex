@@ -235,7 +235,7 @@ st.markdown(f"""
         white-space: nowrap;
     }}
 
-    /* RELOJ TIEMPO REAL MÉXICO (MÁS GRANDE Y CON NÚMEROS BLANCOS) */
+    /* RELOJ TIEMPO REAL MÉXICO (MÁS GRANDE Y CON NÚMEROS BLANCOS EN ESCRITORIO) */
     .header-clock {{
         background: #161922;
         border: 1px solid #2a2e39;
@@ -456,7 +456,7 @@ st.markdown(f"""
         justify-content: center;
         text-align: center;
         padding: 0 12px;
-        font-size: 30px !important;
+        font-size: 28px !important;
         font-weight: 900 !important;
         box-shadow: 0 4px 10px rgba(0,0,0,0.35);
         white-space: normal;
@@ -600,33 +600,50 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* REGLAS EXCLUSIVAS PARA FORZAR ANCHO COMPLETO EN MÓVIL Y ELIMINAR EL ESPACIO VACÍO */
+    /* REGLAS MÓVILES EXCLUSIVAS (OPCIÓN 1: LISTA FLUIDA DE BORDE A BORDE) */
     @media (max-width: 768px) {{
+        /* REMOVER PADDING DEL CONTENEDOR PRINCIPAL */
         .block-container {{
-            padding-left: 0px !important;
-            padding-right: 0px !important;
+            padding-left: 6px !important;
+            padding-right: 6px !important;
         }}
         
+        /* FORZAR A QUE CADA COLUMNA PRINCIPAL DE STREAMLIT SEA UN BLOQUE CONTENIDO DE 100% DE ANCHO */
         div[data-testid="column"] {{
             width: 100% !important;
             flex: 1 1 100% !important;
             padding-left: 0px !important;
             padding-right: 0px !important;
-            margin: 0px !important;
+            margin-bottom: 4px !important;
         }}
         
         div[data-testid="stHorizontalBlock"] {{
-            flex-direction: column !important;
-            gap: 10px !important;
+            flex-direction: row !important;
             width: 100% !important;
-            padding-left: 0px !important;
-            padding-right: 0px !important;
+            gap: 6px !important;
         }}
 
-        div[data-testid="stElementContainer"] {{
-            width: 100% !important;
+        /* AJUSTAR EL TAMAÑO DEL NOMBRE Y NÚMERO DENTRO DE LA TARJETA EN MÓVIL */
+        .card-box-img {{
+            font-size: 22px !important;
+            height: 90px !important;
         }}
         
+        .num-box-masivo {{
+            font-size: 50px !important;
+            height: 90px !important;
+        }}
+
+        div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
+            height: 90px !important;
+            margin-top: -96px !important;
+        }}
+
+        div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
+            height: 90px !important;
+            min-height: 90px !important;
+        }}
+
         /* OCULTAR EL RELOJ DE 12 HORAS EN MÓVIL */
         .header-clock {{
             display: none !important;
@@ -636,7 +653,7 @@ st.markdown(f"""
             flex-direction: row !important;
             justify-content: space-between !important;
             align-items: center !important;
-            padding: 0 8px !important;
+            padding: 0 4px !important;
         }}
         
         .header-title {{
@@ -892,7 +909,8 @@ def renderizar_tablero():
                             clase_pulso = "anim-pulso-nuevo"
                             html_incremento = f'<span class="txt-incremento">+{inc}</span>'
 
-                        col_txt, col_btn = st.columns([0.72, 0.28], gap="small")
+                        # RELACIÓN DE ASPECTO INTERNO FLUIDA PARA MÓVIL
+                        col_txt, col_btn = st.columns([0.75, 0.25], gap="small")
 
                         with col_txt:
                             st.markdown(f"""
