@@ -44,7 +44,7 @@ def obtener_estado_global():
         "cantidades_al_completar": {},
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
-        "modal_dismissed": False
+        "modal_cerrado_manual": False
     }
 
 estado_global = obtener_estado_global()
@@ -58,7 +58,7 @@ def borrar_todo():
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
     estado_global["completados"].clear()
     estado_global["cantidades_al_completar"].clear()
-    estado_global["modal_dismissed"] = False
+    estado_global["modal_cerrado_manual"] = True
     st.toast("Tablero limpiado", icon="ℹ️")
 
 def restaurar_estado():
@@ -67,7 +67,7 @@ def restaurar_estado():
         estado_global["cantidades_al_completar"] = estado_global["respaldo"]["cantidades_al_completar"].copy()
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
-        estado_global["modal_dismissed"] = False
+        estado_global["modal_cerrado_manual"] = True
         st.toast("Tablero restaurado", icon="✅")
     else:
         st.toast("Sin respaldo previo", icon="⚠️")
@@ -80,10 +80,8 @@ def alternar_estado(producto, cantidad_actual):
         estado_global["completados"].add(producto)
         estado_global["cantidades_al_completar"][producto] = cantidad_actual
 
-    estado_global["modal_dismissed"] = True
-
-def descartar_modal():
-    estado_global["modal_dismissed"] = True
+    # AL REABRIR O TOCAR TARJETAS, PERMITIR QUE EL MODAL SE REEVALÚE
+    estado_global["modal_cerrado_manual"] = False
 
 def reproducir_sonido_notificacion():
     sound_js = """
@@ -162,7 +160,28 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS Y ANIMACIONES
+# 3. MODAL NATIVO DE CELEBRACIÓN CON ANIMACIÓN
+# ==========================================
+@st.dialog(" ")
+def modal_celebracion_nativo():
+    st.markdown(f"""
+        <div style="text-align: center; padding: 12px 0 8px 0;">
+            <img src="{LOGO_URL}" class="logo-modal-celebracion" alt="Logo Mostacho">
+            <h2 class="titulo-modal-celebracion">
+                PRODUCCIÓN FINALIZADA
+            </h2>
+            <p class="sub-modal-celebracion">
+                Se han completado todos los pedidos pendientes.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_dialog_cerrar"):
+        estado_global["modal_cerrado_manual"] = True
+        st.rerun()
+
+# ==========================================
+# 4. ESTILOS CSS ESTÁTICOS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -191,46 +210,109 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* BANNER FLOTANTE NO BLOQUEANTE DE CELEBRACIÓN */
-    @keyframes overlayPopIn {{
-        0% {{ opacity: 0; transform: translate(-50%, -45%) scale(0.85); }}
-        70% {{ transform: translate(-50%, -50%) scale(1.02); }}
-        100% {{ opacity: 1; transform: translate(-50%, -50%) scale(1); }}
+    /* ANIMACIÓN POP-IN MODAL */
+    @keyframes modalPopIn {{
+        0% {{ opacity: 0; transform: scale(0.82) translateY(20px); }}
+        70% {{ transform: scale(1.02) translateY(-4px); }}
+        100% {{ opacity: 1; transform: scale(1) translateY(0); }}
     }}
 
-    .overlay-celebracion-bg {{
-        position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(5, 7, 12, 0.88);
-        backdrop-filter: blur(25px) saturate(160%);
-        -webkit-backdrop-filter: blur(25px) saturate(160%);
-        z-index: 99998;
-        pointer-events: none;
+    @keyframes fadeInBg {{
+        from {{ opacity: 0; }}
+        to {{ opacity: 1; }}
     }}
 
-    .overlay-celebracion-card {{
-        position: fixed;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        background: linear-gradient(180deg, #161219 0%, #0c0d12 100%);
-        border: 2px solid #f97316;
-        border-radius: 24px;
-        box-shadow: 0 0 70px rgba(249, 115, 22, 0.6);
-        padding: 32px 28px;
-        text-align: center;
-        z-index: 99999;
-        width: 90%;
-        max-width: 580px;
-        animation: overlayPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    div[data-testid="stModalContainer"]::before {{
+        content: "" !important;
+        position: fixed !important;
+        top: 0 !important; left: 0 !important;
+        width: 100vw !important; height: 100vh !important;
+        background-color: rgba(5, 7, 12, 0.88) !important;
+        backdrop-filter: blur(30px) saturate(160%) !important;
+        -webkit-backdrop-filter: blur(30px) saturate(160%) !important;
+        z-index: -1 !important;
+        animation: fadeInBg 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    }}
+
+    div[data-testid="stModalContainer"] {{
+        background-color: transparent !important;
+    }}
+
+    div[role="dialog"] header,
+    div[role="dialog"] button[aria-label="Close"],
+    div[role="dialog"] [data-testid="stModalCloseButton"],
+    div[role="dialog"] svg {{
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0px !important;
+        width: 0px !important;
+    }}
+
+    div[role="dialog"] {{
+        background: linear-gradient(180deg, #161219 0%, #0c0d12 100%) !important;
+        border: 2px solid #f97316 !important;
+        border-radius: 24px !important;
+        box-shadow: 0 0 70px rgba(249, 115, 22, 0.55) !important;
+        padding: 24px 20px 28px 20px !important;
+        animation: modalPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+    }}
+
+    @media (min-width: 769px) {{
+        div[role="dialog"] {{
+            max-width: 680px !important;
+            width: 680px !important;
+            padding: 36px 32px 40px 32px !important;
+        }}
+        .logo-modal-celebracion {{ height: 105px !important; margin-bottom: 20px !important; }}
+        .titulo-modal-celebracion {{ font-size: 32px !important; margin-bottom: 14px !important; }}
+        .sub-modal-celebracion {{ font-size: 17px !important; margin-bottom: 28px !important; }}
+    }}
+
+    @media (max-width: 768px) {{
+        .logo-modal-celebracion {{ height: 80px !important; margin-bottom: 14px !important; }}
+        .titulo-modal-celebracion {{ font-size: 24px !important; margin-bottom: 10px !important; }}
+        .sub-modal-celebracion {{ font-size: 15px !important; margin-bottom: 20px !important; }}
+    }}
+
+    .logo-modal-celebracion {{
+        width: auto;
+        filter: drop-shadow(0 6px 20px rgba(249, 115, 22, 0.7));
+    }}
+
+    .titulo-modal-celebracion {{
+        color: #fb923c !important;
+        font-weight: 900 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1.5px !important;
+    }}
+
+    .sub-modal-celebracion {{
+        color: #94a3b8 !important;
+        font-weight: 700 !important;
+        line-height: 1.45 !important;
+    }}
+
+    div[role="dialog"] button[kind="primary"] {{
+        background: linear-gradient(90deg, #ea580c 0%, #f97316 100%) !important;
+        color: #ffffff !important;
+        border: 1px solid #fdba74 !important;
+        border-radius: 12px !important;
+        font-weight: 900 !important;
+        font-size: 16px !important;
+        letter-spacing: 1.5px !important;
+        height: 54px !important;
+        box-shadow: 0 4px 24px rgba(249, 115, 22, 0.65) !important;
+        transition: all 0.2s ease !important;
     }}
 
     .header-logo-container {{
         display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 8px; width: 100%; padding: 0 4px; flex-wrap: wrap; gap: 8px;
+        margin-bottom: 8px; width: 100%; padding: 0 4px; flex-wrap: nowrap; gap: 8px;
     }}
     
-    .header-left-group {{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }}
-    .header-logo-img {{ height: 50px !important; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }}
+    .header-left-group {{ display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }}
+    .header-logo-img {{ height: 48px !important; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); display: block !important; }}
 
     .header-title {{
         color: #ffffff; font-weight: 900; font-size: 20px !important;
@@ -238,7 +320,7 @@ st.markdown(f"""
         text-transform: uppercase;
     }}
 
-    .sub-brand-line {{ display: flex; align-items: center; gap: 10px; font-size: 11px; color: #64748b; font-weight: 800; letter-spacing: 1px; }}
+    .sub-brand-line {{ display: flex; align-items: center; gap: 8px; font-size: 11px; color: #64748b; font-weight: 800; letter-spacing: 1px; }}
     .sync-text-inline {{ color: #38bdf8; font-weight: 700; }}
     .clocks-group {{ display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }}
 
@@ -338,6 +420,7 @@ st.markdown(f"""
 
     .footer-sutil span {{ color: #10b981 !important; font-weight: 900 !important; }}
 
+    /* CORRECCIÓN LOGO Y LAYOUT EN MÓVIL */
     @media (max-width: 768px) {{
         .block-container {{ padding-left: 6px !important; padding-right: 6px !important; }}
         div[data-testid="column"] {{ width: 100% !important; flex: 1 1 100% !important; margin-bottom: 4px !important; }}
@@ -347,15 +430,27 @@ st.markdown(f"""
         .num-box-masivo {{ font-size: 50px !important; height: 90px !important; }}
         div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{ height: 90px !important; margin-top: -96px !important; }}
         div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{ height: 90px !important; min-height: 90px !important; }}
-        .header-logo-container {{ flex-direction: row !important; justify-content: space-between !important; align-items: center !important; padding: 0 4px !important; }}
-        .header-title {{ font-size: 15px !important; }}
+        
+        .header-logo-container {{
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 0 2px !important;
+        }}
+        .header-logo-img {{
+            height: 38px !important;
+            display: block !important;
+            visibility: visible !important;
+        }}
+        .header-title {{ font-size: 14px !important; }}
+        .sub-brand-line {{ font-size: 10px !important; }}
         .pct-avance {{ font-size: 11px !important; }}
     }}
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 4. CONSULTA A LA API DE LOYVERSE
+# 5. CONSULTA A LA API DE LOYVERSE
 # ==========================================
 def obtener_recibos_hoy():
     created_at_min = estado_global["hora_corte_utc"].strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -383,7 +478,7 @@ def obtener_recibos_hoy():
     return todos_los_recibos
 
 # ==========================================
-# 5. TABLERO DE PEDIDOS EN TIEMPO REAL
+# 6. TABLERO DE PEDIDOS EN TIEMPO REAL
 # ==========================================
 @st.fragment(run_every=10)
 def renderizar_tablero():
@@ -470,24 +565,24 @@ def renderizar_tablero():
 
         if nuevo_pedido_detectado:
             reproducir_sonido_notificacion()
-            estado_global["modal_dismissed"] = False
+            estado_global["modal_cerrado_manual"] = False
             st.session_state.reproducido_modal_audio = False
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # ENCABEZADO MINIMALISTA
+    # ENCABEZADO MINIMALISTA Y REFORMATO DE SYNC SIN TEXTO 'LOYVERSE'
     col_hdr_left, col_hdr_right = st.columns([0.82, 0.18])
     
     with col_hdr_left:
         st.markdown(f"""
             <div class="header-logo-container">
                 <div class="header-left-group">
-                    <img src="{LOGO_URL}" class="header-logo-img" alt="Logo">
+                    <img src="{LOGO_URL}" class="header-logo-img" alt="Logo Mostacho">
                     <div>
                         <h1 class="header-title">TABLA DE PRODUCCIÓN</h1>
                         <div class="sub-brand-line">
                             <span>MOSTACHO BOTANAS</span>
-                            <span class="sync-text-inline">| SYNC LOYVERSE: {hora_sync_loyverse}</span>
+                            <span class="sync-text-inline">| SYNC: {hora_sync_loyverse}</span>
                         </div>
                     </div>
                 </div>
@@ -533,24 +628,12 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # BANNER CELEBRACIÓN SIN BLOQUEO
-    if conteo_productos and piezas_pendientes == 0 and not estado_global["modal_dismissed"]:
+    # DISPARO CONDICIONAL DEL MODAL DE CELEBRACIÓN
+    if conteo_productos and piezas_pendientes == 0 and not estado_global["modal_cerrado_manual"]:
         if not st.session_state.reproducido_modal_audio:
             reproducir_sonido_celebracion()
             st.session_state.reproducido_modal_audio = True
-            
-        st.markdown(f"""
-            <div class="overlay-celebracion-bg"></div>
-            <div class="overlay-celebracion-card">
-                <img src="{LOGO_URL}" style="height: 90px; width: auto; margin-bottom: 16px; filter: drop-shadow(0 6px 20px rgba(249, 115, 22, 0.7));" alt="Logo">
-                <h2 style="color: #fb923c; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; font-size: 28px; margin-bottom: 10px;">PRODUCCIÓN FINALIZADA</h2>
-                <p style="color: #94a3b8; font-weight: 700; font-size: 16px; margin-bottom: 24px;">Se han completado todos los pedidos pendientes.</p>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_overlay_cerrar"):
-            descartar_modal()
-            st.rerun()
+        modal_celebracion_nativo()
 
     if conteo_productos:
         activos = []
