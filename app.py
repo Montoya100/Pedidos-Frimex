@@ -44,7 +44,7 @@ def obtener_estado_global():
         "cantidades_al_completar": {},
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
-        "cerrar_modal_forzado": False
+        "modal_dismissed": False
     }
 
 estado_global = obtener_estado_global()
@@ -58,7 +58,7 @@ def borrar_todo():
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
     estado_global["completados"].clear()
     estado_global["cantidades_al_completar"].clear()
-    estado_global["cerrar_modal_forzado"] = True
+    estado_global["modal_dismissed"] = False
     st.toast("Tablero limpiado", icon="ℹ️")
 
 def restaurar_estado():
@@ -67,7 +67,7 @@ def restaurar_estado():
         estado_global["cantidades_al_completar"] = estado_global["respaldo"]["cantidades_al_completar"].copy()
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
-        estado_global["cerrar_modal_forzado"] = True
+        estado_global["modal_dismissed"] = False
         st.toast("Tablero restaurado", icon="✅")
     else:
         st.toast("Sin respaldo previo", icon="⚠️")
@@ -80,8 +80,10 @@ def alternar_estado(producto, cantidad_actual):
         estado_global["completados"].add(producto)
         estado_global["cantidades_al_completar"][producto] = cantidad_actual
 
-    # AL INTERACTUAR CON CUALQUIER TARJETA, RESETEAR FORZADO DE MODAL
-    estado_global["cerrar_modal_forzado"] = False
+    estado_global["modal_dismissed"] = True
+
+def descartar_modal():
+    estado_global["modal_dismissed"] = True
 
 def reproducir_sonido_notificacion():
     sound_js = """
@@ -160,28 +162,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. MODAL NATIVO DE CELEBRACIÓN CON ANIMACIÓN
-# ==========================================
-@st.dialog(" ")
-def modal_celebracion_nativo():
-    st.markdown(f"""
-        <div style="text-align: center; padding: 12px 0 8px 0;">
-            <img src="{LOGO_URL}" class="logo-modal-celebracion" alt="Logo Mostacho">
-            <h2 class="titulo-modal-celebracion">
-                PRODUCCIÓN FINALIZADA
-            </h2>
-            <p class="sub-modal-celebracion">
-                Se han completado todos los pedidos pendientes.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_dialog_cerrar"):
-        estado_global["cerrar_modal_forzado"] = True
-        st.rerun()
-
-# ==========================================
-# 4. ESTILOS CSS ESTÁTICOS Y ANIMACIONES
+# 3. ESTILOS CSS Y ANIMACIONES
 # ==========================================
 st.markdown(f"""
     <style>
@@ -210,101 +191,37 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    @keyframes modalPopIn {{
-        0% {{ opacity: 0; transform: scale(0.82) translateY(20px); }}
-        70% {{ transform: scale(1.02) translateY(-4px); }}
-        100% {{ opacity: 1; transform: scale(1) translateY(0); }}
+    /* BANNER FLOTANTE NO BLOQUEANTE DE CELEBRACIÓN */
+    @keyframes overlayPopIn {{
+        0% {{ opacity: 0; transform: translate(-50%, -45%) scale(0.85); }}
+        70% {{ transform: translate(-50%, -50%) scale(1.02); }}
+        100% {{ opacity: 1; transform: translate(-50%, -50%) scale(1); }}
     }}
 
-    @keyframes fadeInBg {{
-        from {{ opacity: 0; }}
-        to {{ opacity: 1; }}
+    .overlay-celebracion-bg {{
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(5, 7, 12, 0.88);
+        backdrop-filter: blur(25px) saturate(160%);
+        -webkit-backdrop-filter: blur(25px) saturate(160%);
+        z-index: 99998;
+        pointer-events: none;
     }}
 
-    div[data-testid="stModalContainer"]::before {{
-        content: "" !important;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        background-color: rgba(5, 7, 12, 0.88) !important;
-        backdrop-filter: blur(30px) saturate(160%) !important;
-        -webkit-backdrop-filter: blur(30px) saturate(160%) !important;
-        z-index: -1 !important;
-        animation: fadeInBg 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-    }}
-
-    div[data-testid="stModalContainer"] {{
-        background-color: transparent !important;
-    }}
-
-    div[role="dialog"] header,
-    div[role="dialog"] button[aria-label="Close"],
-    div[role="dialog"] [data-testid="stModalCloseButton"],
-    div[role="dialog"] svg {{
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        height: 0px !important;
-        width: 0px !important;
-    }}
-
-    div[role="dialog"] {{
-        background: linear-gradient(180deg, #161219 0%, #0c0d12 100%) !important;
-        border: 2px solid #f97316 !important;
-        border-radius: 24px !important;
-        box-shadow: 0 0 70px rgba(249, 115, 22, 0.55) !important;
-        padding: 24px 20px 28px 20px !important;
-        animation: modalPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
-    }}
-
-    @media (min-width: 769px) {{
-        div[role="dialog"] {{
-            max-width: 680px !important;
-            width: 680px !important;
-            padding: 36px 32px 40px 32px !important;
-        }}
-        .logo-modal-celebracion {{ height: 105px !important; margin-bottom: 20px !important; }}
-        .titulo-modal-celebracion {{ font-size: 32px !important; margin-bottom: 14px !important; }}
-        .sub-modal-celebracion {{ font-size: 17px !important; margin-bottom: 28px !important; }}
-    }}
-
-    @media (max-width: 768px) {{
-        .logo-modal-celebracion {{ height: 80px !important; margin-bottom: 14px !important; }}
-        .titulo-modal-celebracion {{ font-size: 24px !important; margin-bottom: 10px !important; }}
-        .sub-modal-celebracion {{ font-size: 15px !important; margin-bottom: 20px !important; }}
-    }}
-
-    .logo-modal-celebracion {{
-        width: auto;
-        filter: drop-shadow(0 6px 20px rgba(249, 115, 22, 0.7));
-    }}
-
-    .titulo-modal-celebracion {{
-        color: #fb923c !important;
-        font-weight: 900 !important;
-        text-transform: uppercase !important;
-        letter-spacing: 1.5px !important;
-    }}
-
-    .sub-modal-celebracion {{
-        color: #94a3b8 !important;
-        font-weight: 700 !important;
-        line-height: 1.45 !important;
-    }}
-
-    div[role="dialog"] button[kind="primary"] {{
-        background: linear-gradient(90deg, #ea580c 0%, #f97316 100%) !important;
-        color: #ffffff !important;
-        border: 1px solid #fdba74 !important;
-        border-radius: 12px !important;
-        font-weight: 900 !important;
-        font-size: 16px !important;
-        letter-spacing: 1.5px !important;
-        height: 54px !important;
-        box-shadow: 0 4px 24px rgba(249, 115, 22, 0.65) !important;
-        transition: all 0.2s ease !important;
+    .overlay-celebracion-card {{
+        position: fixed;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(180deg, #161219 0%, #0c0d12 100%);
+        border: 2px solid #f97316;
+        border-radius: 24px;
+        box-shadow: 0 0 70px rgba(249, 115, 22, 0.6);
+        padding: 32px 28px;
+        text-align: center;
+        z-index: 99999;
+        width: 90%;
+        max-width: 580px;
+        animation: overlayPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }}
 
     .header-logo-container {{
@@ -438,7 +355,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 5. CONSULTA A LA API DE LOYVERSE
+# 4. CONSULTA A LA API DE LOYVERSE
 # ==========================================
 def obtener_recibos_hoy():
     created_at_min = estado_global["hora_corte_utc"].strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -466,15 +383,25 @@ def obtener_recibos_hoy():
     return todos_los_recibos
 
 # ==========================================
-# 6. TABLERO DE PEDIDOS EN TIEMPO REAL
+# 5. TABLERO DE PEDIDOS EN TIEMPO REAL
 # ==========================================
 @st.fragment(run_every=10)
 def renderizar_tablero():
     recibos = obtener_recibos_hoy()
     conteo_productos = {}
+    ultima_hora_loyverse_utc = None
 
     if recibos:
         for recibo in recibos:
+            created_at_str = recibo.get("receipt_date") or recibo.get("created_at")
+            if created_at_str:
+                try:
+                    dt_recibo = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
+                    if ultima_hora_loyverse_utc is None or dt_recibo > ultima_hora_loyverse_utc:
+                        ultima_hora_loyverse_utc = dt_recibo
+                except Exception:
+                    pass
+
             for item in recibo.get("line_items", []):
                 nombre = item.get("item_name", "Producto")
                 cantidad = item.get("quantity", 0)
@@ -487,6 +414,12 @@ def renderizar_tablero():
 
                 cant_num = int(cantidad) if float(cantidad).is_integer() else cantidad
                 conteo_productos[nombre_completo] = conteo_productos.get(nombre_completo, 0) + cant_num
+
+    tz_mexico = zoneinfo.ZoneInfo("America/Mexico_City")
+    if ultima_hora_loyverse_utc:
+        hora_sync_loyverse = ultima_hora_loyverse_utc.astimezone(tz_mexico).strftime("%H:%M:%S")
+    else:
+        hora_sync_loyverse = "SIN RECIBOS"
 
     for prod, cant_total in conteo_productos.items():
         if prod in estado_global["completados"]:
@@ -505,10 +438,8 @@ def renderizar_tablero():
         st.session_state.reproducido_modal_audio = False
 
     ahora_utc = datetime.now(timezone.utc)
-    tz_mexico = zoneinfo.ZoneInfo("America/Mexico_City")
     ahora_mexico = datetime.now(tz_mexico)
     hora_mexico_12h = ahora_mexico.strftime("%I:%M:%S %p")
-    hora_sincro_tabla = ahora_mexico.strftime("%H:%M:%S")
 
     # CÁLCULO DE PENDIENTES
     piezas_totales = sum(conteo_productos.values())
@@ -539,7 +470,7 @@ def renderizar_tablero():
 
         if nuevo_pedido_detectado:
             reproducir_sonido_notificacion()
-            estado_global["cerrar_modal_forzado"] = False
+            estado_global["modal_dismissed"] = False
             st.session_state.reproducido_modal_audio = False
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
@@ -556,7 +487,7 @@ def renderizar_tablero():
                         <h1 class="header-title">TABLA DE PRODUCCIÓN</h1>
                         <div class="sub-brand-line">
                             <span>MOSTACHO BOTANAS</span>
-                            <span class="sync-text-inline">| SYNC: {hora_sincro_tabla}</span>
+                            <span class="sync-text-inline">| SYNC LOYVERSE: {hora_sync_loyverse}</span>
                         </div>
                     </div>
                 </div>
@@ -602,12 +533,24 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # DISPARO CONDICIONAL DEL MODAL DE CELEBRACIÓN
-    if conteo_productos and piezas_pendientes == 0 and not estado_global["cerrar_modal_forzado"]:
+    # BANNER CELEBRACIÓN SIN BLOQUEO
+    if conteo_productos and piezas_pendientes == 0 and not estado_global["modal_dismissed"]:
         if not st.session_state.reproducido_modal_audio:
             reproducir_sonido_celebracion()
             st.session_state.reproducido_modal_audio = True
-        modal_celebracion_nativo()
+            
+        st.markdown(f"""
+            <div class="overlay-celebracion-bg"></div>
+            <div class="overlay-celebracion-card">
+                <img src="{LOGO_URL}" style="height: 90px; width: auto; margin-bottom: 16px; filter: drop-shadow(0 6px 20px rgba(249, 115, 22, 0.7));" alt="Logo">
+                <h2 style="color: #fb923c; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; font-size: 28px; margin-bottom: 10px;">PRODUCCIÓN FINALIZADA</h2>
+                <p style="color: #94a3b8; font-weight: 700; font-size: 16px; margin-bottom: 24px;">Se han completado todos los pedidos pendientes.</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_overlay_cerrar"):
+            descartar_modal()
+            st.rerun()
 
     if conteo_productos:
         activos = []
