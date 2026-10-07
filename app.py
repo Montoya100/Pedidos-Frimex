@@ -168,12 +168,12 @@ def reproducir_sonido_celebracion():
 @st.dialog(" ")
 def modal_celebracion_nativo():
     st.markdown(f"""
-        <div style="text-align: center; padding: 10px 0 5px 0;">
-            <img src="{LOGO_URL}" style="height: 80px; width: auto; margin-bottom: 16px; filter: drop-shadow(0 4px 18px rgba(249, 115, 22, 0.65));">
-            <h2 style="color: #fb923c; font-weight: 900; font-size: 26px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1.5px;">
+        <div style="text-align: center; padding: 12px 0 8px 0;">
+            <img src="{LOGO_URL}" class="logo-modal-celebracion" alt="Logo Mostacho">
+            <h2 class="titulo-modal-celebracion">
                 PRODUCCIÓN FINALIZADA
             </h2>
-            <p style="color: #94a3b8; font-weight: 700; font-size: 15px; line-height: 1.4; margin-bottom: 22px;">
+            <p class="sub-modal-celebracion">
                 Se han completado todos los pedidos pendientes de la jornada.
             </p>
         </div>
@@ -214,25 +214,88 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* OCULTAR ENCABEZADO Y BOTÓN 'X' EN MODAL NATIVO */
-    div[role="dialog"] header {{
-        display: none !important;
-    }}
-
-    /* FONDO TRASLÚCIDO CON DESENFOQUE DETRÁS DEL MODAL */
+    /* FONDO CASI NEGRO TRASLÚCIDO CON DESENFOQUE PROFUNDO */
     div[data-testid="stModalContainer"] {{
-        background-color: rgba(5, 7, 10, 0.92) !important;
-        backdrop-filter: blur(14px) !important;
-        -webkit-backdrop-filter: blur(14px) !important;
+        background-color: rgba(0, 0, 0, 0.96) !important;
+        backdrop-filter: blur(25px) !important;
+        -webkit-backdrop-filter: blur(25px) !important;
     }}
 
-    /* TARJETA DEL MODAL NATIVO ULTRA OSCURA */
+    /* OCULTAR / CAMUFLAR TACHE ("X") Y HEADER EN MODAL NATIVO */
+    div[role="dialog"] header,
+    div[role="dialog"] button[aria-label="Close"],
+    div[role="dialog"] [data-testid="stModalCloseButton"],
+    div[role="dialog"] svg {{
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        color: #0c0d12 !important;
+        fill: #0c0d12 !important;
+        height: 0px !important;
+        width: 0px !important;
+    }}
+
+    /* TARJETA DEL MODAL NATIVO ULTRA OSCURA Y ELEGANTE */
     div[role="dialog"] {{
         background: linear-gradient(180deg, #161219 0%, #0c0d12 100%) !important;
         border: 2px solid #f97316 !important;
-        border-radius: 22px !important;
-        box-shadow: 0 0 65px rgba(249, 115, 22, 0.5) !important;
+        border-radius: 24px !important;
+        box-shadow: 0 0 70px rgba(249, 115, 22, 0.55) !important;
         padding: 24px 20px 28px 20px !important;
+    }}
+
+    /* ESCALADO MÁS GRANDE PARA VERSIÓN HORIZONTAL (ESCRITORIO / TABLET) */
+    @media (min-width: 769px) {{
+        div[role="dialog"] {{
+            max-width: 680px !important;
+            width: 680px !important;
+            padding: 36px 32px 40px 32px !important;
+        }}
+        .logo-modal-celebracion {{
+            height: 105px !important;
+            margin-bottom: 20px !important;
+        }}
+        .titulo-modal-celebracion {{
+            font-size: 32px !important;
+            margin-bottom: 14px !important;
+        }}
+        .sub-modal-celebracion {{
+            font-size: 17px !important;
+            margin-bottom: 28px !important;
+        }}
+    }}
+
+    @media (max-width: 768px) {{
+        .logo-modal-celebracion {{
+            height: 80px !important;
+            margin-bottom: 14px !important;
+        }}
+        .titulo-modal-celebracion {{
+            font-size: 24px !important;
+            margin-bottom: 10px !important;
+        }}
+        .sub-modal-celebracion {{
+            font-size: 15px !important;
+            margin-bottom: 20px !important;
+        }}
+    }}
+
+    .logo-modal-celebracion {{
+        width: auto;
+        filter: drop-shadow(0 6px 20px rgba(249, 115, 22, 0.7));
+    }}
+
+    .titulo-modal-celebracion {{
+        color: #fb923c;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+    }}
+
+    .sub-modal-celebracion {{
+        color: #94a3b8;
+        font-weight: 700;
+        line-height: 1.45;
     }}
 
     div[role="dialog"] button[kind="primary"] {{
@@ -243,14 +306,14 @@ st.markdown(f"""
         font-weight: 900 !important;
         font-size: 16px !important;
         letter-spacing: 1.5px !important;
-        height: 52px !important;
-        box-shadow: 0 4px 22px rgba(249, 115, 22, 0.65) !important;
+        height: 54px !important;
+        box-shadow: 0 4px 24px rgba(249, 115, 22, 0.65) !important;
         transition: all 0.2s ease !important;
     }}
 
     div[role="dialog"] button[kind="primary"]:hover {{
         background: linear-gradient(90deg, #c2410c 0%, #ea580c 100%) !important;
-        box-shadow: 0 6px 30px rgba(249, 115, 22, 0.85) !important;
+        box-shadow: 0 6px 32px rgba(249, 115, 22, 0.85) !important;
     }}
 
     /* ENCABEZADO RESPONSIVE */
@@ -890,38 +953,4 @@ def renderizar_tablero():
 
                         with col_btn:
                             st.markdown(f"""
-                                <div class="num-box-masivo {clase_num_box} {clase_pulso}">
-                                    {valor_mostrar}
-                                </div>
-                            """, unsafe_allow_html=True)
-                            
-                            st.button(
-                                texto_estado, 
-                                key=f"num_btn_{producto}", 
-                                on_click=alternar_estado, 
-                                args=(producto, cant_total),
-                                use_container_width=True
-                            )
-
-        if activos:
-            renderizar_lista_productos(activos)
-
-        if completados:
-            st.markdown("""
-                <div class="divider-completados">
-                    <span>PRODUCTOS TERMINADOS</span>
-                </div>
-            """, unsafe_allow_html=True)
-            renderizar_lista_productos(completados)
-
-    else:
-        st.info("No hay pedidos registrados en este periodo.")
-
-    # FOOTER DISCRETO EN LA PARTE INFERIOR
-    st.markdown(f"""
-        <div class="footer-sutil">
-            PROCESADAS HOY: <span>{piezas_completadas}</span> DE <span>{piezas_totales}</span> PIEZAS
-        </div>
-    """, unsafe_allow_html=True)
-
-renderizar_tablero()
+                                <div class="num-box-masivo
