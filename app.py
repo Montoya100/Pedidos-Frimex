@@ -90,11 +90,11 @@ def alternar_estado(producto, cantidad_actual, conteo_actual):
             pendientes_restantes += (cant_tot - cant_m)
 
     if pendientes_restantes == 0 and len(conteo_actual) > 0:
-        # PERMITIR QUE EL MODAL SE ACTIVE AL COMPLETAR LA ÚLTIMA TARJETA
+        # ACTIVAR MODAL SI SE HA FINALIZADO TODO
         st.session_state.cerrar_modal_celebracion = False
         st.session_state.reproducido_modal_audio = False
     else:
-        # MANTENER CERRADO SI AÚN QUEDAN PENDIENTES
+        # CERRAR SI AÚN HAY PENDIENTES
         st.session_state.cerrar_modal_celebracion = True
 
 def reproducir_sonido_notificacion():
@@ -176,7 +176,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. MODAL NATIVO DE CELEBRACIÓN LIMPIO
+# 3. MODAL NATIVO DE CELEBRACIÓN CON ANIMACIÓN
 # ==========================================
 @st.dialog(" ")
 def modal_celebracion_nativo():
@@ -197,7 +197,7 @@ def modal_celebracion_nativo():
         st.rerun()
 
 # ==========================================
-# 4. ESTILOS CSS ESTÁTICOS
+# 4. ESTILOS CSS ESTÁTICOS Y KEYFRAMES DE ANIMACIÓN
 # ==========================================
 st.markdown(f"""
     <style>
@@ -227,6 +227,26 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
+    /* KEYFRAMES ANIMACIÓN POP-IN SUAVE Y ELEGANTE */
+    @keyframes modalPopIn {{
+        0% {{
+            opacity: 0;
+            transform: scale(0.82) translateY(20px);
+        }}
+        70% {{
+            transform: scale(1.02) translateY(-4px);
+        }}
+        100% {{
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }}
+    }}
+
+    @keyframes fadeInBg {{
+        from {{ opacity: 0; }}
+        to {{ opacity: 1; }}
+    }}
+
     /* CAPA FIJA SUPERPUESTA MEDIANTE PSEUDO-ELEMENTO ::BEFORE EN EL MODAL */
     div[data-testid="stModalContainer"]::before {{
         content: "" !important;
@@ -235,10 +255,11 @@ st.markdown(f"""
         left: 0 !important;
         width: 100vw !important;
         height: 100vh !important;
-        background-color: rgba(5, 7, 12, 0.85) !important;
+        background-color: rgba(5, 7, 12, 0.88) !important;
         backdrop-filter: blur(30px) saturate(160%) !important;
         -webkit-backdrop-filter: blur(30px) saturate(160%) !important;
         z-index: -1 !important;
+        animation: fadeInBg 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
     }}
 
     div[data-testid="stModalContainer"] {{
@@ -259,13 +280,14 @@ st.markdown(f"""
         width: 0px !important;
     }}
 
-    /* TARJETA DEL MODAL NATIVO ULTRA OSCURA */
+    /* TARJETA DEL MODAL NATIVO ULTRA OSCURA Y ANIMADA */
     div[role="dialog"] {{
         background: linear-gradient(180deg, #161219 0%, #0c0d12 100%) !important;
         border: 2px solid #f97316 !important;
         border-radius: 24px !important;
         box-shadow: 0 0 70px rgba(249, 115, 22, 0.55) !important;
         padding: 24px 20px 28px 20px !important;
+        animation: modalPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
     }}
 
     /* ESCALADO MÁS GRANDE PARA VERSIÓN HORIZONTAL (ESCRITORIO / TABLET) */
@@ -812,6 +834,22 @@ def renderizar_tablero():
     hora_mexico_12h = ahora_mexico.strftime("%I:%M:%S %p")
     hora_sincro_tabla = ahora_mexico.strftime("%H:%M:%S")
 
+    # CÁLCULO PREVIO DE PENDIENTES
+    piezas_totales = sum(conteo_productos.values())
+    piezas_pendientes = 0
+    
+    for prod, cant_total in conteo_productos.items():
+        if prod in estado_global["completados"]:
+            cant_marcada = estado_global["cantidades_al_completar"].get(prod, cant_total)
+            piezas_pendientes += max(0, cant_total - cant_marcada)
+        else:
+            cant_marcada = estado_global["cantidades_al_completar"].get(prod, 0)
+            piezas_pendientes += (cant_total - cant_marcada)
+
+    # MONITOREO DE CAMBIOS AUTOMÁTICOS POR LLEGADA DE NUEVOS PEDIDOS
+    if "ultimo_pendientes" not in st.session_state:
+        st.session_state.ultimo_pendientes = piezas_pendientes
+
     if "ultimo_conteo" not in st.session_state:
         st.session_state.ultimo_conteo = conteo_productos.copy()
     else:
@@ -827,12 +865,15 @@ def renderizar_tablero():
                     "hora": ahora_utc
                 }
 
-        if nuevo_pedido_detectado:
+        # SI SURGIÓ UN NUEVO PENDIENTE, OCULTAR MODAL DE INMEDIATO
+        if piezas_pendientes > st.session_state.ultimo_pendientes or nuevo_pedido_detectado:
             reproducir_sonido_notificacion()
-            st.session_state.cerrar_modal_celebracion = False
+            st.session_state.cerrar_modal_celebracion = True
             st.session_state.reproducido_modal_audio = False
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
+
+    st.session_state.ultimo_pendientes = piezas_pendientes
 
     # ENCABEZADO MINIMALISTA
     col_hdr_left, col_hdr_right = st.columns([0.82, 0.18])
@@ -870,18 +911,6 @@ def renderizar_tablero():
     for prod, info in list(st.session_state.popups_nuevos.items()):
         if (ahora_utc - info["hora"]).total_seconds() >= 30:
             st.session_state.popups_nuevos.pop(prod, None)
-
-    # CÁLCULO DE MÉTRICAS Y PROGRESO REAL DE PRODUCCIÓN
-    piezas_totales = sum(conteo_productos.values())
-    piezas_pendientes = 0
-    
-    for prod, cant_total in conteo_productos.items():
-        if prod in estado_global["completados"]:
-            cant_marcada = estado_global["cantidades_al_completar"].get(prod, cant_total)
-            piezas_pendientes += max(0, cant_total - cant_marcada)
-        else:
-            cant_marcada = estado_global["cantidades_al_completar"].get(prod, 0)
-            piezas_pendientes += (cant_total - cant_marcada)
 
     piezas_completadas = max(0, piezas_totales - piezas_pendientes)
     pct_progreso = int((piezas_completadas / piezas_totales * 100)) if piezas_totales > 0 else 100
