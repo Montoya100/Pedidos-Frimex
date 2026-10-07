@@ -174,7 +174,7 @@ def modal_celebracion_nativo():
                 PRODUCCIÓN FINALIZADA
             </h2>
             <p class="sub-modal-celebracion">
-                Se han completado todos los pedidos pendientes de la jornada.
+                Se han completado todos los pedidos pendientes.
             </p>
         </div>
     """, unsafe_allow_html=True)
@@ -214,11 +214,11 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* FONDO CASI NEGRO TRASLÚCIDO CON DESENFOQUE PROFUNDO */
+    /* FONDO TRASLÚCIDO OSCURCIDO (99% NEGRO) CON BLUR SUTIL */
     div[data-testid="stModalContainer"] {{
-        background-color: rgba(0, 0, 0, 0.96) !important;
-        backdrop-filter: blur(25px) !important;
-        -webkit-backdrop-filter: blur(25px) !important;
+        background-color: rgba(0, 0, 0, 0.99) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
     }}
 
     /* OCULTAR / CAMUFLAR TACHE ("X") Y HEADER EN MODAL NATIVO */
@@ -286,16 +286,16 @@ st.markdown(f"""
     }}
 
     .titulo-modal-celebracion {{
-        color: #fb923c;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
+        color: #fb923c !important;
+        font-weight: 900 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1.5px !important;
     }}
 
     .sub-modal-celebracion {{
-        color: #94a3b8;
-        font-weight: 700;
-        line-height: 1.45;
+        color: #94a3b8 !important;
+        font-weight: 700 !important;
+        line-height: 1.45 !important;
     }}
 
     div[role="dialog"] button[kind="primary"] {{
