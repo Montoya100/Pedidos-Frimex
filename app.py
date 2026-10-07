@@ -214,11 +214,11 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* FONDO TRASLÚCIDO OSCURCIDO (99% NEGRO) CON BLUR SUTIL */
+    /* FONDO TRASLÚCIDO CON DESENFOQUE PROFUNDO (BLUR MASIVO TIPO CRISTAL ESMERILADO OSCURO) */
     div[data-testid="stModalContainer"] {{
-        background-color: rgba(0, 0, 0, 0.99) !important;
-        backdrop-filter: blur(8px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
+        background-color: rgba(5, 7, 12, 0.88) !important;
+        backdrop-filter: blur(40px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
     }}
 
     /* OCULTAR / CAMUFLAR TACHE ("X") Y HEADER EN MODAL NATIVO */
