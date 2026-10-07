@@ -953,4 +953,38 @@ def renderizar_tablero():
 
                         with col_btn:
                             st.markdown(f"""
-                                <div class="num-box-masivo
+                                <div class="num-box-masivo {clase_num_box} {clase_pulso}">
+                                    {valor_mostrar}
+                                </div>
+                            """, unsafe_allow_html=True)
+                            
+                            st.button(
+                                texto_estado, 
+                                key=f"num_btn_{producto}", 
+                                on_click=alternar_estado, 
+                                args=(producto, cant_total),
+                                use_container_width=True
+                            )
+
+        if activos:
+            renderizar_lista_productos(activos)
+
+        if completados:
+            st.markdown("""
+                <div class="divider-completados">
+                    <span>PRODUCTOS TERMINADOS</span>
+                </div>
+            """, unsafe_allow_html=True)
+            renderizar_lista_productos(completados)
+
+    else:
+        st.info("No hay pedidos registrados en este periodo.")
+
+    # FOOTER DISCRETO EN LA PARTE INFERIOR
+    st.markdown(f"""
+        <div class="footer-sutil">
+            PROCESADAS HOY: <span>{piezas_completadas}</span> DE <span>{piezas_totales}</span> PIEZAS
+        </div>
+    """, unsafe_allow_html=True)
+
+renderizar_tablero()
