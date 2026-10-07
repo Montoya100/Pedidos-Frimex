@@ -71,16 +71,31 @@ def restaurar_estado():
     else:
         st.toast("Sin respaldo previo", icon="⚠️")
 
-def alternar_estado(producto, cantidad_actual):
+def alternar_estado(producto, cantidad_actual, conteo_actual):
     if producto in estado_global["completados"]:
         estado_global["completados"].remove(producto)
         estado_global["cantidades_al_completar"].pop(producto, None)
     else:
         estado_global["completados"].add(producto)
         estado_global["cantidades_al_completar"][producto] = cantidad_actual
-    
-    # CERRAR EL POP-UP AUTOMÁTICAMENTE ANTE CUALQUIER CAMBIO DE ESTADO
-    st.session_state.cerrar_modal_celebracion = True
+
+    # VERIFICAR SI TRAS ESTE CAMBIO YA NO QUEDAN PRODUCTOS PENDIENTES
+    pendientes_restantes = 0
+    for prod, cant_tot in conteo_actual.items():
+        if prod in estado_global["completados"]:
+            cant_m = estado_global["cantidades_al_completar"].get(prod, cant_tot)
+            pendientes_restantes += max(0, cant_tot - cant_m)
+        else:
+            cant_m = estado_global["cantidades_al_completar"].get(prod, 0)
+            pendientes_restantes += (cant_tot - cant_m)
+
+    if pendientes_restantes == 0 and len(conteo_actual) > 0:
+        # PERMITIR QUE EL MODAL SE ACTIVE AL COMPLETAR LA ÚLTIMA TARJETA
+        st.session_state.cerrar_modal_celebracion = False
+        st.session_state.reproducido_modal_audio = False
+    else:
+        # MANTENER CERRADO SI AÚN QUEDAN PENDIENTES
+        st.session_state.cerrar_modal_celebracion = True
 
 def reproducir_sonido_notificacion():
     sound_js = """
@@ -971,7 +986,7 @@ def renderizar_tablero():
                                 texto_estado, 
                                 key=f"num_btn_{producto}", 
                                 on_click=alternar_estado, 
-                                args=(producto, cant_total),
+                                args=(producto, cant_total, conteo_productos),
                                 use_container_width=True
                             )
 
