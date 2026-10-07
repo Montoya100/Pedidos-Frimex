@@ -184,7 +184,7 @@ def modal_celebracion_nativo():
         st.rerun()
 
 # ==========================================
-# 4. ESTILOS CSS ESTÁTICOS Y PERSONALIZACIÓN DE MODAL
+# 4. ESTILOS CSS ESTÁTICOS Y OPCIÓN A DE DESENFOQUE
 # ==========================================
 st.markdown(f"""
     <style>
@@ -214,11 +214,22 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* FONDO TRASLÚCIDO CON DESENFOQUE PROFUNDO (BLUR MASIVO TIPO CRISTAL ESMERILADO OSCURO) */
+    /* OPCIÓN A: CAPA FIJA SUPERPUESTA MEDIANTE PSEUDO-ELEMENTO ::BEFORE EN EL MODAL */
+    div[data-testid="stModalContainer"]::before {{
+        content: "" !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background-color: rgba(5, 7, 12, 0.85) !important;
+        backdrop-filter: blur(30px) saturate(160%) !important;
+        -webkit-backdrop-filter: blur(30px) saturate(160%) !important;
+        z-index: -1 !important;
+    }}
+
     div[data-testid="stModalContainer"] {{
-        background-color: rgba(5, 7, 12, 0.88) !important;
-        backdrop-filter: blur(40px) saturate(180%) !important;
-        -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+        background-color: transparent !important;
     }}
 
     /* OCULTAR / CAMUFLAR TACHE ("X") Y HEADER EN MODAL NATIVO */
