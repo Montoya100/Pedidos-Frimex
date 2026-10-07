@@ -80,7 +80,7 @@ def alternar_estado(producto, cantidad_actual):
         estado_global["completados"].add(producto)
         estado_global["cantidades_al_completar"][producto] = cantidad_actual
 
-    # AL REABRIR O TOCAR TARJETAS, PERMITIR QUE EL MODAL SE REEVALÚE
+    # AL REABRIR O TOCAR TARJETAS, PERMITIR QUE EL MODAL SE REEVALÚE EN PRÓXIMO CICLO
     estado_global["modal_cerrado_manual"] = False
 
 def reproducir_sonido_notificacion():
@@ -160,19 +160,15 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. MODAL NATIVO DE CELEBRACIÓN CON ANIMACIÓN
+# 3. MODAL NATIVO DE CELEBRACIÓN
 # ==========================================
 @st.dialog(" ")
 def modal_celebracion_nativo():
     st.markdown(f"""
-        <div style="text-align: center; padding: 12px 0 8px 0;">
+        <div style="text-align: center; padding: 8px 0;">
             <img src="{LOGO_URL}" class="logo-modal-celebracion" alt="Logo Mostacho">
-            <h2 class="titulo-modal-celebracion">
-                PRODUCCIÓN FINALIZADA
-            </h2>
-            <p class="sub-modal-celebracion">
-                Se han completado todos los pedidos pendientes.
-            </p>
+            <h2 class="titulo-modal-celebracion">PRODUCCIÓN FINALIZADA</h2>
+            <p class="sub-modal-celebracion">Se han completado todos los pedidos pendientes.</p>
         </div>
     """, unsafe_allow_html=True)
     
@@ -181,7 +177,7 @@ def modal_celebracion_nativo():
         st.rerun()
 
 # ==========================================
-# 4. ESTILOS CSS ESTÁTICOS
+# 4. ESTILOS CSS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -210,10 +206,10 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* ANIMACIÓN POP-IN MODAL */
+    /* ANIMACIÓN POP-IN MODAL NATIVO */
     @keyframes modalPopIn {{
-        0% {{ opacity: 0; transform: scale(0.82) translateY(20px); }}
-        70% {{ transform: scale(1.02) translateY(-4px); }}
+        0% {{ opacity: 0; transform: scale(0.85) translateY(15px); }}
+        70% {{ transform: scale(1.02) translateY(-2px); }}
         100% {{ opacity: 1; transform: scale(1) translateY(0); }}
     }}
 
@@ -228,10 +224,10 @@ st.markdown(f"""
         top: 0 !important; left: 0 !important;
         width: 100vw !important; height: 100vh !important;
         background-color: rgba(5, 7, 12, 0.88) !important;
-        backdrop-filter: blur(30px) saturate(160%) !important;
-        -webkit-backdrop-filter: blur(30px) saturate(160%) !important;
+        backdrop-filter: blur(25px) saturate(160%) !important;
+        -webkit-backdrop-filter: blur(25px) saturate(160%) !important;
         z-index: -1 !important;
-        animation: fadeInBg 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+        animation: fadeInBg 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
     }}
 
     div[data-testid="stModalContainer"] {{
@@ -255,24 +251,24 @@ st.markdown(f"""
         border-radius: 24px !important;
         box-shadow: 0 0 70px rgba(249, 115, 22, 0.55) !important;
         padding: 24px 20px 28px 20px !important;
-        animation: modalPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+        animation: modalPopIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
     }}
 
     @media (min-width: 769px) {{
         div[role="dialog"] {{
-            max-width: 680px !important;
-            width: 680px !important;
-            padding: 36px 32px 40px 32px !important;
+            max-width: 620px !important;
+            width: 620px !important;
+            padding: 32px 28px 36px 28px !important;
         }}
-        .logo-modal-celebracion {{ height: 105px !important; margin-bottom: 20px !important; }}
-        .titulo-modal-celebracion {{ font-size: 32px !important; margin-bottom: 14px !important; }}
-        .sub-modal-celebracion {{ font-size: 17px !important; margin-bottom: 28px !important; }}
+        .logo-modal-celebracion {{ height: 95px !important; margin-bottom: 16px !important; }}
+        .titulo-modal-celebracion {{ font-size: 28px !important; margin-bottom: 12px !important; }}
+        .sub-modal-celebracion {{ font-size: 16px !important; margin-bottom: 24px !important; }}
     }}
 
     @media (max-width: 768px) {{
-        .logo-modal-celebracion {{ height: 80px !important; margin-bottom: 14px !important; }}
-        .titulo-modal-celebracion {{ font-size: 24px !important; margin-bottom: 10px !important; }}
-        .sub-modal-celebracion {{ font-size: 15px !important; margin-bottom: 20px !important; }}
+        .logo-modal-celebracion {{ height: 75px !important; margin-bottom: 12px !important; }}
+        .titulo-modal-celebracion {{ font-size: 22px !important; margin-bottom: 8px !important; }}
+        .sub-modal-celebracion {{ font-size: 14px !important; margin-bottom: 18px !important; }}
     }}
 
     .logo-modal-celebracion {{
@@ -301,9 +297,8 @@ st.markdown(f"""
         font-weight: 900 !important;
         font-size: 16px !important;
         letter-spacing: 1.5px !important;
-        height: 54px !important;
+        height: 52px !important;
         box-shadow: 0 4px 24px rgba(249, 115, 22, 0.65) !important;
-        transition: all 0.2s ease !important;
     }}
 
     .header-logo-container {{
@@ -420,7 +415,7 @@ st.markdown(f"""
 
     .footer-sutil span {{ color: #10b981 !important; font-weight: 900 !important; }}
 
-    /* CORRECCIÓN LOGO Y LAYOUT EN MÓVIL */
+    /* GARANTIZAR VISIBILIDAD DE LOGO EN MÓVIL */
     @media (max-width: 768px) {{
         .block-container {{ padding-left: 6px !important; padding-right: 6px !important; }}
         div[data-testid="column"] {{ width: 100% !important; flex: 1 1 100% !important; margin-bottom: 4px !important; }}
@@ -570,7 +565,7 @@ def renderizar_tablero():
 
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
-    # ENCABEZADO MINIMALISTA Y REFORMATO DE SYNC SIN TEXTO 'LOYVERSE'
+    # ENCABEZADO
     col_hdr_left, col_hdr_right = st.columns([0.82, 0.18])
     
     with col_hdr_left:
@@ -628,7 +623,7 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # DISPARO CONDICIONAL DEL MODAL DE CELEBRACIÓN
+    # DISPARO CONDICIONAL DEL MODAL DE CELEBRACIÓN NATIVO
     if conteo_productos and piezas_pendientes == 0 and not estado_global["modal_cerrado_manual"]:
         if not st.session_state.reproducido_modal_audio:
             reproducir_sonido_celebracion()
