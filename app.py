@@ -231,6 +231,7 @@ st.markdown(f"""
         border: 1px solid #1e293b;
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 6px;
         white-space: nowrap;
     }}
@@ -600,15 +601,13 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* REGLAS MÓVILES EXCLUSIVAS (OPCIÓN 1: LISTA FLUIDA DE BORDE A BORDE) */
+    /* REGLAS MÓVILES EXCLUSIVAS (LISTA FLUIDA + RELOJ DE SYNC CENTRADO DE BORDES COMPLETOS) */
     @media (max-width: 768px) {{
-        /* REMOVER PADDING DEL CONTENEDOR PRINCIPAL */
         .block-container {{
             padding-left: 6px !important;
             padding-right: 6px !important;
         }}
         
-        /* FORZAR A QUE CADA COLUMNA PRINCIPAL DE STREAMLIT SEA UN BLOQUE CONTENIDO DE 100% DE ANCHO */
         div[data-testid="column"] {{
             width: 100% !important;
             flex: 1 1 100% !important;
@@ -621,6 +620,19 @@ st.markdown(f"""
             flex-direction: row !important;
             width: 100% !important;
             gap: 6px !important;
+        }}
+
+        /* RELOJ DE SYNC EN MÓVIL: ANCHO COMPLETO Y CENTRADO PERFECTO */
+        .clocks-group {{
+            width: 100% !important;
+            margin-top: 4px !important;
+        }}
+
+        .reloj-tabla-sutil {{
+            width: 100% !important;
+            text-align: center !important;
+            justify-content: center !important;
+            padding: 8px 12px !important;
         }}
 
         /* AJUSTAR EL TAMAÑO DEL NOMBRE Y NÚMERO DENTRO DE LA TARJETA EN MÓVIL */
