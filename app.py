@@ -187,7 +187,7 @@ st.markdown(f"""
     
     .block-container {{
         padding-top: 0.4rem !important; 
-        padding-bottom: 2.5rem !important;
+        padding-bottom: 3.5rem !important;
         padding-left: 0.2rem !important; 
         padding-right: 0.2rem !important;
         max-width: 100% !important;
@@ -297,26 +297,25 @@ st.markdown(f"""
         border: 1px solid #3b82f6;
     }}
 
-    /* MODAL FLOTANTE ULTRA OSCURO TRASLÚCIDO EN PANTALLA COMPLETA CON CAPA SUPERIOR PARA EL BOTÓN */
-    .custom-modal-overlay {{
+    /* MODAL CELEBRACIÓN VISUAL (FONDO TRASLÚCIDO + TARJETA CENTRAL) */
+    .overlay-celebracion {{
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
         width: 100vw !important;
         height: 100vh !important;
-        background-color: rgba(5, 7, 10, 0.96) !important;
-        backdrop-filter: blur(18px) !important;
-        -webkit-backdrop-filter: blur(18px) !important;
-        z-index: 99990 !important;
+        background-color: rgba(5, 7, 10, 0.94) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        z-index: 9990 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        pointer-events: auto !important;
     }}
 
-    .custom-modal-box {{
+    .box-celebracion {{
         position: fixed !important;
-        top: 50% !important;
+        top: 42% !important;
         left: 50% !important;
         transform: translate(-50%, -50%) !important;
         background: linear-gradient(180deg, #18131a 0%, #0d0e14 100%) !important;
@@ -324,10 +323,10 @@ st.markdown(f"""
         border-radius: 24px !important;
         box-shadow: 0 0 70px rgba(249, 115, 22, 0.5) !important;
         text-align: center !important;
-        max-width: 540px !important;
-        width: 88% !important;
-        padding: 32px 24px 84px 24px !important;
-        z-index: 99995 !important;
+        max-width: 500px !important;
+        width: 86% !important;
+        padding: 32px 24px !important;
+        z-index: 9995 !important;
     }}
 
     .modal-logo-img-large {{
@@ -353,36 +352,36 @@ st.markdown(f"""
         line-height: 1.4;
     }}
 
-    /* POSICIONAMIENTO Y ESTILO DEL BOTÓN DE RETROCESO DENTRO DEL MODAL */
+    /* OPCIÓN 2: BOTÓN FLOTANTE FIJO EN FOOTER SUPERIOR */
     div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_custom_modal"]) {{
         position: fixed !important;
-        top: 50% !important;
+        bottom: 18px !important;
         left: 50% !important;
-        transform: translate(-50%, 110px) !important;
-        z-index: 100000 !important;
-        width: 80% !important;
-        max-width: 360px !important;
+        transform: translateX(-50%) !important;
+        z-index: 10000 !important;
+        width: 88% !important;
+        max-width: 440px !important;
     }}
 
     div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_custom_modal"]) button {{
-        background-color: #f97316 !important;
+        background: linear-gradient(90deg, #ea580c 0%, #f97316 100%) !important;
         color: #ffffff !important;
-        border: 1px solid #fb923c !important;
-        border-radius: 12px !important;
+        border: 1px solid #fdba74 !important;
+        border-radius: 14px !important;
         font-weight: 900 !important;
-        font-size: 15px !important;
+        font-size: 16px !important;
         letter-spacing: 1.5px !important;
-        height: 50px !important;
-        box-shadow: 0 4px 22px rgba(249, 115, 22, 0.55) !important;
+        height: 54px !important;
+        box-shadow: 0 6px 28px rgba(249, 115, 22, 0.75) !important;
         transition: all 0.2s ease !important;
         cursor: pointer !important;
+        width: 100% !important;
     }}
 
     div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_custom_modal"]) button:hover {{
-        background-color: #ea580c !important;
-        border-color: #fdba74 !important;
-        box-shadow: 0 6px 30px rgba(249, 115, 22, 0.8) !important;
-        transform: scale(1.02) !important;
+        background: linear-gradient(90deg, #c2410c 0%, #ea580c 100%) !important;
+        box-shadow: 0 8px 36px rgba(249, 115, 22, 0.9) !important;
+        transform: translateY(-2px) !important;
     }}
 
     /* MÉTRICAS EN LÍNEA CON BARRA DE PROGRESO (TICKETS -> PENDIENTES -> % COMPLETADO A LA DERECHA) */
@@ -845,15 +844,15 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # POP-UP NATIVO CON CAPA DE NAVEGACIÓN Y BOTÓN VISIBLE/CLICABLE EN MÓVIL Y ESCRITORIO
+    # POP-UP DE CELEBRACIÓN CON BARRA DE ACCIÓN FLOTANTE GARANTIZADA
     if conteo_productos and piezas_pendientes == 0 and not st.session_state.cerrar_modal_celebracion:
         if not st.session_state.reproducido_modal_audio:
             reproducir_sonido_celebracion()
             st.session_state.reproducido_modal_audio = True
 
         st.markdown(f"""
-            <div class="custom-modal-overlay"></div>
-            <div class="custom-modal-box">
+            <div class="overlay-celebracion"></div>
+            <div class="box-celebracion">
                 <img src="{LOGO_URL}" class="modal-logo-img-large" alt="Logo Mostacho">
                 <div class="celebration-title-orange-large">PRODUCCIÓN FINALIZADA</div>
                 <div class="celebration-sub-orange-large">
