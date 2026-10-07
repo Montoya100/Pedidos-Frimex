@@ -297,7 +297,7 @@ st.markdown(f"""
         border: 1px solid #3b82f6;
     }}
 
-    /* MODAL FLOTANTE ULTRA OSCURO TRASLÚCIDO EN PANTALLA COMPLETA */
+    /* MODAL FLOTANTE ULTRA OSCURO TRASLÚCIDO EN PANTALLA COMPLETA CON CAPA SUPERIOR PARA EL BOTÓN */
     .custom-modal-overlay {{
         position: fixed !important;
         top: 0 !important;
@@ -307,33 +307,38 @@ st.markdown(f"""
         background-color: rgba(5, 7, 10, 0.96) !important;
         backdrop-filter: blur(18px) !important;
         -webkit-backdrop-filter: blur(18px) !important;
-        z-index: 999999 !important;
+        z-index: 99990 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+        pointer-events: auto !important;
     }}
 
     .custom-modal-box {{
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
         background: linear-gradient(180deg, #18131a 0%, #0d0e14 100%) !important;
         border: 2px solid #f97316 !important;
         border-radius: 24px !important;
         box-shadow: 0 0 70px rgba(249, 115, 22, 0.5) !important;
         text-align: center !important;
-        max-width: 580px !important;
+        max-width: 540px !important;
         width: 88% !important;
-        padding: 36px 28px !important;
-        margin: auto !important;
+        padding: 32px 24px 84px 24px !important;
+        z-index: 99995 !important;
     }}
 
     .modal-logo-img-large {{
-        height: 80px !important;
+        height: 75px !important;
         width: auto;
-        margin-bottom: 16px;
+        margin-bottom: 14px;
         filter: drop-shadow(0 6px 18px rgba(249, 115, 22, 0.5));
     }}
 
     .celebration-title-orange-large {{
-        font-size: 28px !important;
+        font-size: 26px !important;
         font-weight: 900 !important;
         margin-bottom: 10px;
         color: #fb923c;
@@ -342,14 +347,23 @@ st.markdown(f"""
     }}
 
     .celebration-sub-orange-large {{
-        font-size: 16px !important;
+        font-size: 15px !important;
         font-weight: 700 !important;
         color: #94a3b8;
-        line-height: 1.5;
-        margin-bottom: 24px;
+        line-height: 1.4;
     }}
 
-    /* ESTILO DEL BOTÓN DEL MODAL */
+    /* POSICIONAMIENTO Y ESTILO DEL BOTÓN DE RETROCESO DENTRO DEL MODAL */
+    div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_custom_modal"]) {{
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, 110px) !important;
+        z-index: 100000 !important;
+        width: 80% !important;
+        max-width: 360px !important;
+    }}
+
     div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_custom_modal"]) button {{
         background-color: #f97316 !important;
         color: #ffffff !important;
@@ -358,16 +372,17 @@ st.markdown(f"""
         font-weight: 900 !important;
         font-size: 15px !important;
         letter-spacing: 1.5px !important;
-        height: 52px !important;
-        box-shadow: 0 4px 22px rgba(249, 115, 22, 0.45) !important;
+        height: 50px !important;
+        box-shadow: 0 4px 22px rgba(249, 115, 22, 0.55) !important;
         transition: all 0.2s ease !important;
+        cursor: pointer !important;
     }}
 
     div[data-testid="stElementContainer"]:has(button[key="btn_cerrar_custom_modal"]) button:hover {{
         background-color: #ea580c !important;
         border-color: #fdba74 !important;
-        box-shadow: 0 6px 30px rgba(249, 115, 22, 0.7) !important;
-        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 30px rgba(249, 115, 22, 0.8) !important;
+        transform: scale(1.02) !important;
     }}
 
     /* MÉTRICAS EN LÍNEA CON BARRA DE PROGRESO (TICKETS -> PENDIENTES -> % COMPLETADO A LA DERECHA) */
@@ -533,7 +548,7 @@ st.markdown(f"""
         border: 2px solid #60a5fa !important;
     }}
 
-    /* BOTÓN TRANSPARENTE SUPERPUESTO */
+    /* BOTÓN TRANSPARENTE SUPERPUESTO EN TARJETAS */
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{
         height: 100px !important;
         margin-top: -106px !important;
@@ -830,29 +845,26 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # POP-UP NATIVO EN PANTALLA COMPLETA
+    # POP-UP NATIVO CON CAPA DE NAVEGACIÓN Y BOTÓN VISIBLE/CLICABLE EN MÓVIL Y ESCRITORIO
     if conteo_productos and piezas_pendientes == 0 and not st.session_state.cerrar_modal_celebracion:
         if not st.session_state.reproducido_modal_audio:
             reproducir_sonido_celebracion()
             st.session_state.reproducido_modal_audio = True
 
         st.markdown(f"""
-            <div class="custom-modal-overlay">
-                <div class="custom-modal-box">
-                    <img src="{LOGO_URL}" class="modal-logo-img-large" alt="Logo Mostacho">
-                    <div class="celebration-title-orange-large">PRODUCCIÓN FINALIZADA</div>
-                    <div class="celebration-sub-orange-large">
-                        Se han completado todos los pedidos pendientes de la jornada.
-                    </div>
+            <div class="custom-modal-overlay"></div>
+            <div class="custom-modal-box">
+                <img src="{LOGO_URL}" class="modal-logo-img-large" alt="Logo Mostacho">
+                <div class="celebration-title-orange-large">PRODUCCIÓN FINALIZADA</div>
+                <div class="celebration-sub-orange-large">
+                    Se han completado todos los pedidos pendientes de la jornada.
                 </div>
             </div>
         """, unsafe_allow_html=True)
         
-        modal_btn_col1, modal_btn_col2, modal_btn_col3 = st.columns([0.15, 0.70, 0.15])
-        with modal_btn_col2:
-            if st.button("REVISAR PENDIENTES", key="btn_cerrar_custom_modal", use_container_width=True):
-                st.session_state.cerrar_modal_celebracion = True
-                st.rerun()
+        if st.button("REVISAR PENDIENTES", key="btn_cerrar_custom_modal", use_container_width=True):
+            st.session_state.cerrar_modal_celebracion = True
+            st.rerun()
 
     if conteo_productos:
         activos = []
