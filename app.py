@@ -188,8 +188,8 @@ st.markdown(f"""
     .block-container {{
         padding-top: 0.4rem !important; 
         padding-bottom: 2.5rem !important;
-        padding-left: 0.4rem !important; 
-        padding-right: 0.4rem !important;
+        padding-left: 0.2rem !important; 
+        padding-right: 0.2rem !important;
         max-width: 100% !important;
     }}
 
@@ -600,11 +600,11 @@ st.markdown(f"""
         font-weight: 900 !important;
     }}
 
-    /* REGLAS EXCLUSIVAS PARA ELIMINAR EL MARGEN VACÍO A LA DERECHA EN MÓVIL */
+    /* REGLAS EXCLUSIVAS PARA FORZAR ANCHO COMPLETO EN MÓVIL Y ELIMINAR EL ESPACIO VACÍO */
     @media (max-width: 768px) {{
         .block-container {{
-            padding-left: 0.2rem !important;
-            padding-right: 0.2rem !important;
+            padding-left: 0px !important;
+            padding-right: 0px !important;
         }}
         
         div[data-testid="column"] {{
@@ -612,11 +612,18 @@ st.markdown(f"""
             flex: 1 1 100% !important;
             padding-left: 0px !important;
             padding-right: 0px !important;
+            margin: 0px !important;
         }}
         
         div[data-testid="stHorizontalBlock"] {{
             flex-direction: column !important;
             gap: 10px !important;
+            width: 100% !important;
+            padding-left: 0px !important;
+            padding-right: 0px !important;
+        }}
+
+        div[data-testid="stElementContainer"] {{
             width: 100% !important;
         }}
         
@@ -629,6 +636,7 @@ st.markdown(f"""
             flex-direction: row !important;
             justify-content: space-between !important;
             align-items: center !important;
+            padding: 0 8px !important;
         }}
         
         .header-title {{
@@ -884,7 +892,7 @@ def renderizar_tablero():
                             clase_pulso = "anim-pulso-nuevo"
                             html_incremento = f'<span class="txt-incremento">+{inc}</span>'
 
-                        col_txt, col_btn = st.columns([0.70, 0.30], gap="small")
+                        col_txt, col_btn = st.columns([0.72, 0.28], gap="small")
 
                         with col_txt:
                             st.markdown(f"""
