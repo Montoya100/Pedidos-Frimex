@@ -43,6 +43,7 @@ def obtener_estado_global():
         "completados": set(),
         "cantidades_al_completar": {},
         "productos_manuales": {},  # Almacena {nombre: cantidad}
+        "nota_tablero": "",        # Almacena la nota global del tablero
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False
@@ -55,12 +56,14 @@ def borrar_todo():
         "completados": estado_global["completados"].copy(),
         "cantidades_al_completar": estado_global["cantidades_al_completar"].copy(),
         "productos_manuales": estado_global["productos_manuales"].copy(),
+        "nota_tablero": estado_global["nota_tablero"],
         "hora_corte_utc": estado_global["hora_corte_utc"]
     }
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
     estado_global["completados"].clear()
     estado_global["cantidades_al_completar"].clear()
     estado_global["productos_manuales"].clear()
+    estado_global["nota_tablero"] = ""
     estado_global["descartar_celebracion"] = False
     st.toast("Tablero limpiado correctamente", icon="ℹ️")
 
@@ -69,6 +72,7 @@ def restaurar_estado():
         estado_global["completados"] = estado_global["respaldo"]["completados"].copy()
         estado_global["cantidades_al_completar"] = estado_global["respaldo"]["cantidades_al_completar"].copy()
         estado_global["productos_manuales"] = estado_global["respaldo"]["productos_manuales"].copy()
+        estado_global["nota_tablero"] = estado_global["respaldo"]["nota_tablero"]
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
         estado_global["descartar_celebracion"] = False
@@ -163,7 +167,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS CON TIPOGRAFÍA GIGANTE
+# 3. ESTILOS CSS CON TIPOGRAFÍA GIGANTE Y NOTAS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -190,6 +194,39 @@ st.markdown(f"""
         padding-left: 0.2rem !important; 
         padding-right: 0.2rem !important;
         max-width: 100% !important;
+    }}
+
+    /* BANNER DE NOTAS DESTACADO */
+    .banner-notas-container {{
+        background: linear-gradient(90deg, #1e1b4b 0%, #31104b 100%);
+        border: 2px solid #a855f7;
+        border-radius: 12px;
+        padding: 12px 20px;
+        margin-bottom: 12px;
+        box-shadow: 0 4px 20px rgba(168, 85, 247, 0.35);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }}
+
+    .banner-notas-tag {{
+        background: #a855f7;
+        color: #ffffff;
+        font-weight: 900;
+        font-size: 13px !important;
+        letter-spacing: 1.5px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }}
+
+    .banner-notas-text {{
+        color: #f3e8ff;
+        font-size: 20px !important;
+        font-weight: 800 !important;
+        line-height: 1.25;
+        letter-spacing: 0.5px;
     }}
 
     .full-screen-celebracion {{
@@ -386,6 +423,7 @@ st.markdown(f"""
         .card-master-title {{ font-size: 22px !important; }}
         .card-master-num {{ font-size: 56px !important; }}
         .card-master-container {{ min-height: 100px !important; padding: 12px 14px !important; }}
+        .banner-notas-text {{ font-size: 16px !important; }}
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -541,7 +579,29 @@ def renderizar_tablero():
 
     with col_hdr_right:
         with st.popover("OPCIONES", use_container_width=True):
-            st.markdown("### ➕ Agregar Producto Manual")
+            # SECCIÓN: NOTAS / AVISOS DEL TABLERO
+            st.markdown("### Notas / Avisos")
+            with st.form("form_nota_tablero", clear_on_submit=False):
+                texto_nota_input = st.text_area("Indicación para cocina", value=estado_global["nota_tablero"], placeholder="Ej. Dar prioridad a cacahuates garrapiñados")
+                col_n1, col_n2 = st.columns(2)
+                with col_n1:
+                    btn_guardar_nota = st.form_submit_button("Guardar Nota", use_container_width=True)
+                with col_n2:
+                    btn_limpiar_nota = st.form_submit_button("Limpiar Nota", use_container_width=True)
+
+                if btn_guardar_nota:
+                    estado_global["nota_tablero"] = texto_nota_input.strip()
+                    st.toast("Nota guardada en el tablero", icon="✅")
+                    st.rerun()
+
+                if btn_limpiar_nota:
+                    estado_global["nota_tablero"] = ""
+                    st.toast("Nota eliminada", icon="ℹ️")
+                    st.rerun()
+
+            st.markdown("---")
+            # SECCIÓN: AGREGAR PRODUCTO MANUAL
+            st.markdown("### Agregar Producto Manual")
             with st.form("form_agregar_manual", clear_on_submit=True):
                 nombre_manual = st.text_input("Nombre del producto")
                 cantidad_manual = st.number_input("Cantidad", min_value=1, value=1, step=1)
@@ -553,27 +613,34 @@ def renderizar_tablero():
                     st.toast(f"Agregado: {prod_key} (+{cantidad_manual})", icon="✅")
                     st.rerun()
 
-            # SECCIÓN DE EDICIÓN Y BORRADO DE PRODUCTOS MANUALES
+            # SECCIÓN: GESTIÓN Y EDICIÓN DE PRODUCTOS MANUALES
             if estado_global["productos_manuales"]:
                 st.markdown("---")
-                st.markdown("### ✏️ Modificar / Borrar Manuales")
+                st.markdown("### Modificar Productos Manuales")
                 for p_nombre, p_cant in list(estado_global["productos_manuales"].items()):
-                    col_p1, col_p2, col_p3 = st.columns([0.5, 0.3, 0.2])
-                    with col_p1:
-                        st.caption(f"**{p_nombre}**")
-                    with col_p2:
-                        nueva_cant = st.number_input("Cant.", min_value=1, value=p_cant, key=f"edit_cant_{p_nombre}", label_visibility="collapsed")
-                        if nueva_cant != p_cant:
-                            estado_global["productos_manuales"][p_nombre] = int(nueva_cant)
-                            st.toast(f"Cantidad actualizada: {p_nombre} ({nueva_cant})", icon="✏️")
-                            st.rerun()
-                    with col_p3:
-                        if st.button("🗑️", key=f"del_manual_{p_nombre}"):
-                            estado_global["productos_manuales"].pop(p_nombre, None)
-                            estado_global["completados"].discard(p_nombre)
-                            estado_global["cantidades_al_completar"].pop(p_nombre, None)
-                            st.toast(f"Eliminado: {p_nombre}", icon="🗑️")
-                            st.rerun()
+                    st.markdown(f"**{p_nombre}** (Actual: {p_cant})")
+                    
+                    # Formulario individual con botón de ACEPTAR para guardar cambios
+                    with st.expander(f"Editar o borrar {p_nombre}"):
+                        with st.form(key=f"form_edit_{p_nombre}"):
+                            nueva_cant_val = st.number_input("Nueva cantidad", min_value=1, value=p_cant, step=1)
+                            col_e1, col_e2 = st.columns(2)
+                            with col_e1:
+                                btn_aceptar_edit = st.form_submit_button("Aceptar")
+                            with col_e2:
+                                btn_borrar_item = st.form_submit_button("Borrar")
+
+                            if btn_aceptar_edit:
+                                estado_global["productos_manuales"][p_nombre] = int(nueva_cant_val)
+                                st.toast(f"Cantidad actualizada: {p_nombre} -> {nueva_cant_val}", icon="✅")
+                                st.rerun()
+
+                            if btn_borrar_item:
+                                estado_global["productos_manuales"].pop(p_nombre, None)
+                                estado_global["completados"].discard(p_nombre)
+                                estado_global["cantidades_al_completar"].pop(p_nombre, None)
+                                st.toast(f"Producto borrado: {p_nombre}", icon="ℹ️")
+                                st.rerun()
 
             st.markdown("---")
             st.markdown("### Acciones de Tablero")
@@ -583,6 +650,15 @@ def renderizar_tablero():
             if st.button("Restaurar", use_container_width=True):
                 restaurar_estado()
                 st.rerun()
+
+    # BANNER VISUAL DE NOTAS (SE MUESTRA ARRIBA DE LAS MÉTRICAS SI HAY NOTA ACTIVA)
+    if estado_global["nota_tablero"]:
+        st.markdown(f"""
+            <div class="banner-notas-container">
+                <div class="banner-notas-tag">NOTA / AVISO</div>
+                <div class="banner-notas-text">{estado_global["nota_tablero"]}</div>
+            </div>
+        """, unsafe_allow_html=True)
 
     # LIMPIEZA DE NOTIFICACIONES EXPIRADAS (> 30 SEG)
     for prod, info in list(st.session_state.popups_nuevos.items()):
