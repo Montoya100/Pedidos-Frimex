@@ -159,7 +159,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS CON TEXTOS GIGANTES Y NEGRITA
+# 3. ESTILOS CSS CON TEXTOS GIGANTES Y NEGRITA FUERTE
 # ==========================================
 st.markdown(f"""
     <style>
@@ -295,12 +295,12 @@ st.markdown(f"""
 
     .footer-sutil span {{ color: #10b981 !important; font-weight: 900 !important; }}
 
-    /* TARJETA-BOTÓN UNIFICADA CON TEXTOS GIGANTES Y NEGRITA PESADA */
+    /* TARJETA-BOTÓN UNIFICADA CON TEXTOS GIGANTES Y NEGRITA PESADA (SIN EMOJIS) */
     div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) {{ margin-bottom: 14px !important; }}
     
     div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button {{
-        height: 140px !important;
-        min-height: 140px !important;
+        height: 150px !important;
+        min-height: 150px !important;
         width: 100% !important;
         border-radius: 14px !important;
         display: flex !important;
@@ -315,9 +315,9 @@ st.markdown(f"""
         transform: scale(0.98) !important;
     }}
 
-    /* FUENTE GIGANTE Y ULTRA NEGRITA DENTRO DEL BOTÓN */
+    /* FUENTE GIGANTE Y ULTRA NEGRITA DENTRO DEL BOTÓN PARA ESCRITORIO */
     div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button p {{
-        font-size: 24px !important;
+        font-size: 26px !important;
         font-weight: 900 !important;
         line-height: 1.25 !important;
         letter-spacing: 1px !important;
@@ -351,9 +351,9 @@ st.markdown(f"""
         .txt-celebracion-titulo {{ font-size: 28px !important; margin-bottom: 8px !important; }}
         .txt-celebracion-sub {{ font-size: 16px !important; margin-bottom: 24px !important; }}
         
-        /* En móvil ajustamos ligeramente el texto gigante para que no se desborde si el nombre es largo */
+        /* TEXTO GIGANTE Y MUY CLARO EN MÓVIL */
         div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button p {{
-            font-size: 20px !important;
+            font-size: 22px !important;
         }}
     }}
     </style>
@@ -556,7 +556,7 @@ def renderizar_tablero():
             estado_global["descartar_celebracion"] = True
             st.rerun()
 
-    # RENDERIZADO DE TARJETAS UNIFICADAS CON TEXTO GIGANTE Y NEGRITA
+    # RENDERIZADO DE TARJETAS UNIFICADAS CON TEXTO GIGANTE, NEGRILLAS Y SIN EMOJIS
     else:
         if conteo_productos:
             activos = []
@@ -605,8 +605,8 @@ def renderizar_tablero():
                                 inc = info_popup["incremento"]
                                 texto_incremento = f" (+{inc})"
 
-                            # ETIQUETA CLARA, GRANDE Y VISIBLE A DISTANCIA
-                            label_boton = f"{producto}{texto_incremento}\n📦 CANT: {valor_mostrar}  |  [{texto_estado}]"
+                            # TEXTO LIMPIO, GIGANTE Y EN NEGRITAS SIN EMOJIS
+                            label_boton = f"{producto}{texto_incremento}\nCANT: {valor_mostrar}  |  [{texto_estado}]"
 
                             if st.button(
                                 label_boton, 
