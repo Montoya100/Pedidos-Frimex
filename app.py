@@ -159,7 +159,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS UNIFICADOS (TARJETA-BOTÓN)
+# 3. ESTILOS CSS CON TEXTOS GIGANTES Y NEGRITA
 # ==========================================
 st.markdown(f"""
     <style>
@@ -257,12 +257,6 @@ st.markdown(f"""
 
     .anim-pulso-nuevo {{ animation: pulseGlow 1.2s infinite ease-in-out !important; }}
 
-    .txt-incremento {{
-        display: inline-block; background-color: #1e3a8a; color: #93c5fd;
-        font-size: 14px !important; font-weight: 900 !important; padding: 1px 6px;
-        border-radius: 4px; margin-left: 4px; border: 1px solid #3b82f6; vertical-align: middle;
-    }}
-
     .metrics-row {{
         display: flex; justify-content: space-around; align-items: center;
         background: #141822; border-radius: 10px; padding: 10px 16px 14px 16px;
@@ -301,20 +295,19 @@ st.markdown(f"""
 
     .footer-sutil span {{ color: #10b981 !important; font-weight: 900 !important; }}
 
-    /* CONVERTIMOS EL BOTÓN NATIVO EN LA TARJETA-BLOQUE UNIFICADA */
+    /* TARJETA-BOTÓN UNIFICADA CON TEXTOS GIGANTES Y NEGRITA PESADA */
     div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) {{ margin-bottom: 14px !important; }}
     
     div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button {{
-        height: 125px !important;
-        min-height: 125px !important;
+        height: 140px !important;
+        min-height: 140px !important;
         width: 100% !important;
-        border-radius: 12px !important;
+        border-radius: 14px !important;
         display: flex !important;
-        flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
-        padding: 10px 14px !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+        padding: 12px 16px !important;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.5) !important;
         transition: transform 0.1s ease !important;
     }}
 
@@ -322,62 +315,14 @@ st.markdown(f"""
         transform: scale(0.98) !important;
     }}
 
-    /* COLORES Y ESTADOS DE LOS BOTONES UNIFICADOS */
-    /* PENDIENTE (Rojo) */
-    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"][data-baseweb]? ) button {{ /* fallback */ }}
-    /* Como Streamlit asigna dinámicamente clases, estilizamos por el tipo primary/secondary o selector general de botones de tarjeta */
-    
-    /* Estilos específicos para los textos internos de la tarjeta unificada (manejados vía HTML en el label del botón) */
-    .card-content-wrapper {{
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: space-between;
-        height: 100%;
-    }}
-    .card-top-row {{
-        display: flex;
-        width: 100%;
-        justify-content: space-between;
-        align-items: center;
-        gap: 8px;
-    }}
-    .card-title-text {{
-        font-size: 16px !important;
+    /* FUENTE GIGANTE Y ULTRA NEGRITA DENTRO DEL BOTÓN */
+    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button p {{
+        font-size: 24px !important;
         font-weight: 900 !important;
+        line-height: 1.25 !important;
+        letter-spacing: 1px !important;
         text-transform: uppercase !important;
-        text-align: left !important;
-        line-height: 1.15 !important;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        flex: 1;
     }}
-    .card-num-text {{
-        font-family: 'JetBrains Mono', monospace !important;
-        font-size: 38px !important;
-        font-weight: 900 !important;
-        line-height: 1 !important;
-    }}
-    .card-status-badge {{
-        font-size: 10px !important;
-        font-weight: 900 !important;
-        letter-spacing: 2px !important;
-        text-transform: uppercase !important;
-        padding: 4px 12px;
-        border-radius: 6px;
-        width: 100%;
-        text-align: center;
-        margin-top: 4px;
-    }}
-
-    /* VARIANTES DE COLOR PARA LAS TARJETAS */
-    /* 1. Pendiente */
-    button[key*="tarjeta_btn_"] {{ background-color: #dc2626 !important; border: 1px solid #ef4444 !important; color: #ffffff !important; }}
-    /* Nota: para distinguir estados de forma precisa con selectores de atributos en Streamlit, usamos clases o la lógica de renderizado */
 
     /* VERSIÓN MÓVIL */
     @media (max-width: 768px) {{
@@ -405,6 +350,11 @@ st.markdown(f"""
         .img-celebracion-logo {{ height: 100px !important; margin-bottom: 16px !important; }}
         .txt-celebracion-titulo {{ font-size: 28px !important; margin-bottom: 8px !important; }}
         .txt-celebracion-sub {{ font-size: 16px !important; margin-bottom: 24px !important; }}
+        
+        /* En móvil ajustamos ligeramente el texto gigante para que no se desborde si el nombre es largo */
+        div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button p {{
+            font-size: 20px !important;
+        }}
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -606,7 +556,7 @@ def renderizar_tablero():
             estado_global["descartar_celebracion"] = True
             st.rerun()
 
-    # RENDERIZADO DE TARJETAS UNIFICADAS (TODO EL RECUADRO ES EL BOTÓN)
+    # RENDERIZADO DE TARJETAS UNIFICADAS CON TEXTO GIGANTE Y NEGRITA
     else:
         if conteo_productos:
             activos = []
@@ -650,15 +600,14 @@ def renderizar_tablero():
                             valor_mostrar = "∞" if cant_mostrar == 1 else str(cant_mostrar)
 
                             info_popup = st.session_state.popups_nuevos.get(producto)
-                            html_incremento = ""
+                            texto_incremento = ""
                             if info_popup and not es_completado:
                                 inc = info_popup["incremento"]
-                                html_incremento = f'<span class="txt-incremento">+{inc}</span>'
+                                texto_incremento = f" (+{inc})"
 
-                            # CONSTRUCCIÓN DEL ETIQUETADO INTERNO PARA EL BOTÓN UNIFICADO
-                            label_boton = f"{producto} {html_incremento} | CANT: {valor_mostrar} | [{texto_estado}]"
+                            # ETIQUETA CLARA, GRANDE Y VISIBLE A DISTANCIA
+                            label_boton = f"{producto}{texto_incremento}\n📦 CANT: {valor_mostrar}  |  [{texto_estado}]"
 
-                            # EL BOTÓN COMPLETO HACE LA VEZ DE TARJETA INTERACTIVA
                             if st.button(
                                 label_boton, 
                                 key=f"tarjeta_btn_{producto}", 
