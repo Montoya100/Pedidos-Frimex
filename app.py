@@ -134,7 +134,6 @@ def reproducir_sonido_notificacion():
     components.html(sound_js, height=0, width=0)
 
 def reproducir_sonido_nota():
-    # Sonido distintivo para notas nuevas o actualizadas (tono triple descendente/ascendente curioso)
     sound_js = """
     <script>
     (function() {
@@ -205,7 +204,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS (BANNER HORIZONTAL EXPANDIDO, MAYÚSCULAS, NEGRITA Y WAKE LOCK)
+# 3. ESTILOS CSS (ANIMACIÓN DE NOTAS Y TACHADO EN COMPLETADOS)
 # ==========================================
 st.markdown(f"""
     <style>
@@ -234,9 +233,16 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* BANNER DE NOTA OPTIMIZADO PARA PANTALLAS HORIZONTALES (TEXTO GIGANTE Y EXPANDIDO) */
+    /* ANIMACIÓN DE ENTRADA Y DEGRADADO PARA LAS NOTAS */
+    @keyframes deslizarDegradado {{
+        0% {{ opacity: 0; transform: translateY(-10px); background-position: 200% 0; }}
+        100% {{ opacity: 1; transform: translateY(0); background-position: 0 0; }}
+    }}
+
     .banner-notas-container {{
-        background: linear-gradient(90deg, #0f172a 100%, #1e293b 100%);
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0284c7 200%);
+        background-size: 200% 100%;
+        animation: deslizarDegradado 0.6s ease-out forwards;
         border: 2px solid #0284c7;
         border-radius: 12px;
         padding: 12px 20px;
@@ -399,7 +405,16 @@ st.markdown(f"""
     }}
 
     .card-master-pendiente {{ background: #dc2626 !important; border: 2px solid #ef4444 !important; color: #ffffff !important; }}
-    .card-master-completado {{ background: #059669 !important; border: 2px solid #10b981 !important; color: #ffffff !important; opacity: 0.8; }}
+    
+    /* TARJETA COMPLETADA CON TEXTO Y CANTIDAD TACHADOS (EFECTO RAYADO FÍSICO) */
+    .card-master-completado {{ background: #059669 !important; border: 2px solid #10b981 !important; color: #ffffff !important; opacity: 0.75; }}
+    .card-master-completado .card-master-title,
+    .card-master-completado .card-master-num {{
+        text-decoration: line-through !important;
+        text-decoration-thickness: 4px !important;
+        text-decoration-color: rgba(255, 255, 255, 0.8) !important;
+    }}
+
     .card-master-reciente {{ background: #2563eb !important; border: 2px solid #60a5fa !important; color: #ffffff !important; }}
 
     .card-master-title {{
@@ -726,7 +741,7 @@ def renderizar_tablero():
                 restaurar_estado()
                 st.rerun()
 
-    # RENDERIZAR LOS BANNERS DE NOTAS ACTIVAS (MAYÚSCULAS, NEGRITA Y ANCHO EXPANDIDO)
+    # RENDERIZAR LOS BANNERS DE NOTAS ACTIVAS (CON ANIMACIÓN Y DEGRADADO)
     for idx_n, nota_txt in enumerate(estado_global["notas_tablero"]):
         if nota_txt:
             st.markdown(f"""
@@ -829,7 +844,7 @@ def renderizar_tablero():
                                 inc = info_popup["incremento"]
                                 html_incremento = f'<span class="txt-incremento">+{inc}</span>'
 
-                            # TARJETA VISUAL GIGANTE
+                            # TARJETA VISUAL GIGANTE (CON TACHADO AUTOMÁTICO EN COMPLETADOS)
                             st.markdown(f"""
                                 <div class="card-master-container {clase_css}">
                                     <div class="card-master-title">{producto} {html_incremento}</div>
