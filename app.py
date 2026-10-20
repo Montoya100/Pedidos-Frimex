@@ -35,15 +35,15 @@ def obtener_base64_imagen(ruta_imagen):
 LOGO_URL = obtener_base64_imagen("logo.png")
 
 # ==========================================
-# 2. ESTADO GLOBAL COMPARTIDO
+# 2. ESTADO GLOBAL COMPARTIDO PERSISTENTE
 # ==========================================
 @st.cache_resource
 def obtener_estado_global():
     return {
         "completados": set(),
         "cantidades_al_completar": {},
-        "productos_manuales": {},  # Almacena {nombre: cantidad}
-        "nota_tablero": "",        # Almacena la nota global del tablero
+        "productos_manuales": {},  # Guardado persistente {nombre: cantidad}
+        "nota_tablero": "",        # Nota persistente
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False
@@ -167,7 +167,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS CON TIPOGRAFÍA GIGANTE Y NOTAS
+# 3. ESTILOS CSS CON BANNER "NOTA" Y FUENTES GIGANTES
 # ==========================================
 st.markdown(f"""
     <style>
@@ -196,9 +196,9 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* BANNER DE NOTAS DESTACADO */
+    /* BANNER DE NOTA LIMPIO Y ELEGANTE */
     .banner-notas-container {{
-        background: linear-gradient(90deg, #1e1b4b 0%, #31104b 100%);
+        background: linear-gradient(90deg, #1e1b4b 0%, #2e1065 100%);
         border: 2px solid #a855f7;
         border-radius: 12px;
         padding: 12px 20px;
@@ -214,8 +214,8 @@ st.markdown(f"""
         color: #ffffff;
         font-weight: 900;
         font-size: 13px !important;
-        letter-spacing: 1.5px;
-        padding: 4px 10px;
+        letter-spacing: 2px;
+        padding: 4px 12px;
         border-radius: 6px;
         text-transform: uppercase;
         white-space: nowrap;
@@ -223,7 +223,7 @@ st.markdown(f"""
 
     .banner-notas-text {{
         color: #f3e8ff;
-        font-size: 20px !important;
+        font-size: 22px !important;
         font-weight: 800 !important;
         line-height: 1.25;
         letter-spacing: 0.5px;
@@ -489,7 +489,7 @@ def renderizar_tablero():
                 cant_num = int(cantidad) if float(cantidad).is_integer() else cantidad
                 conteo_productos[nombre_completo] = conteo_productos.get(nombre_completo, 0) + cant_num
 
-    # FUSIONAR PRODUCTOS MANUALES AGREGADOS POR EL USUARIO
+    # FUSIONAR PRODUCTOS MANUALES DE FORMA PERSISTENTE
     for prod_manual, cant_manual in estado_global["productos_manuales"].items():
         conteo_productos[prod_manual] = conteo_productos.get(prod_manual, 0) + cant_manual
 
@@ -579,8 +579,8 @@ def renderizar_tablero():
 
     with col_hdr_right:
         with st.popover("OPCIONES", use_container_width=True):
-            # SECCIÓN: NOTAS / AVISOS DEL TABLERO
-            st.markdown("### Notas / Avisos")
+            # SECCIÓN: NOTA DEL TABLERO
+            st.markdown("### Notas")
             with st.form("form_nota_tablero", clear_on_submit=False):
                 texto_nota_input = st.text_area("Indicación para cocina", value=estado_global["nota_tablero"], placeholder="Ej. Dar prioridad a cacahuates garrapiñados")
                 col_n1, col_n2 = st.columns(2)
@@ -613,15 +613,14 @@ def renderizar_tablero():
                     st.toast(f"Agregado: {prod_key} (+{cantidad_manual})", icon="✅")
                     st.rerun()
 
-            # SECCIÓN: GESTIÓN Y EDICIÓN DE PRODUCTOS MANUALES
+            # SECCIÓN: EDICIÓN / BORRADO DE PRODUCTOS MANUALES
             if estado_global["productos_manuales"]:
                 st.markdown("---")
                 st.markdown("### Modificar Productos Manuales")
                 for p_nombre, p_cant in list(estado_global["productos_manuales"].items()):
                     st.markdown(f"**{p_nombre}** (Actual: {p_cant})")
                     
-                    # Formulario individual con botón de ACEPTAR para guardar cambios
-                    with st.expander(f"Editar o borrar {p_nombre}"):
+                    with st.expander(f"Editar {p_nombre}"):
                         with st.form(key=f"form_edit_{p_nombre}"):
                             nueva_cant_val = st.number_input("Nueva cantidad", min_value=1, value=p_cant, step=1)
                             col_e1, col_e2 = st.columns(2)
@@ -651,11 +650,11 @@ def renderizar_tablero():
                 restaurar_estado()
                 st.rerun()
 
-    # BANNER VISUAL DE NOTAS (SE MUESTRA ARRIBA DE LAS MÉTRICAS SI HAY NOTA ACTIVA)
+    # BANNER VISUAL CON ETIQUETA "NOTA"
     if estado_global["nota_tablero"]:
         st.markdown(f"""
             <div class="banner-notas-container">
-                <div class="banner-notas-tag">NOTA / AVISO</div>
+                <div class="banner-notas-tag">NOTA</div>
                 <div class="banner-notas-text">{estado_global["nota_tablero"]}</div>
             </div>
         """, unsafe_allow_html=True)
