@@ -42,7 +42,7 @@ def obtener_estado_global():
     return {
         "completados": set(),
         "cantidades_al_completar": {},
-        "productos_manuales": {},  # <-- Almacena los productos agregados a mano {nombre: cantidad}
+        "productos_manuales": {},  # Almacena {nombre: cantidad}
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False
@@ -62,7 +62,7 @@ def borrar_todo():
     estado_global["cantidades_al_completar"].clear()
     estado_global["productos_manuales"].clear()
     estado_global["descartar_celebracion"] = False
-    st.toast("Tablero limpiado", icon="ℹ️")
+    st.toast("Tablero limpiado correctamente", icon="ℹ️")
 
 def restaurar_estado():
     if estado_global["respaldo"]:
@@ -72,9 +72,9 @@ def restaurar_estado():
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
         estado_global["descartar_celebracion"] = False
-        st.toast("Tablero restaurado", icon="✅")
+        st.toast("Tablero restaurado correctamente", icon="✅")
     else:
-        st.toast("Sin respaldo previo", icon="⚠️")
+        st.toast("Sin respaldo previo disponible", icon="⚠️")
 
 def alternar_estado(producto, cantidad_actual):
     if producto in estado_global["completados"]:
@@ -553,6 +553,28 @@ def renderizar_tablero():
                     st.toast(f"Agregado: {prod_key} (+{cantidad_manual})", icon="✅")
                     st.rerun()
 
+            # SECCIÓN DE EDICIÓN Y BORRADO DE PRODUCTOS MANUALES
+            if estado_global["productos_manuales"]:
+                st.markdown("---")
+                st.markdown("### ✏️ Modificar / Borrar Manuales")
+                for p_nombre, p_cant in list(estado_global["productos_manuales"].items()):
+                    col_p1, col_p2, col_p3 = st.columns([0.5, 0.3, 0.2])
+                    with col_p1:
+                        st.caption(f"**{p_nombre}**")
+                    with col_p2:
+                        nueva_cant = st.number_input("Cant.", min_value=1, value=p_cant, key=f"edit_cant_{p_nombre}", label_visibility="collapsed")
+                        if nueva_cant != p_cant:
+                            estado_global["productos_manuales"][p_nombre] = int(nueva_cant)
+                            st.toast(f"Cantidad actualizada: {p_nombre} ({nueva_cant})", icon="✏️")
+                            st.rerun()
+                    with col_p3:
+                        if st.button("🗑️", key=f"del_manual_{p_nombre}"):
+                            estado_global["productos_manuales"].pop(p_nombre, None)
+                            estado_global["completados"].discard(p_nombre)
+                            estado_global["cantidades_al_completar"].pop(p_nombre, None)
+                            st.toast(f"Eliminado: {p_nombre}", icon="🗑️")
+                            st.rerun()
+
             st.markdown("---")
             st.markdown("### Acciones de Tablero")
             if st.button("Borrar todo", use_container_width=True):
@@ -602,7 +624,7 @@ def renderizar_tablero():
             </div>
         """, unsafe_allow_html=True)
 
-        if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_pantalla_completa_cerrار"):
+        if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_pantalla_completa_cerrar"):
             estado_global["descartar_celebracion"] = True
             st.rerun()
 
