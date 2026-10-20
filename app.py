@@ -204,7 +204,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS (LOGOS, TÍTULOS AMPLIADOS Y OCULTAR MARCA STREAMLIT)
+# 3. ESTILOS CSS (BLOQUEO TOTAL DE MARCA DE AGUA STREAMLIT)
 # ==========================================
 st.markdown(f"""
     <style>
@@ -222,12 +222,18 @@ st.markdown(f"""
 
     .stApp {{ background-color: #0b0d13 !important; }}
     
-    /* OCULTAR MENÚ, FOOTER, HEADER Y BRANDING DE STREAMLIT */
-    #MainMenu {{ visibility: hidden !important; display: none !important; }}
-    footer {{ visibility: hidden !important; display: none !important; }}
-    header {{ visibility: hidden !important; display: none !important; }}
-    .stAppDeployButton {{ display: none !important; }}
-    div[data-testid="stToolbar"] {{ display: none !important; }}
+    /* REGLAS REFORZADAS PARA OCULTAR COMPLETAMENTE LA MARCA DE AGUA Y MENÚS DE STREAMLIT */
+    #MainMenu, footer, header, 
+    div[data-testid="stToolbar"], 
+    div[data-testid="stDecoration"], 
+    div[data-testid="stStatusWidget"],
+    .stAppDeployButton,
+    a[href*="streamlit.io"] {{
+        visibility: hidden !important;
+        display: none !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }}
     
     .block-container {{
         padding-top: 0.4rem !important; 
