@@ -42,6 +42,7 @@ def obtener_estado_global():
     return {
         "completados": set(),
         "cantidades_al_completar": {},
+        "productos_manuales": {},  # <-- Almacena los productos agregados a mano {nombre: cantidad}
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False
@@ -53,11 +54,13 @@ def borrar_todo():
     estado_global["respaldo"] = {
         "completados": estado_global["completados"].copy(),
         "cantidades_al_completar": estado_global["cantidades_al_completar"].copy(),
+        "productos_manuales": estado_global["productos_manuales"].copy(),
         "hora_corte_utc": estado_global["hora_corte_utc"]
     }
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
     estado_global["completados"].clear()
     estado_global["cantidades_al_completar"].clear()
+    estado_global["productos_manuales"].clear()
     estado_global["descartar_celebracion"] = False
     st.toast("Tablero limpiado", icon="ℹ️")
 
@@ -65,6 +68,7 @@ def restaurar_estado():
     if estado_global["respaldo"]:
         estado_global["completados"] = estado_global["respaldo"]["completados"].copy()
         estado_global["cantidades_al_completar"] = estado_global["respaldo"]["cantidades_al_completar"].copy()
+        estado_global["productos_manuales"] = estado_global["respaldo"]["productos_manuales"].copy()
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
         estado_global["descartar_celebracion"] = False
@@ -159,7 +163,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS CON TIPOGRAFÍA EXTRA GIGANTE
+# 3. ESTILOS CSS CON TIPOGRAFÍA GIGANTE
 # ==========================================
 st.markdown(f"""
     <style>
@@ -335,7 +339,7 @@ st.markdown(f"""
         min-width: 100px;
     }}
 
-    /* BOTÓN NATIVO INFERIOR CON TEXTO MUY VISIBLE */
+    /* BOTÓN NATIVO INFERIOR */
     div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) {{ margin-bottom: 16px !important; }}
     
     div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button {{
@@ -447,6 +451,10 @@ def renderizar_tablero():
                 cant_num = int(cantidad) if float(cantidad).is_integer() else cantidad
                 conteo_productos[nombre_completo] = conteo_productos.get(nombre_completo, 0) + cant_num
 
+    # FUSIONAR PRODUCTOS MANUALES AGREGADOS POR EL USUARIO
+    for prod_manual, cant_manual in estado_global["productos_manuales"].items():
+        conteo_productos[prod_manual] = conteo_productos.get(prod_manual, 0) + cant_manual
+
     tz_mexico = zoneinfo.ZoneInfo("America/Mexico_City")
     if ultima_hora_loyverse_utc:
         hora_sync_loyverse = ultima_hora_loyverse_utc.astimezone(tz_mexico).strftime("%H:%M:%S")
@@ -533,11 +541,26 @@ def renderizar_tablero():
 
     with col_hdr_right:
         with st.popover("OPCIONES", use_container_width=True):
+            st.markdown("### ➕ Agregar Producto Manual")
+            with st.form("form_agregar_manual", clear_on_submit=True):
+                nombre_manual = st.text_input("Nombre del producto")
+                cantidad_manual = st.number_input("Cantidad", min_value=1, value=1, step=1)
+                submit_manual = st.form_submit_button("Agregar al tablero")
+                
+                if submit_manual and nombre_manual.strip():
+                    prod_key = nombre_manual.strip().upper()
+                    estado_global["productos_manuales"][prod_key] = estado_global["productos_manuales"].get(prod_key, 0) + int(cantidad_manual)
+                    st.toast(f"Agregado: {prod_key} (+{cantidad_manual})", icon="✅")
+                    st.rerun()
+
+            st.markdown("---")
             st.markdown("### Acciones de Tablero")
             if st.button("Borrar todo", use_container_width=True):
                 borrar_todo()
+                st.rerun()
             if st.button("Restaurar", use_container_width=True):
                 restaurar_estado()
+                st.rerun()
 
     # LIMPIEZA DE NOTIFICACIONES EXPIRADAS (> 30 SEG)
     for prod, info in list(st.session_state.popups_nuevos.items()):
@@ -579,7 +602,7 @@ def renderizar_tablero():
             </div>
         """, unsafe_allow_html=True)
 
-        if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_pantalla_completa_cerrar"):
+        if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_pantalla_completa_cerrار"):
             estado_global["descartar_celebracion"] = True
             st.rerun()
 
@@ -640,7 +663,7 @@ def renderizar_tablero():
                                 </div>
                             """, unsafe_allow_html=True)
 
-                            # BOTÓN INFERIOR CON TEXTO CORRECTO
+                            # BOTÓN INFERIOR
                             st.button(
                                 texto_estado, 
                                 key=f"tarjeta_btn_{producto}", 
