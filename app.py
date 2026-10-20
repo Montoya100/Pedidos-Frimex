@@ -159,7 +159,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS ESTÁTICOS Y RESPONSIVOS
+# 3. ESTILOS CSS UNIFICADOS (TARJETA-BOTÓN)
 # ==========================================
 st.markdown(f"""
     <style>
@@ -188,7 +188,6 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* ESTRUCTURA BASE VISTA CELEBRACIÓN */
     .full-screen-celebracion {{
         background: linear-gradient(180deg, #161219 0%, #0c0d12 100%);
         border: 2px solid #f97316;
@@ -209,19 +208,9 @@ st.markdown(f"""
             padding: 60px 40px !important;
             justify-content: center !important;
         }}
-        .img-celebracion-logo {{
-            height: 150px !important;
-            margin-bottom: 24px !important;
-        }}
-        .txt-celebracion-titulo {{
-            font-size: 42px !important;
-            letter-spacing: 3px !important;
-            margin-bottom: 12px !important;
-        }}
-        .txt-celebracion-sub {{
-            font-size: 20px !important;
-            margin-bottom: 36px !important;
-        }}
+        .img-celebracion-logo {{ height: 150px !important; margin-bottom: 24px !important; }}
+        .txt-celebracion-titulo {{ font-size: 42px !important; letter-spacing: 3px !important; margin-bottom: 12px !important; }}
+        .txt-celebracion-sub {{ font-size: 20px !important; margin-bottom: 36px !important; }}
         div[data-testid="stElementContainer"]:has(button[key="btn_pantalla_completa_cerrar"]) {{
             max-width: 280px !important;
             margin: 0 auto !important;
@@ -270,8 +259,8 @@ st.markdown(f"""
 
     .txt-incremento {{
         display: inline-block; background-color: #1e3a8a; color: #93c5fd;
-        font-size: 18px !important; font-weight: 900 !important; padding: 2px 8px;
-        border-radius: 6px; margin-left: 6px; border: 1px solid #3b82f6;
+        font-size: 14px !important; font-weight: 900 !important; padding: 1px 6px;
+        border-radius: 4px; margin-left: 4px; border: 1px solid #3b82f6; vertical-align: middle;
     }}
 
     .metrics-row {{
@@ -302,38 +291,6 @@ st.markdown(f"""
     .divider-completados::before, .divider-completados::after {{ content: ''; flex: 1; border-bottom: 1px solid #10b981; opacity: 0.3; }}
     .divider-completados span {{ padding: 0 12px; background-color: #0b0d13; }}
 
-    .card-box-img {{
-        border-radius: 10px; height: 85px !important; display: flex; align-items: center; justify-content: center;
-        text-align: center; padding: 0 10px; font-size: 22px !important; font-weight: 900 !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.35); white-space: normal; word-wrap: break-word; line-height: 1.15; margin-bottom: 6px;
-    }}
-
-    .num-box-masivo {{
-        border-radius: 10px; height: 85px !important; display: flex; align-items: center; justify-content: center;
-        font-family: 'JetBrains Mono', monospace !important; font-size: 52px !important; font-weight: 900 !important;
-        line-height: 1 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.4); margin-bottom: 6px; user-select: none;
-    }}
-
-    .num-box-pendiente {{ background: #dc2626 !important; color: #ffffff !important; border: 1px solid #ef4444 !important; }}
-    .num-box-completado {{ background: #059669 !important; color: #ffffff !important; opacity: 0.75; border: 1px solid #10b981 !important; }}
-    .num-box-reciente {{ background: #2563eb !important; color: #ffffff !important; border: 1px solid #60a5fa !important; }}
-
-    .card-pendiente {{ background: #ef4444 !important; color: #ffffff !important; border: 1px solid #f87171 !important; }}
-    .card-completado {{ background: #10b981 !important; color: #ffffff !important; border: 1px solid #34d399 !important; opacity: 0.75; }}
-    .card-nueva-orden {{ background: #2563eb !important; color: #ffffff !important; border: 2px solid #60a5fa !important; }}
-
-    /* ESTILOS PARA LOS BOTONES DE ESTADO DEBAJO DE LA TARJETA */
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{ margin-top: -6px !important; margin-bottom: 14px !important; }}
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
-        height: 38px !important; min-height: 38px !important; background-color: #161922 !important;
-        border: 1px solid #2a2e39 !important; border-radius: 8px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
-        width: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important;
-    }}
-
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button * {{
-        font-size: 11px !important; font-weight: 900 !important; letter-spacing: 1.5px !important; text-transform: uppercase !important; color: #94a3b8 !important;
-    }}
-
     div[data-testid="stPopover"] button {{
         height: 36px !important; font-size: 12px !important; font-weight: 800 !important; background-color: #141822 !important; color: #94a3b8 !important; border: 1px solid #232936 !important; border-radius: 8px !important;
     }}
@@ -344,14 +301,90 @@ st.markdown(f"""
 
     .footer-sutil span {{ color: #10b981 !important; font-weight: 900 !important; }}
 
-    /* VERSIÓN MÓVIL SIN MODIFICACIONES ADICIONALES */
+    /* CONVERTIMOS EL BOTÓN NATIVO EN LA TARJETA-BLOQUE UNIFICADA */
+    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) {{ margin-bottom: 14px !important; }}
+    
+    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button {{
+        height: 125px !important;
+        min-height: 125px !important;
+        width: 100% !important;
+        border-radius: 12px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 10px 14px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+        transition: transform 0.1s ease !important;
+    }}
+
+    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button:active {{
+        transform: scale(0.98) !important;
+    }}
+
+    /* COLORES Y ESTADOS DE LOS BOTONES UNIFICADOS */
+    /* PENDIENTE (Rojo) */
+    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"][data-baseweb]? ) button {{ /* fallback */ }}
+    /* Como Streamlit asigna dinámicamente clases, estilizamos por el tipo primary/secondary o selector general de botones de tarjeta */
+    
+    /* Estilos específicos para los textos internos de la tarjeta unificada (manejados vía HTML en el label del botón) */
+    .card-content-wrapper {{
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        height: 100%;
+    }}
+    .card-top-row {{
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+    }}
+    .card-title-text {{
+        font-size: 16px !important;
+        font-weight: 900 !important;
+        text-transform: uppercase !important;
+        text-align: left !important;
+        line-height: 1.15 !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        flex: 1;
+    }}
+    .card-num-text {{
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 38px !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+    }}
+    .card-status-badge {{
+        font-size: 10px !important;
+        font-weight: 900 !important;
+        letter-spacing: 2px !important;
+        text-transform: uppercase !important;
+        padding: 4px 12px;
+        border-radius: 6px;
+        width: 100%;
+        text-align: center;
+        margin-top: 4px;
+    }}
+
+    /* VARIANTES DE COLOR PARA LAS TARJETAS */
+    /* 1. Pendiente */
+    button[key*="tarjeta_btn_"] {{ background-color: #dc2626 !important; border: 1px solid #ef4444 !important; color: #ffffff !important; }}
+    /* Nota: para distinguir estados de forma precisa con selectores de atributos en Streamlit, usamos clases o la lógica de renderizado */
+
+    /* VERSIÓN MÓVIL */
     @media (max-width: 768px) {{
         .block-container {{ padding-left: 6px !important; padding-right: 6px !important; }}
         div[data-testid="column"] {{ width: 100% !important; flex: 1 1 100% !important; margin-bottom: 4px !important; }}
         div[data-testid="stHorizontalBlock"] {{ flex-direction: row !important; width: 100% !important; gap: 6px !important; }}
         .clocks-group {{ display: none !important; }}
-        .card-box-img {{ font-size: 20px !important; height: 80px !important; }}
-        .num-box-masivo {{ font-size: 46px !important; height: 80px !important; }}
         
         .header-logo-container {{
             flex-direction: row !important;
@@ -368,9 +401,7 @@ st.markdown(f"""
         .sub-brand-line {{ font-size: 10px !important; }}
         .pct-avance {{ font-size: 11px !important; }}
 
-        .full-screen-celebracion {{
-            padding: 28px 16px 20px 16px !important;
-        }}
+        .full-screen-celebracion {{ padding: 28px 16px 20px 16px !important; }}
         .img-celebracion-logo {{ height: 100px !important; margin-bottom: 16px !important; }}
         .txt-celebracion-titulo {{ font-size: 28px !important; margin-bottom: 8px !important; }}
         .txt-celebracion-sub {{ font-size: 16px !important; margin-bottom: 24px !important; }}
@@ -575,7 +606,7 @@ def renderizar_tablero():
             estado_global["descartar_celebracion"] = True
             st.rerun()
 
-    # RENDERIZADO DE TARJETAS DE PRODUCTOS (DISTRIBUCIÓN VERTICAL)
+    # RENDERIZADO DE TARJETAS UNIFICADAS (TODO EL RECUADRO ES EL BOTÓN)
     else:
         if conteo_productos:
             activos = []
@@ -607,53 +638,36 @@ def renderizar_tablero():
                                 es_reciente = True
 
                             if es_reciente:
-                                clase_estado = "card-nueva-orden"
-                                clase_num_box = "num-box-reciente"
+                                tipo_btn = "primary"
                                 texto_estado = "NUEVO"
                             elif es_completado:
-                                clase_estado = "card-completado"
-                                clase_num_box = "num-box-completado"
+                                tipo_btn = "secondary"
                                 texto_estado = "TERMINADO"
                             else:
-                                clase_estado = "card-pendiente"
-                                clase_num_box = "num-box-pendiente"
+                                tipo_btn = "primary"
                                 texto_estado = "PENDIENTE"
 
                             valor_mostrar = "∞" if cant_mostrar == 1 else str(cant_mostrar)
 
                             info_popup = st.session_state.popups_nuevos.get(producto)
-                            clase_pulso = ""
                             html_incremento = ""
                             if info_popup and not es_completado:
                                 inc = info_popup["incremento"]
-                                clase_pulso = "anim-pulso-nuevo"
                                 html_incremento = f'<span class="txt-incremento">+{inc}</span>'
 
-                            # TARJETA SUPERIOR (NOMBRE Y CANTIDAD JUNTOS EN FILA)
-                            col_txt, col_num = st.columns([0.6, 0.4], gap="small")
+                            # CONSTRUCCIÓN DEL ETIQUETADO INTERNO PARA EL BOTÓN UNIFICADO
+                            label_boton = f"{producto} {html_incremento} | CANT: {valor_mostrar} | [{texto_estado}]"
 
-                            with col_txt:
-                                st.markdown(f"""
-                                    <div class="card-box-img {clase_estado} {clase_pulso}">
-                                        {producto} {html_incremento}
-                                    </div>
-                                """, unsafe_allow_html=True)
-
-                            with col_num:
-                                st.markdown(f"""
-                                    <div class="num-box-masivo {clase_num_box} {clase_pulso}">
-                                        {valor_mostrar}
-                                    </div>
-                                """, unsafe_allow_html=True)
-                            
-                            # BOTÓN DE ESTADO UBICADO ABAJO (OCUPA TODO EL ANCHO)
-                            st.button(
-                                texto_estado, 
-                                key=f"num_btn_{producto}", 
+                            # EL BOTÓN COMPLETO HACE LA VEZ DE TARJETA INTERACTIVA
+                            if st.button(
+                                label_boton, 
+                                key=f"tarjeta_btn_{producto}", 
                                 on_click=alternar_estado, 
                                 args=(producto, cant_total),
-                                use_container_width=True
-                            )
+                                use_container_width=True,
+                                type=tipo_btn
+                            ):
+                                pass
 
             if activos:
                 renderizar_lista_productos(activos)
