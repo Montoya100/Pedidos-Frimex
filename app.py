@@ -43,7 +43,7 @@ def obtener_estado_global():
         "completados": set(),
         "cantidades_al_completar": {},
         "productos_manuales": {},  # Guardado persistente {nombre: cantidad}
-        "nota_tablero": "",        # Nota persistente
+        "notas_tablero": ["", "", ""], # Hasta 3 notas independientes
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False
@@ -56,14 +56,14 @@ def borrar_todo():
         "completados": estado_global["completados"].copy(),
         "cantidades_al_completar": estado_global["cantidades_al_completar"].copy(),
         "productos_manuales": estado_global["productos_manuales"].copy(),
-        "nota_tablero": estado_global["nota_tablero"],
+        "notas_tablero": estado_global["notas_tablero"].copy(),
         "hora_corte_utc": estado_global["hora_corte_utc"]
     }
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
     estado_global["completados"].clear()
     estado_global["cantidades_al_completar"].clear()
     estado_global["productos_manuales"].clear()
-    estado_global["nota_tablero"] = ""
+    estado_global["notas_tablero"] = ["", "", ""]
     estado_global["descartar_celebracion"] = False
     st.toast("Tablero limpiado correctamente", icon="ℹ️")
 
@@ -72,7 +72,7 @@ def restaurar_estado():
         estado_global["completados"] = estado_global["respaldo"]["completados"].copy()
         estado_global["cantidades_al_completar"] = estado_global["respaldo"]["cantidades_al_completar"].copy()
         estado_global["productos_manuales"] = estado_global["respaldo"]["productos_manuales"].copy()
-        estado_global["nota_tablero"] = estado_global["respaldo"]["nota_tablero"]
+        estado_global["notas_tablero"] = estado_global["respaldo"]["notas_tablero"].copy()
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
         estado_global["descartar_celebracion"] = False
@@ -167,7 +167,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS CON BANNER "NOTA" Y FUENTES GIGANTES
+# 3. ESTILOS CSS CON NUEVO BANNER AZUL ACERO Y FUENTES GIGANTES
 # ==========================================
 st.markdown(f"""
     <style>
@@ -196,21 +196,21 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* BANNER DE NOTA LIMPIO Y ELEGANTE */
+    /* BANNER DE NOTA EN AZUL ACERO ELEGANTE */
     .banner-notas-container {{
-        background: linear-gradient(90deg, #1e1b4b 0%, #2e1065 100%);
-        border: 2px solid #a855f7;
+        background: linear-gradient(90deg, #0f172a 100%, #1e293b 100%);
+        border: 2px solid #0284c7;
         border-radius: 12px;
         padding: 12px 20px;
-        margin-bottom: 12px;
-        box-shadow: 0 4px 20px rgba(168, 85, 247, 0.35);
+        margin-bottom: 10px;
+        box-shadow: 0 4px 16px rgba(2, 132, 199, 0.25);
         display: flex;
         align-items: center;
         gap: 14px;
     }}
 
     .banner-notas-tag {{
-        background: #a855f7;
+        background: #0284c7;
         color: #ffffff;
         font-weight: 900;
         font-size: 13px !important;
@@ -222,7 +222,7 @@ st.markdown(f"""
     }}
 
     .banner-notas-text {{
-        color: #f3e8ff;
+        color: #e0f2fe;
         font-size: 22px !important;
         font-weight: 800 !important;
         line-height: 1.25;
@@ -457,9 +457,9 @@ def obtener_recibos_hoy():
     return todos_los_recibos
 
 # ==========================================
-# 5. TABLERO DE PEDIDOS EN TIEMPO REAL
+# 5. TABLERO DE PEDIDOS EN TIEMPO REAL (CADA 5 SEGUNDOS)
 # ==========================================
-@st.fragment(run_every=10)
+@st.fragment(run_every=5)
 def renderizar_tablero():
     recibos = obtener_recibos_hoy()
     conteo_productos = {}
@@ -579,24 +579,27 @@ def renderizar_tablero():
 
     with col_hdr_right:
         with st.popover("OPCIONES", use_container_width=True):
-            # SECCIÓN: NOTA DEL TABLERO
-            st.markdown("### Notas")
-            with st.form("form_nota_tablero", clear_on_submit=False):
-                texto_nota_input = st.text_area("Indicación para cocina", value=estado_global["nota_tablero"], placeholder="Ej. Dar prioridad a cacahuates garrapiñados")
+            # SECCIÓN: GESTIÓN DE HASTA 3 NOTAS INDEPENDIENTES
+            st.markdown("### Notas del Tablero")
+            with st.form("form_notas_tablero", clear_on_submit=False):
+                n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="Ej. Lote 1 con extra sal")
+                n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="Ej. Prioridad pedidos para llevar")
+                n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="Ej. Limpiar área al terminar")
+                
                 col_n1, col_n2 = st.columns(2)
                 with col_n1:
-                    btn_guardar_nota = st.form_submit_button("Guardar Nota", use_container_width=True)
+                    btn_guardar_notas = st.form_submit_button("Guardar Notas", use_container_width=True)
                 with col_n2:
-                    btn_limpiar_nota = st.form_submit_button("Limpiar Nota", use_container_width=True)
+                    btn_limpiar_notas = st.form_submit_button("Limpiar Todas", use_container_width=True)
 
-                if btn_guardar_nota:
-                    estado_global["nota_tablero"] = texto_nota_input.strip()
-                    st.toast("Nota guardada en el tablero", icon="✅")
+                if btn_guardar_notas:
+                    estado_global["notas_tablero"] = [n1.strip(), n2.strip(), n3.strip()]
+                    st.toast("Notas actualizadas en el tablero", icon="✅")
                     st.rerun()
 
-                if btn_limpiar_nota:
-                    estado_global["nota_tablero"] = ""
-                    st.toast("Nota eliminada", icon="ℹ️")
+                if btn_limpiar_notas:
+                    estado_global["notas_tablero"] = ["", "", ""]
+                    st.toast("Todas las notas fueron eliminadas", icon="ℹ️")
                     st.rerun()
 
             st.markdown("---")
@@ -650,14 +653,15 @@ def renderizar_tablero():
                 restaurar_estado()
                 st.rerun()
 
-    # BANNER VISUAL CON ETIQUETA "NOTA"
-    if estado_global["nota_tablero"]:
-        st.markdown(f"""
-            <div class="banner-notas-container">
-                <div class="banner-notas-tag">NOTA</div>
-                <div class="banner-notas-text">{estado_global["nota_tablero"]}</div>
-            </div>
-        """, unsafe_allow_html=True)
+    # RENDERIZAR LOS BANNERS DE NOTAS ACTIVAS (HASTA 3)
+    for idx_n, nota_txt in enumerate(estado_global["notas_tablero"]):
+        if nota_txt:
+            st.markdown(f"""
+                <div class="banner-notas-container">
+                    <div class="banner-notas-tag">NOTA {idx_n + 1}</div>
+                    <div class="banner-notas-text">{nota_txt}</div>
+                </div>
+            """, unsafe_allow_html=True)
 
     # LIMPIEZA DE NOTIFICACIONES EXPIRADAS (> 30 SEG)
     for prod, info in list(st.session_state.popups_nuevos.items()):
