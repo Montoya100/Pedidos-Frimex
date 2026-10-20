@@ -203,7 +203,6 @@ st.markdown(f"""
         justify-content: center;
     }}
 
-    /* AJUSTES EXCLUSIVOS PARA PANTALLAS HORIZONTALES / ESCRITORIO */
     @media (min-width: 769px) {{
         .full-screen-celebracion {{
             min-height: 65vh !important;
@@ -223,7 +222,6 @@ st.markdown(f"""
             font-size: 20px !important;
             margin-bottom: 36px !important;
         }}
-        /* BOTÓN MÁS ANGOSTO Y CENTRADO EN HORIZONTAL */
         div[data-testid="stElementContainer"]:has(button[key="btn_pantalla_completa_cerrar"]) {{
             max-width: 280px !important;
             margin: 0 auto !important;
@@ -305,14 +303,14 @@ st.markdown(f"""
     .divider-completados span {{ padding: 0 12px; background-color: #0b0d13; }}
 
     .card-box-img {{
-        border-radius: 10px; height: 100px !important; display: flex; align-items: center; justify-content: center;
-        text-align: center; padding: 0 12px; font-size: 28px !important; font-weight: 900 !important;
+        border-radius: 10px; height: 85px !important; display: flex; align-items: center; justify-content: center;
+        text-align: center; padding: 0 10px; font-size: 22px !important; font-weight: 900 !important;
         box-shadow: 0 4px 10px rgba(0,0,0,0.35); white-space: normal; word-wrap: break-word; line-height: 1.15; margin-bottom: 6px;
     }}
 
     .num-box-masivo {{
-        border-radius: 10px; height: 100px !important; display: flex; align-items: center; justify-content: center;
-        font-family: 'JetBrains Mono', monospace !important; font-size: 66px !important; font-weight: 900 !important;
+        border-radius: 10px; height: 85px !important; display: flex; align-items: center; justify-content: center;
+        font-family: 'JetBrains Mono', monospace !important; font-size: 52px !important; font-weight: 900 !important;
         line-height: 1 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.4); margin-bottom: 6px; user-select: none;
     }}
 
@@ -324,14 +322,16 @@ st.markdown(f"""
     .card-completado {{ background: #10b981 !important; color: #ffffff !important; border: 1px solid #34d399 !important; opacity: 0.75; }}
     .card-nueva-orden {{ background: #2563eb !important; color: #ffffff !important; border: 2px solid #60a5fa !important; }}
 
-    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{ height: 100px !important; margin-top: -106px !important; }}
+    /* ESTILOS PARA LOS BOTONES DE ESTADO DEBAJO DE LA TARJETA */
+    div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{ margin-top: -6px !important; margin-bottom: 14px !important; }}
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{
-        height: 100px !important; min-height: 100px !important; background-color: transparent !important;
-        border: none !important; box-shadow: none !important; display: flex !important; align-items: flex-end !important; justify-content: center !important; padding-bottom: 8px !important;
+        height: 38px !important; min-height: 38px !important; background-color: #161922 !important;
+        border: 1px solid #2a2e39 !important; border-radius: 8px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
+        width: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important;
     }}
 
     div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button * {{
-        font-size: 11px !important; font-weight: 900 !important; letter-spacing: 1.5px !important; text-transform: uppercase !important; color: #ffffff !important; opacity: 0.95 !important;
+        font-size: 11px !important; font-weight: 900 !important; letter-spacing: 1.5px !important; text-transform: uppercase !important; color: #94a3b8 !important;
     }}
 
     div[data-testid="stPopover"] button {{
@@ -344,16 +344,14 @@ st.markdown(f"""
 
     .footer-sutil span {{ color: #10b981 !important; font-weight: 900 !important; }}
 
-    /* VERSIÓN MÓVIL SIN MODIFICACIONES */
+    /* VERSIÓN MÓVIL SIN MODIFICACIONES ADICIONALES */
     @media (max-width: 768px) {{
         .block-container {{ padding-left: 6px !important; padding-right: 6px !important; }}
         div[data-testid="column"] {{ width: 100% !important; flex: 1 1 100% !important; margin-bottom: 4px !important; }}
         div[data-testid="stHorizontalBlock"] {{ flex-direction: row !important; width: 100% !important; gap: 6px !important; }}
         .clocks-group {{ display: none !important; }}
-        .card-box-img {{ font-size: 22px !important; height: 90px !important; }}
-        .num-box-masivo {{ font-size: 50px !important; height: 90px !important; }}
-        div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) {{ height: 90px !important; margin-top: -96px !important; }}
-        div[data-testid="stElementContainer"]:has(button[key^="num_btn_"]) button {{ height: 90px !important; min-height: 90px !important; }}
+        .card-box-img {{ font-size: 20px !important; height: 80px !important; }}
+        .num-box-masivo {{ font-size: 46px !important; height: 80px !important; }}
         
         .header-logo-container {{
             flex-direction: row !important;
@@ -559,7 +557,7 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # VISTA DE CELEBRACIÓN CON DENSIDAD RESPONSIVA
+    # VISTA DE CELEBRACIÓN
     if conteo_productos and piezas_pendientes == 0 and not estado_global["descartar_celebracion"]:
         if not st.session_state.reproducido_modal_audio:
             reproducir_sonido_celebracion()
@@ -569,16 +567,15 @@ def renderizar_tablero():
             <div class="full-screen-celebracion">
                 <img src="{LOGO_URL}" class="img-celebracion-logo" style="width: auto; filter: drop-shadow(0 6px 20px rgba(249, 115, 22, 0.7));" alt="Logo">
                 <h2 class="txt-celebracion-titulo" style="color: #fb923c; font-weight: 900; text-transform: uppercase;">PRODUCCIÓN FINALIZADA</h2>
-                <p class="txt-celebracion-sub" style="color: #94a3b8; font-weight: 700;">Se han completado todos los pedidos pendientes !BUEN TRABAJO EN EQUIPO¡.</p>
+                <p class="txt-celebracion-sub" style="color: #94a3b8; font-weight: 700;">Se han completado todos los pedidos pendientes.</p>
             </div>
         """, unsafe_allow_html=True)
 
-        # BOTÓN CON ANCHO CONTROLADO EN HORIZONTAL
         if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_pantalla_completa_cerrar"):
             estado_global["descartar_celebracion"] = True
             st.rerun()
 
-    # RENDERIZADO DE TARJETAS DE PRODUCTOS
+    # RENDERIZADO DE TARJETAS DE PRODUCTOS (DISTRIBUCIÓN VERTICAL)
     else:
         if conteo_productos:
             activos = []
@@ -632,7 +629,8 @@ def renderizar_tablero():
                                 clase_pulso = "anim-pulso-nuevo"
                                 html_incremento = f'<span class="txt-incremento">+{inc}</span>'
 
-                            col_txt, col_btn = st.columns([0.75, 0.25], gap="small")
+                            # TARJETA SUPERIOR (NOMBRE Y CANTIDAD JUNTOS EN FILA)
+                            col_txt, col_num = st.columns([0.6, 0.4], gap="small")
 
                             with col_txt:
                                 st.markdown(f"""
@@ -641,20 +639,21 @@ def renderizar_tablero():
                                     </div>
                                 """, unsafe_allow_html=True)
 
-                            with col_btn:
+                            with col_num:
                                 st.markdown(f"""
                                     <div class="num-box-masivo {clase_num_box} {clase_pulso}">
                                         {valor_mostrar}
                                     </div>
                                 """, unsafe_allow_html=True)
-                                
-                                st.button(
-                                    texto_estado, 
-                                    key=f"num_btn_{producto}", 
-                                    on_click=alternar_estado, 
-                                    args=(producto, cant_total),
-                                    use_container_width=True
-                                )
+                            
+                            # BOTÓN DE ESTADO UBICADO ABAJO (OCUPA TODO EL ANCHO)
+                            st.button(
+                                texto_estado, 
+                                key=f"num_btn_{producto}", 
+                                on_click=alternar_estado, 
+                                args=(producto, cant_total),
+                                use_container_width=True
+                            )
 
             if activos:
                 renderizar_lista_productos(activos)
