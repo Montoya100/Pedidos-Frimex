@@ -694,15 +694,15 @@ def renderizar_tablero():
             # SECCIÓN: GESTIÓN DE HASTA 3 NOTAS INDEPENDIENTES
             st.markdown("### Notas del Tablero")
             with st.form("form_notas_tablero", clear_on_submit=False):
-                n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. LOTE 1 CON EXTRA SAL")
-                n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD PEDIDOS PARA LLEVAR")
+                n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. PONER ETIQUETA A CHURRITO")
+                n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD A PEDIDOS")
                 n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="EJ. LIMPIAR ÁREA AL TERMINAR")
                 
                 col_n1, col_n2 = st.columns(2)
                 with col_n1:
-                    btn_guardar_notas = st.form_submit_button("Guardar Notas", use_container_width=True)
+                    btn_guardar_notas = st.form_submit_button("Guardar", use_container_width=True)
                 with col_n2:
-                    btn_limpiar_notas = st.form_submit_button("Limpiar Todas", use_container_width=True)
+                    btn_limpiar_notas = st.form_submit_button("Borrar", use_container_width=True)
 
                 if btn_guardar_notas:
                     nuevas_notas = [n1.strip().upper(), n2.strip().upper(), n3.strip().upper()]
@@ -723,7 +723,7 @@ def renderizar_tablero():
 
             st.markdown("---")
             # SECCIÓN: AGREGAR PRODUCTO MANUAL
-            st.markdown("### Agregar Producto Manual")
+            st.markdown("### Agregar Producto")
             with st.form("form_agregar_manual", clear_on_submit=True):
                 nombre_manual = st.text_input("Nombre del producto")
                 cantidad_manual = st.number_input("Cantidad", min_value=1, value=1, step=1)
@@ -738,7 +738,7 @@ def renderizar_tablero():
             # SECCIÓN: EDICIÓN / BORRADO DE PRODUCTOS MANUALES
             if estado_global["productos_manuales"]:
                 st.markdown("---")
-                st.markdown("### Modificar Productos Manuales")
+                st.markdown("### Modificar")
                 for p_nombre, p_cant in list(estado_global["productos_manuales"].items()):
                     st.markdown(f"**{p_nombre}** (Actual: {p_cant})")
                     
