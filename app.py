@@ -159,7 +159,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS CON TIPOGRAFÍA GIGANTE A DISTANCIA
+# 3. ESTILOS CSS ESTÉTICOS Y GIGANTES
 # ==========================================
 st.markdown(f"""
     <style>
@@ -259,8 +259,8 @@ st.markdown(f"""
 
     .txt-incremento {{
         display: inline-block; background-color: #1e3a8a; color: #93c5fd;
-        font-size: 20px !important; font-weight: 900 !important; padding: 2px 10px;
-        border-radius: 6px; margin-left: 8px; border: 1px solid #3b82f6; vertical-align: middle;
+        font-size: 18px !important; font-weight: 900 !important; padding: 2px 8px;
+        border-radius: 6px; margin-left: 6px; border: 1px solid #3b82f6; vertical-align: middle;
     }}
 
     .metrics-row {{
@@ -301,50 +301,46 @@ st.markdown(f"""
 
     .footer-sutil span {{ color: #10b981 !important; font-weight: 900 !important; }}
 
-    /* TARJETA UNIFICADA CON BLOQUE VISUAL GIGANTE Y NÚMEROS ENORMES */
+    /* TARJETA MAESTRA CON DISTRIBUCIÓN 75% TÍTULO / 25% CANTIDAD GIGANTE */
     .card-master-container {{
         border-radius: 14px;
-        padding: 16px 20px;
+        padding: 14px 16px;
         margin-bottom: 6px;
         box-shadow: 0 6px 18px rgba(0,0,0,0.5);
         display: flex;
-        flex-direction: column;
+        align-items: center;
         justify-content: space-between;
-        min-height: 145px;
+        min-height: 110px;
     }}
 
     .card-master-pendiente {{ background: #dc2626 !important; border: 2px solid #ef4444 !important; color: #ffffff !important; }}
     .card-master-completado {{ background: #059669 !important; border: 2px solid #10b981 !important; color: #ffffff !important; opacity: 0.8; }}
     .card-master-reciente {{ background: #2563eb !important; border: 2px solid #60a5fa !important; color: #ffffff !important; }}
 
-    .card-master-top {{
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 12px;
-    }}
-
     .card-master-title {{
-        font-size: 24px !important;
+        font-size: 26px !important;
         font-weight: 900 !important;
         text-transform: uppercase !important;
         line-height: 1.15 !important;
+        flex: 1;
+        padding-right: 10px;
     }}
 
     .card-master-num {{
         font-family: 'JetBrains Mono', monospace !important;
-        font-size: 56px !important;
+        font-size: 64px !important;
         font-weight: 900 !important;
         line-height: 1 !important;
-        text-align: right;
+        text-align: center;
+        min-width: 90px;
     }}
 
-    /* BOTÓN DEBAJO DE LA TARJETA GIGANTE */
+    /* BOTÓN NATIVO INFERIOR CON ETIQUETA CORTA */
     div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) {{ margin-bottom: 16px !important; }}
     
     div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button {{
-        height: 42px !important;
-        min-height: 42px !important;
+        height: 40px !important;
+        min-height: 40px !important;
         width: 100% !important;
         border-radius: 8px !important;
         background-color: #161922 !important;
@@ -352,7 +348,7 @@ st.markdown(f"""
         color: #ffffff !important;
         font-weight: 900 !important;
         font-size: 13px !important;
-        letter-spacing: 1.5px !important;
+        letter-spacing: 2px !important;
         text-transform: uppercase !important;
     }}
 
@@ -384,8 +380,8 @@ st.markdown(f"""
         .txt-celebracion-sub {{ font-size: 16px !important; margin-bottom: 24px !important; }}
         
         .card-master-title {{ font-size: 20px !important; }}
-        .card-master-num {{ font-size: 46px !important; }}
-        .card-master-container {{ min-height: 125px !important; padding: 12px 14px !important; }}
+        .card-master-num {{ font-size: 50px !important; }}
+        .card-master-container {{ min-height: 95px !important; padding: 10px 12px !important; }}
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -587,7 +583,7 @@ def renderizar_tablero():
             estado_global["descartar_celebracion"] = True
             st.rerun()
 
-    # RENDERIZADO DE TARJETAS CON TEXTO GIGANTE Y LEGIBLE A DISTANCIA
+    # RENDERIZADO DE TARJETAS MAESTRAS (TÍTULO GRANDE + CANTIDAD ENORME + BOTÓN CORTO ABAJO)
     else:
         if conteo_productos:
             activos = []
@@ -620,13 +616,13 @@ def renderizar_tablero():
 
                             if es_reciente:
                                 clase_css = "card-master-reciente anim-pulso-nuevo"
-                                texto_estado = "MARCAR COMO TERMINADO"
+                                texto_estado = "TERMINADO"
                             elif es_completado:
                                 clase_css = "card-master-completado"
-                                texto_estado = "TERMINADO (CLIC PARA REABRIR)"
+                                texto_estado = "PENDIENTE"
                             else:
                                 clase_css = "card-master-pendiente"
-                                texto_estado = "MARCAR COMO TERMINADO"
+                                texto_estado = "TERMINADO"
 
                             valor_mostrar = "∞" if cant_mostrar == 1 else str(cant_mostrar)
 
@@ -636,17 +632,15 @@ def renderizar_tablero():
                                 inc = info_popup["incremento"]
                                 html_incremento = f'<span class="txt-incremento">+{inc}</span>'
 
-                            # BLOQUE VISUAL GIGANTE (HTML PURO SEGURO)
+                            # CONTENEDOR VISUAL DE LA TARJETA CON TÍTULO Y NÚMERO GIGANTE
                             st.markdown(f"""
                                 <div class="card-master-container {clase_css}">
-                                    <div class="card-master-top">
-                                        <div class="card-master-title">{producto} {html_incremento}</div>
-                                    </div>
+                                    <div class="card-master-title">{producto} {html_incremento}</div>
                                     <div class="card-master-num">{valor_mostrar}</div>
                                 </div>
                             """, unsafe_allow_html=True)
 
-                            # BOTÓN NATIVO DEBAJO PARA ASEGURAR ACCIÓN INMEDIATA
+                            # BOTÓN INFERIOR CON ETIQUETA CORTA
                             st.button(
                                 texto_estado, 
                                 key=f"tarjeta_btn_{producto}", 
