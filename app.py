@@ -204,7 +204,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS (ANIMACIÓN DE NOTAS Y TACHADO EN COMPLETADOS)
+# 3. ESTILOS CSS (LOGOS, TÍTULOS AMPLIADOS Y OCULTAR MARCA STREAMLIT)
 # ==========================================
 st.markdown(f"""
     <style>
@@ -221,9 +221,13 @@ st.markdown(f"""
     }}
 
     .stApp {{ background-color: #0b0d13 !important; }}
-    #MainMenu {{visibility: hidden;}}
-    footer {{visibility: hidden;}}
-    header {{visibility: hidden;}}
+    
+    /* OCULTAR MENÚ, FOOTER, HEADER Y BRANDING DE STREAMLIT */
+    #MainMenu {{ visibility: hidden !important; display: none !important; }}
+    footer {{ visibility: hidden !important; display: none !important; }}
+    header {{ visibility: hidden !important; display: none !important; }}
+    .stAppDeployButton {{ display: none !important; }}
+    div[data-testid="stToolbar"] {{ display: none !important; }}
     
     .block-container {{
         padding-top: 0.4rem !important; 
@@ -313,16 +317,18 @@ st.markdown(f"""
         margin-bottom: 8px; width: 100%; padding: 0 4px; flex-wrap: nowrap; gap: 8px;
     }}
     
-    .header-left-group {{ display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }}
-    .header-logo-img {{ height: 48px !important; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); display: block !important; }}
+    .header-left-group {{ display: flex; align-items: center; gap: 12px; flex-wrap: nowrap; }}
+    
+    /* LOGO Y TÍTULO AMPLIADOS UN 15% */
+    .header-logo-img {{ height: 56px !important; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); display: block !important; }}
 
     .header-title {{
-        color: #ffffff; font-weight: 900; font-size: 20px !important;
-        line-height: 1.1; letter-spacing: 1px; margin: 0; padding: 0; white-space: nowrap;
+        color: #ffffff; font-weight: 900; font-size: 23px !important;
+        line-height: 1.1; letter-spacing: 1.2px; margin: 0; padding: 0; white-space: nowrap;
         text-transform: uppercase;
     }}
 
-    .sub-brand-line {{ display: flex; align-items: center; gap: 8px; font-size: 11px; color: #64748b; font-weight: 800; letter-spacing: 1px; }}
+    .sub-brand-line {{ display: flex; align-items: center; gap: 8px; font-size: 12px; color: #64748b; font-weight: 800; letter-spacing: 1px; }}
     .sync-text-inline {{ color: #38bdf8; font-weight: 700; }}
     .clocks-group {{ display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }}
 
@@ -406,7 +412,7 @@ st.markdown(f"""
 
     .card-master-pendiente {{ background: #dc2626 !important; border: 2px solid #ef4444 !important; color: #ffffff !important; }}
     
-    /* TARJETA COMPLETADA CON TEXTO Y CANTIDAD TACHADOS (EFECTO RAYADO FÍSICO) */
+    /* TARJETA COMPLETADA CON TACHADO AUTOMÁTICO */
     .card-master-completado {{ background: #059669 !important; border: 2px solid #10b981 !important; color: #ffffff !important; opacity: 0.75; }}
     .card-master-completado .card-master-title,
     .card-master-completado .card-master-num {{
@@ -466,11 +472,11 @@ st.markdown(f"""
             padding: 0 2px !important;
         }}
         .header-logo-img {{
-            height: 38px !important;
+            height: 44px !important;
             display: block !important;
             visibility: visible !important;
         }}
-        .header-title {{ font-size: 14px !important; }}
+        .header-title {{ font-size: 16px !important; }}
         .sub-brand-line {{ font-size: 10px !important; }}
         .pct-avance {{ font-size: 11px !important; }}
 
