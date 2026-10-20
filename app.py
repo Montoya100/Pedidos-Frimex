@@ -204,7 +204,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS (BLOQUEO TOTAL DE MARCA DE AGUA STREAMLIT)
+# 3. ESTILOS CSS Y SCRIPT LIMPIADOR DE STREAMLIT
 # ==========================================
 st.markdown(f"""
     <style>
@@ -222,13 +222,12 @@ st.markdown(f"""
 
     .stApp {{ background-color: #0b0d13 !important; }}
     
-    /* REGLAS REFORZADAS PARA OCULTAR COMPLETAMENTE LA MARCA DE AGUA Y MENÚS DE STREAMLIT */
+    /* OCULTAR ELEMENTOS NATIVOS DE STREAMLIT */
     #MainMenu, footer, header, 
     div[data-testid="stToolbar"], 
     div[data-testid="stDecoration"], 
     div[data-testid="stStatusWidget"],
-    .stAppDeployButton,
-    a[href*="streamlit.io"] {{
+    .stAppDeployButton {{
         visibility: hidden !important;
         display: none !important;
         opacity: 0 !important;
@@ -324,8 +323,6 @@ st.markdown(f"""
     }}
     
     .header-left-group {{ display: flex; align-items: center; gap: 12px; flex-wrap: nowrap; }}
-    
-    /* LOGO Y TÍTULO AMPLIADOS UN 15% */
     .header-logo-img {{ height: 56px !important; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); display: block !important; }}
 
     .header-title {{
@@ -418,7 +415,6 @@ st.markdown(f"""
 
     .card-master-pendiente {{ background: #dc2626 !important; border: 2px solid #ef4444 !important; color: #ffffff !important; }}
     
-    /* TARJETA COMPLETADA CON TACHADO AUTOMÁTICO */
     .card-master-completado {{ background: #059669 !important; border: 2px solid #10b981 !important; color: #ffffff !important; opacity: 0.75; }}
     .card-master-completado .card-master-title,
     .card-master-completado .card-master-num {{
@@ -500,11 +496,12 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SCRIPT DE WAKE LOCK (MANTIENE LA PANTALLA ACTIVA)
+# SCRIPT JS: WAKE LOCK + REMOCIÓN ACTIVA DE LA MARCA DE AGUA
 # ==========================================
-wake_lock_js = """
+ocultar_marca_js = """
 <script>
-async function solicitarWakeLock() {
+async function iniciarUtilidades() {
+    // 1. Mantener pantalla activa
     if ('wakeLock' in navigator) {
         try {
             let wakeLock = await navigator.wakeLock.request('screen');
@@ -515,11 +512,33 @@ async function solicitarWakeLock() {
             });
         } catch (err) {}
     }
+
+    // 2. Remover dinámicamente la marca de agua y footer flotante de Streamlit
+    function limpiarUI() {
+        const elementosAEliminar = document.querySelectorAll('footer, #MainMenu, header, [data-testid="stDecoration"], [data-testid="stStatusWidget"], .stAppDeployButton');
+        elementosAEliminar.forEach(el => el.remove());
+        
+        // Buscar elementos flotantes por contenido o clases parciales
+        document.querySelectorAll('*').forEach(el => {
+            if (el.shadowRoot) {
+                // Limpiar si hay elementos internos
+            }
+            const txt = el.innerText || "";
+            if (txt.includes("Made with Streamlit") || txt.includes("Streamlit")) {
+                if (el.tagName === 'FOOTER' || el.tagName === 'DIV' && el.style.position === 'fixed') {
+                    el.remove();
+                }
+            }
+        });
+    }
+    
+    setInterval(limpiarUI, 1000);
+    limpiarUI();
 }
-solicitarWakeLock();
+iniciarUtilidades();
 </script>
 """
-components.html(wake_lock_js, height=0, width=0)
+components.html(ocultar_marca_js, height=0, width=0)
 
 # ==========================================
 # 4. CONSULTA A LA API DE LOYVERSE
