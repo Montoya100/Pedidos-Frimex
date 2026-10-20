@@ -90,6 +90,9 @@ def alternar_estado(producto, cantidad_actual):
 
     estado_global["descartar_celebracion"] = False
 
+# ==========================================
+# SONIDOS DE NOTIFICACIÓN
+# ==========================================
 def reproducir_sonido_notificacion():
     sound_js = """
     <script>
@@ -125,6 +128,41 @@ def reproducir_sonido_notificacion():
             } catch(e) {}
         }
         sonar();
+    })();
+    </script>
+    """
+    components.html(sound_js, height=0, width=0)
+
+def reproducir_sonido_nota():
+    # Sonido distintivo para notas nuevas o actualizadas (tono triple descendente/ascendente curioso)
+    sound_js = """
+    <script>
+    (function() {
+        function sonarNota() {
+            try {
+                var AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                var ctx = new AudioContext();
+                if (ctx.state === 'suspended') { ctx.resume(); }
+
+                var frecuencias = [440, 659.25, 987.77];
+                frecuencias.forEach(function(freq, i) {
+                    var osc = ctx.createOscillator();
+                    var gain = ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(freq, ctx.currentTime + (i * 0.1));
+                    
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime + (i * 0.1));
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (i * 0.1) + 0.2);
+                    
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime + (i * 0.1));
+                    osc.stop(ctx.currentTime + (i * 0.1) + 0.2);
+                });
+            } catch(e) {}
+        }
+        sonarNota();
     })();
     </script>
     """
@@ -167,7 +205,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS CON NUEVO BANNER AZUL ACERO Y FUENTES GIGANTES
+# 3. ESTILOS CSS (BANNER HORIZONTAL EXPANDIDO, MAYÚSCULAS, NEGRITA Y WAKE LOCK)
 # ==========================================
 st.markdown(f"""
     <style>
@@ -196,7 +234,7 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* BANNER DE NOTA EN AZUL ACERO ELEGANTE */
+    /* BANNER DE NOTA OPTIMIZADO PARA PANTALLAS HORIZONTALES (TEXTO GIGANTE Y EXPANDIDO) */
     .banner-notas-container {{
         background: linear-gradient(90deg, #0f172a 100%, #1e293b 100%);
         border: 2px solid #0284c7;
@@ -206,27 +244,33 @@ st.markdown(f"""
         box-shadow: 0 4px 16px rgba(2, 132, 199, 0.25);
         display: flex;
         align-items: center;
-        gap: 14px;
+        width: 100% !important;
+        box-sizing: border-box;
+        gap: 16px;
     }}
 
     .banner-notas-tag {{
         background: #0284c7;
         color: #ffffff;
         font-weight: 900;
-        font-size: 13px !important;
+        font-size: 14px !important;
         letter-spacing: 2px;
-        padding: 4px 12px;
+        padding: 6px 14px;
         border-radius: 6px;
         text-transform: uppercase;
         white-space: nowrap;
     }}
 
     .banner-notas-text {{
-        color: #e0f2fe;
-        font-size: 22px !important;
-        font-weight: 800 !important;
+        color: #f8fafc;
+        font-size: 24px !important;
+        font-weight: 900 !important;
         line-height: 1.25;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.8px;
+        text-transform: uppercase !important;
+        flex: 1 !important;
+        width: 100% !important;
+        word-break: break-word;
     }}
 
     .full-screen-celebracion {{
@@ -423,10 +467,32 @@ st.markdown(f"""
         .card-master-title {{ font-size: 22px !important; }}
         .card-master-num {{ font-size: 56px !important; }}
         .card-master-container {{ min-height: 100px !important; padding: 12px 14px !important; }}
-        .banner-notas-text {{ font-size: 16px !important; }}
+        .banner-notas-text {{ font-size: 18px !important; }}
     }}
     </style>
 """, unsafe_allow_html=True)
+
+# ==========================================
+# SCRIPT DE WAKE LOCK (MANTIENE LA PANTALLA ACTIVA)
+# ==========================================
+wake_lock_js = """
+<script>
+async function solicitarWakeLock() {
+    if ('wakeLock' in navigator) {
+        try {
+            let wakeLock = await navigator.wakeLock.request('screen');
+            document.addEventListener('visibilitychange', async () => {
+                if (wakeLock !== null && document.visibilityState === 'visible') {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            });
+        } catch (err) {}
+    }
+}
+solicitarWakeLock();
+</script>
+"""
+components.html(wake_lock_js, height=0, width=0)
 
 # ==========================================
 # 4. CONSULTA A LA API DE LOYVERSE
@@ -582,9 +648,9 @@ def renderizar_tablero():
             # SECCIÓN: GESTIÓN DE HASTA 3 NOTAS INDEPENDIENTES
             st.markdown("### Notas del Tablero")
             with st.form("form_notas_tablero", clear_on_submit=False):
-                n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="Ej. Lote 1 con extra sal")
-                n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="Ej. Prioridad pedidos para llevar")
-                n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="Ej. Limpiar área al terminar")
+                n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. LOTE 1 CON EXTRA SAL")
+                n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD PEDIDOS PARA LLEVAR")
+                n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="EJ. LIMPIAR ÁREA AL TERMINAR")
                 
                 col_n1, col_n2 = st.columns(2)
                 with col_n1:
@@ -593,13 +659,20 @@ def renderizar_tablero():
                     btn_limpiar_notas = st.form_submit_button("Limpiar Todas", use_container_width=True)
 
                 if btn_guardar_notas:
-                    estado_global["notas_tablero"] = [n1.strip(), n2.strip(), n3.strip()]
-                    st.toast("Notas actualizadas en el tablero", icon="✅")
+                    nuevas_notas = [n1.strip().upper(), n2.strip().upper(), n3.strip().upper()]
+                    if nuevas_notas != estado_global["notas_tablero"]:
+                        estado_global["notas_tablero"] = nuevas_notas
+                        reproducir_sonido_nota()
+                        st.toast("Notas actualizadas en el tablero", icon="✅")
+                    else:
+                        st.toast("Sin cambios en las notas", icon="ℹ️")
                     st.rerun()
 
                 if btn_limpiar_notas:
-                    estado_global["notas_tablero"] = ["", "", ""]
-                    st.toast("Todas las notas fueron eliminadas", icon="ℹ️")
+                    if any(estado_global["notas_tablero"]):
+                        estado_global["notas_tablero"] = ["", "", ""]
+                        reproducir_sonido_nota()
+                        st.toast("Todas las notas fueron eliminadas", icon="ℹ️")
                     st.rerun()
 
             st.markdown("---")
@@ -653,13 +726,13 @@ def renderizar_tablero():
                 restaurar_estado()
                 st.rerun()
 
-    # RENDERIZAR LOS BANNERS DE NOTAS ACTIVAS (HASTA 3)
+    # RENDERIZAR LOS BANNERS DE NOTAS ACTIVAS (MAYÚSCULAS, NEGRITA Y ANCHO EXPANDIDO)
     for idx_n, nota_txt in enumerate(estado_global["notas_tablero"]):
         if nota_txt:
             st.markdown(f"""
                 <div class="banner-notas-container">
                     <div class="banner-notas-tag">NOTA {idx_n + 1}</div>
-                    <div class="banner-notas-text">{nota_txt}</div>
+                    <div class="banner-notas-text">{nota_txt.upper()}</div>
                 </div>
             """, unsafe_allow_html=True)
 
