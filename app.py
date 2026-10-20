@@ -159,7 +159,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS CON TEXTOS GIGANTES Y NEGRITA FUERTE
+# 3. ESTILOS CSS CON TIPOGRAFÍA GIGANTE A DISTANCIA
 # ==========================================
 st.markdown(f"""
     <style>
@@ -257,6 +257,12 @@ st.markdown(f"""
 
     .anim-pulso-nuevo {{ animation: pulseGlow 1.2s infinite ease-in-out !important; }}
 
+    .txt-incremento {{
+        display: inline-block; background-color: #1e3a8a; color: #93c5fd;
+        font-size: 20px !important; font-weight: 900 !important; padding: 2px 10px;
+        border-radius: 6px; margin-left: 8px; border: 1px solid #3b82f6; vertical-align: middle;
+    }}
+
     .metrics-row {{
         display: flex; justify-content: space-around; align-items: center;
         background: #141822; border-radius: 10px; padding: 10px 16px 14px 16px;
@@ -295,32 +301,58 @@ st.markdown(f"""
 
     .footer-sutil span {{ color: #10b981 !important; font-weight: 900 !important; }}
 
-    /* TARJETA-BOTÓN UNIFICADA CON TEXTOS GIGANTES Y NEGRITA PESADA (SIN EMOJIS) */
-    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) {{ margin-bottom: 14px !important; }}
+    /* TARJETA UNIFICADA CON BLOQUE VISUAL GIGANTE Y NÚMEROS ENORMES */
+    .card-master-container {{
+        border-radius: 14px;
+        padding: 16px 20px;
+        margin-bottom: 6px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 145px;
+    }}
+
+    .card-master-pendiente {{ background: #dc2626 !important; border: 2px solid #ef4444 !important; color: #ffffff !important; }}
+    .card-master-completado {{ background: #059669 !important; border: 2px solid #10b981 !important; color: #ffffff !important; opacity: 0.8; }}
+    .card-master-reciente {{ background: #2563eb !important; border: 2px solid #60a5fa !important; color: #ffffff !important; }}
+
+    .card-master-top {{
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+    }}
+
+    .card-master-title {{
+        font-size: 24px !important;
+        font-weight: 900 !important;
+        text-transform: uppercase !important;
+        line-height: 1.15 !important;
+    }}
+
+    .card-master-num {{
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 56px !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        text-align: right;
+    }}
+
+    /* BOTÓN DEBAJO DE LA TARJETA GIGANTE */
+    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) {{ margin-bottom: 16px !important; }}
     
     div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button {{
-        height: 150px !important;
-        min-height: 150px !important;
+        height: 42px !important;
+        min-height: 42px !important;
         width: 100% !important;
-        border-radius: 14px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 12px 16px !important;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.5) !important;
-        transition: transform 0.1s ease !important;
-    }}
-
-    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button:active {{
-        transform: scale(0.98) !important;
-    }}
-
-    /* FUENTE GIGANTE Y ULTRA NEGRITA DENTRO DEL BOTÓN PARA ESCRITORIO */
-    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button p {{
-        font-size: 26px !important;
+        border-radius: 8px !important;
+        background-color: #161922 !important;
+        border: 1px solid #2a2e39 !important;
+        color: #ffffff !important;
         font-weight: 900 !important;
-        line-height: 1.25 !important;
-        letter-spacing: 1px !important;
+        font-size: 13px !important;
+        letter-spacing: 1.5px !important;
         text-transform: uppercase !important;
     }}
 
@@ -351,10 +383,9 @@ st.markdown(f"""
         .txt-celebracion-titulo {{ font-size: 28px !important; margin-bottom: 8px !important; }}
         .txt-celebracion-sub {{ font-size: 16px !important; margin-bottom: 24px !important; }}
         
-        /* TEXTO GIGANTE Y MUY CLARO EN MÓVIL */
-        div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button p {{
-            font-size: 22px !important;
-        }}
+        .card-master-title {{ font-size: 20px !important; }}
+        .card-master-num {{ font-size: 46px !important; }}
+        .card-master-container {{ min-height: 125px !important; padding: 12px 14px !important; }}
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -556,7 +587,7 @@ def renderizar_tablero():
             estado_global["descartar_celebracion"] = True
             st.rerun()
 
-    # RENDERIZADO DE TARJETAS UNIFICADAS CON TEXTO GIGANTE, NEGRILLAS Y SIN EMOJIS
+    # RENDERIZADO DE TARJETAS CON TEXTO GIGANTE Y LEGIBLE A DISTANCIA
     else:
         if conteo_productos:
             activos = []
@@ -588,35 +619,41 @@ def renderizar_tablero():
                                 es_reciente = True
 
                             if es_reciente:
-                                tipo_btn = "primary"
-                                texto_estado = "NUEVO"
+                                clase_css = "card-master-reciente anim-pulso-nuevo"
+                                texto_estado = "MARCAR COMO TERMINADO"
                             elif es_completado:
-                                tipo_btn = "secondary"
-                                texto_estado = "TERMINADO"
+                                clase_css = "card-master-completado"
+                                texto_estado = "TERMINADO (CLIC PARA REABRIR)"
                             else:
-                                tipo_btn = "primary"
-                                texto_estado = "PENDIENTE"
+                                clase_css = "card-master-pendiente"
+                                texto_estado = "MARCAR COMO TERMINADO"
 
                             valor_mostrar = "∞" if cant_mostrar == 1 else str(cant_mostrar)
 
                             info_popup = st.session_state.popups_nuevos.get(producto)
-                            texto_incremento = ""
+                            html_incremento = ""
                             if info_popup and not es_completado:
                                 inc = info_popup["incremento"]
-                                texto_incremento = f" (+{inc})"
+                                html_incremento = f'<span class="txt-incremento">+{inc}</span>'
 
-                            # TEXTO LIMPIO, GIGANTE Y EN NEGRITAS SIN EMOJIS
-                            label_boton = f"{producto}{texto_incremento}\nCANT: {valor_mostrar}  |  [{texto_estado}]"
+                            # BLOQUE VISUAL GIGANTE (HTML PURO SEGURO)
+                            st.markdown(f"""
+                                <div class="card-master-container {clase_css}">
+                                    <div class="card-master-top">
+                                        <div class="card-master-title">{producto} {html_incremento}</div>
+                                    </div>
+                                    <div class="card-master-num">{valor_mostrar}</div>
+                                </div>
+                            """, unsafe_allow_html=True)
 
-                            if st.button(
-                                label_boton, 
+                            # BOTÓN NATIVO DEBAJO PARA ASEGURAR ACCIÓN INMEDIATA
+                            st.button(
+                                texto_estado, 
                                 key=f"tarjeta_btn_{producto}", 
                                 on_click=alternar_estado, 
                                 args=(producto, cant_total),
-                                use_container_width=True,
-                                type=tipo_btn
-                            ):
-                                pass
+                                use_container_width=True
+                            )
 
             if activos:
                 renderizar_lista_productos(activos)
