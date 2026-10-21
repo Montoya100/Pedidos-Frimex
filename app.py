@@ -43,7 +43,7 @@ def obtener_estado_global():
         "completados": set(),
         "cantidades_al_completar": {},
         "productos_manuales": {},  
-        "notas_tablero": ["", "", ""], 
+        "notas_tablero": ["PONERLE ETIQUETA A 20 CHURRITOS", "PRIORIDAD PEDIDOS FRIMEX", ""], 
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False
@@ -241,80 +241,6 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    @keyframes deslizarDegradado {{
-        0% {{ opacity: 0; transform: translateY(-10px); background-position: 200% 0; }}
-        100% {{ opacity: 1; transform: translateY(0); background-position: 0 0; }}
-    }}
-
-    /* BANNER DE NOTAS AMPLIADO UN 15% MÁS (TEXTO 28PX) CON TIPO CARRUSEL INTERACTIVO */
-    .banner-notas-container {{
-        background: linear-gradient(135deg, #182232 0%, #111827 50%, #0077ed 200%);
-        background-size: 200% 100%;
-        animation: deslizarDegradado 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        border: 1px solid rgba(0, 119, 237, 0.3);
-        border-radius: 22px;
-        padding: 16px 24px;
-        margin-bottom: 12px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-        display: flex;
-        align-items: center;
-        width: 100% !important;
-        box-sizing: border-box;
-        gap: 16px;
-    }}
-
-    .banner-notas-tag {{
-        background: #0077ed;
-        color: #ffffff;
-        font-weight: 900;
-        font-size: 14px !important;
-        letter-spacing: 1.5px;
-        padding: 8px 16px;
-        border-radius: 14px;
-        text-transform: uppercase;
-        white-space: nowrap;
-    }}
-
-    .banner-notas-text {{
-        color: #ffffff;
-        font-size: 28px !important;
-        font-weight: 900 !important;
-        line-height: 1.25;
-        letter-spacing: 0.8px;
-        text-transform: uppercase !important;
-        flex: 1 !important;
-        width: 100% !important;
-        word-break: break-word;
-    }}
-
-    .banner-notas-hint {{
-        color: #60a5fa;
-        font-size: 13px !important;
-        font-weight: 800;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        white-space: nowrap;
-        background: rgba(0, 119, 237, 0.15);
-        padding: 6px 12px;
-        border-radius: 10px;
-        border: 1px solid rgba(0, 119, 237, 0.3);
-    }}
-
-    /* BOTÓN TOTALMENTE INVISIBLE PARA HACER CLICKABLE EL BANNER DE NOTAS */
-    div[data-testid="stElementContainer"]:has(button[key="btn_toggle_desglose_notas"]) {{
-        margin-bottom: 0px !important;
-        margin-top: -8px !important;
-    }}
-    
-    div[data-testid="stElementContainer"]:has(button[key="btn_toggle_desglose_notas"]) button {{
-        height: 0px !important;
-        min-height: 0px !important;
-        padding: 0px !important;
-        border: none !important;
-        background: transparent !important;
-        opacity: 0 !important;
-    }}
-
     .full-screen-celebracion {{
         background: linear-gradient(180deg, #1e1b18 0%, #0b0f19 100%);
         border: 1px solid rgba(255, 149, 0, 0.3);
@@ -473,7 +399,7 @@ st.markdown(f"""
         min-width: 90px;
     }}
 
-    /* BOTONES TIPO PÍLDORA FLOTANTE */
+    /* BOTONES TIPO PÍLDORA FLOTANTE PARA PRODUCTOS */
     div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) {{ margin-bottom: 16px !important; }}
     
     div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button {{
@@ -489,6 +415,30 @@ st.markdown(f"""
         letter-spacing: 1.5px !important;
         text-transform: uppercase !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }}
+
+    /* BOTÓN NATIVO DE NOTAS (DISEÑO LIMPIO EN UNA SOLA FILA) */
+    div[data-testid="stElementContainer"]:has(button[key="btn_toggle_desglose_notas"]) button {{
+        height: 64px !important;
+        border-radius: 16px !important;
+        background-color: #151c2c !important;
+        border: 1px solid rgba(0, 119, 237, 0.4) !important;
+        color: #60a5fa !important;
+        font-weight: 800 !important;
+        font-size: 12px !important;
+        letter-spacing: 1px !important;
+        text-transform: uppercase !important;
+    }}
+
+    /* CAJA NATIVA PARA EL TEXTO DEL BANNER */
+    .stAlert {{
+        background-color: #111827 !important;
+        border: 1px solid rgba(0, 119, 237, 0.3) !important;
+        border-radius: 16px !important;
+        color: #ffffff !important;
+        font-weight: 800 !important;
+        font-size: 22px !important;
+        padding: 12px 18px !important;
     }}
 
     /* VERSIÓN MÓVIL Y TABLET COMPACTA */
@@ -521,7 +471,6 @@ st.markdown(f"""
         .card-master-title {{ font-size: 21px !important; }}
         .card-master-num {{ font-size: 52px !important; }}
         .card-master-container {{ min-height: 96px !important; padding: 14px 16px !important; border-radius: 20px !important; }}
-        .banner-notas-text {{ font-size: 20px !important; }}
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -832,40 +781,32 @@ def renderizar_tablero():
                 restaurar_estado()
                 st.rerun()
 
-    # RENDERIZAR NOTAS ACTIVAS CON LÓGICA DE CARRUSEL (ROTACIÓN Y DESGLOSE INTERACTIVO)
+    # RENDERIZAR NOTAS ACTIVAS (CON COLUMNAS NATIVAS, SIN HTML COMPLICADO)
     notas_filtradas = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
     
     if notas_filtradas:
         total_notas_validas = len(notas_filtradas)
         
-        # BOTÓN PARA DESGLOSAR O COLAPSAR
         def alternar_desglose():
             st.session_state.desglosar_notas = not st.session_state.desglosar_notas
 
-        st.button("TOGGLE_NOTAS", key="btn_toggle_desglose_notas", on_click=alternar_desglose, use_container_width=True)
-
         if st.session_state.desglosar_notas or total_notas_validas == 1:
-            # MOSTRAR TODAS LAS NOTAS DESGLOSADAS
             for num_nota, nota_txt in notas_filtradas:
-                st.markdown(f"""
-                    <div class="banner-notas-container">
-                        <div class="banner-notas-tag">NOTA {num_nota}</div>
-                        <div class="banner-notas-text">{nota_txt.upper()}</div>
-                        {f'<div class="banner-notas-hint">▲ COLAPSAR</div>' if total_notas_validas > 1 else ''}
-                    </div>
-                """, unsafe_allow_html=True)
+                col_banner, col_btn = st.columns([0.84, 0.16]) if total_notas_validas > 1 else (st.columns([1, 0.001]))
+                with col_banner:
+                    st.info(f"NOTA {num_nota}: {nota_txt.upper()}")
+                if total_notas_validas > 1:
+                    with col_btn:
+                        st.button("▲ COLAPSAR", key="btn_toggle_desglose_notas", on_click=alternar_desglose, use_container_width=True)
         else:
-            # MOSTRAR EN MODO CARRUSEL ROTATIVO CADA 5 SEGUNDOS
             st.session_state.indice_nota_carrusel = (st.session_state.indice_nota_carrusel + 1) % total_notas_validas
             num_nota_actual, texto_actual = notas_filtradas[st.session_state.indice_nota_carrusel]
             
-            st.markdown(f"""
-                <div class="banner-notas-container">
-                    <div class="banner-notas-tag">NOTA {num_nota_actual}/{total_notas_validas}</div>
-                    <div class="banner-notas-text">{texto_actual.upper()}</div>
-                    <div class="banner-notas-hint">▼ DESGLOSAR TODAS</div>
-                </div>
-            """, unsafe_allow_html=True)
+            col_banner, col_btn = st.columns([0.82, 0.18])
+            with col_banner:
+                st.info(f"NOTA {num_nota_actual}/{total_notas_validas}: {texto_actual.upper()}")
+            with col_btn:
+                st.button(f"▼ VER ({total_notas_validas})", key="btn_toggle_desglose_notas", on_click=alternar_desglose, use_container_width=True)
 
     for prod, info in list(st.session_state.popups_nuevos.items()):
         if (ahora_utc - info["hora"]).total_seconds() >= 30:
