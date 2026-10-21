@@ -289,7 +289,7 @@ st.markdown(f"""
         word-break: break-word;
     }}
 
-    /* FORZAR QUE AMBOS BOTONES SUPERIORES COMPARTAN SIEMPRE LA MISMA FILA */
+    /* FORZAR FILA ESTRICTA PARA LOS DOS BOTONES SUPERIORES */
     div[data-testid="stHorizontalBlock"]:has(div[data-testid="stPopover"]) {{
         display: flex !important;
         flex-direction: row !important;
@@ -303,8 +303,9 @@ st.markdown(f"""
         min-width: 0 !important;
     }}
 
-    /* ESTILO BOTÓN OPCIONES */
-    div[data-testid="stPopover"] button {{
+    /* ESTILO IDÉNTICO Y REDONDEADO PARA AMBOS BOTONES (OPCIONES Y VER NOTAS) */
+    div[data-testid="stPopover"] button,
+    div[data-testid="stElementContainer"]:has(button[key^="btn_toggle_"]) button {{
         height: 44px !important;
         min-height: 44px !important;
         border-radius: 16px !important;
@@ -320,21 +321,11 @@ st.markdown(f"""
         white-space: nowrap !important;
     }}
 
-    /* ESTILO BOTÓN VER / COLAPSAR NOTAS CON EL LOOK AZULITO DE ETIQUETA */
-    div[data-testid="stElementContainer"]:has(button[key^="btn_toggle_"]) button {{
-        height: 44px !important;
-        min-height: 44px !important;
-        border-radius: 14px !important;
-        background: linear-gradient(135deg, #0077ed 0%, #1d4ed8 100%) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        color: #ffffff !important;
-        font-weight: 900 !important;
-        font-size: 11px !important;
-        letter-spacing: 1.2px !important;
-        text-transform: uppercase !important;
-        box-shadow: 0 4px 14px rgba(0, 119, 237, 0.4) !important;
-        width: 100% !important;
-        white-space: nowrap !important;
+    div[data-testid="stPopover"] button:hover,
+    div[data-testid="stElementContainer"]:has(button[key^="btn_toggle_"]) button:hover {{
+        background-color: #1e293b !important;
+        border-color: #3b82f6 !important;
+        color: #93c5fd !important;
     }}
 
     .full-screen-celebracion {{
@@ -756,7 +747,7 @@ def renderizar_tablero():
         """, unsafe_allow_html=True)
 
     with col_hdr_right:
-        # CONTENEDOR COMPARTIDO EN LA MISMA FILA ESTRICTA (OPCIONES + BOTÓN DE NOTAS ESTILO BANNER AZUL)
+        # CONTENEDOR COMPARTIDO EN LA MISMA FILA ESTRICTA (OPCIONES + BOTÓN DE NOTAS CON EL MISMO ESTILO REDONDEADO AZUL)
         notas_filtradas_header = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
         total_notas_h = len(notas_filtradas_header)
 
