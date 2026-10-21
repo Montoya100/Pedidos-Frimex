@@ -35,15 +35,13 @@ def obtener_base64_imagen(ruta_imagen):
 LOGO_URL = obtener_base64_imagen("logo.png")
 
 # ==========================================
-# 2. ESTADO GLOBAL COMPARTIDO PERSISTENTE
+# 2. ESTADO GLOBAL COMPARTIDO Y PERSISTENTE
 # ==========================================
 @st.cache_resource
 def obtener_estado_global():
     return {
         "completados": set(),
         "cantidades_al_completar": {},
-        "productos_manuales": {},  
-        "notas_tablero": ["", "", ""],  
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False
@@ -51,19 +49,26 @@ def obtener_estado_global():
 
 estado_global = obtener_estado_global()
 
+# Asegurar persistencia absoluta en session_state para Notas y Productos Manuales
+if "notas_tablero_state" not in st.session_state:
+    st.session_state.notas_tablero_state = ["", "", ""]
+
+if "productos_manuales_state" not in st.session_state:
+    st.session_state.productos_manuales_state = {}
+
 def borrar_todo():
     estado_global["respaldo"] = {
         "completados": estado_global["completados"].copy(),
         "cantidades_al_completar": estado_global["cantidades_al_completar"].copy(),
-        "productos_manuales": {k: v.copy() for k, v in estado_global["productos_manuales"].items()},
-        "notas_tablero": estado_global["notas_tablero"].copy(),
+        "productos_manuales": {k: v.copy() for k, v in st.session_state.productos_manuales_state.items()},
+        "notas_tablero": st.session_state.notas_tablero_state.copy(),
         "hora_corte_utc": estado_global["hora_corte_utc"]
     }
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
     estado_global["completados"].clear()
     estado_global["cantidades_al_completar"].clear()
-    estado_global["productos_manuales"].clear()
-    estado_global["notas_tablero"] = ["", "", ""]
+    st.session_state.productos_manuales_state.clear()
+    st.session_state.notas_tablero_state = ["", "", ""]
     estado_global["descartar_celebracion"] = False
     st.toast("Tablero limpiado correctamente", icon="ℹ️")
 
@@ -71,8 +76,8 @@ def restaurar_estado():
     if estado_global["respaldo"]:
         estado_global["completados"] = estado_global["respaldo"]["completados"].copy()
         estado_global["cantidades_al_completar"] = estado_global["respaldo"]["cantidades_al_completar"].copy()
-        estado_global["productos_manuales"] = {k: v.copy() for k, v in estado_global["respaldo"]["productos_manuales"].items()}
-        estado_global["notas_tablero"] = estado_global["respaldo"]["notas_tablero"].copy()
+        st.session_state.productos_manuales_state = {k: v.copy() for k, v in estado_global["respaldo"]["productos_manuales"].items()}
+        st.session_state.notas_tablero_state = estado_global["respaldo"]["notas_tablero"].copy()
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
         estado_global["descartar_celebracion"] = False
@@ -287,8 +292,8 @@ st.markdown(f"""
         word-break: break-word;
     }}
 
-    /* ESTILO PARA LOS BOTONES DE EXPANSIÓN AL LADO DERECHO */
-    div[data-testid="stElementContainer"]:has(button[key^="btn_toggle_"]) button {{
+    /* ESTILO PARA EL PRIMER BOTÓN DE EXPANSIÓN VISIBLE */
+    div[data-testid="stElementContainer"]:has(button[key="btn_toggle_colapsar_1"]) button {{
         height: 64px !important;
         min-height: 64px !important;
         border-radius: 16px !important;
@@ -301,6 +306,12 @@ st.markdown(f"""
         text-transform: uppercase !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.25);
         white-space: nowrap !important;
+    }}
+
+    /* OCULTAR VISUALMENTE LOS BOTONES ADICIONALES (NOTA 2 Y 3) */
+    div[data-testid="stElementContainer"]:has(button[key="btn_toggle_colapsar_2"]),
+    div[data-testid="stElementContainer"]:has(button[key="btn_toggle_colapsar_3"]) {{
+        display: none !important;
     }}
 
     .full-screen-celebracion {{
@@ -615,8 +626,8 @@ def renderizar_tablero():
                 cant_num = int(cantidad) if float(cantidad).is_integer() else cantidad
                 conteo_productos[nombre_completo] = conteo_productos.get(nombre_completo, 0) + cant_num
 
-    # FUSIONAR PRODUCTOS MANUALES
-    for prod_manual, datos in estado_global["productos_manuales"].items():
+    # FUSIONAR PRODUCTOS MANUALES DESDE SESSION STATE
+    for prod_manual, datos in st.session_state.productos_manuales_state.items():
         if isinstance(datos, dict):
             cant_manual = datos.get("cantidad", 1)
             es_infinito = datos.get("infinito", False)
@@ -730,9 +741,9 @@ def renderizar_tablero():
         with st.popover("OPCIONES", use_container_width=True):
             st.markdown("### Notas del Tablero")
             with st.form("form_notas_tablero", clear_on_submit=False):
-                n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. PONERLE ETIQUETA A 20 CHURRITOS")
-                n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD PEDIDOS FRIMEX")
-                n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="EJ. LIMPIAR ÁREA AL TERMINAR")
+                n1 = st.text_input("Nota 1", value=st.session_state.notas_tablero_state[0], placeholder="EJ. PONERLE ETIQUETA A 20 CHURRITOS")
+                n2 = st.text_input("Nota 2", value=st.session_state.notas_tablero_state[1], placeholder="EJ. PRIORIDAD PEDIDOS FRIMEX")
+                n3 = st.text_input("Nota 3", value=st.session_state.notas_tablero_state[2], placeholder="EJ. LIMPIAR ÁREA AL TERMINAR")
                 
                 col_n1, col_n2 = st.columns(2)
                 with col_n1:
@@ -742,8 +753,8 @@ def renderizar_tablero():
 
                 if btn_guardar_notas:
                     nuevas_notas = [n1.strip().upper(), n2.strip().upper(), n3.strip().upper()]
-                    if nuevas_notas != estado_global["notas_tablero"]:
-                        estado_global["notas_tablero"] = nuevas_notas
+                    if nuevas_notas != st.session_state.notas_tablero_state:
+                        st.session_state.notas_tablero_state = nuevas_notas
                         st.session_state.indice_nota_carrusel = 0
                         reproducir_sonido_nota()
                         st.toast("Notas actualizadas en el tablero", icon="✅")
@@ -752,8 +763,8 @@ def renderizar_tablero():
                     st.rerun()
 
                 if btn_limpiar_notas:
-                    if any(estado_global["notas_tablero"]):
-                        estado_global["notas_tablero"] = ["", "", ""]
+                    if any(st.session_state.notas_tablero_state):
+                        st.session_state.notas_tablero_state = ["", "", ""]
                         st.session_state.indice_nota_carrusel = 0
                         reproducir_sonido_nota()
                         st.toast("Todas las notas fueron eliminadas", icon="ℹ️")
@@ -769,17 +780,17 @@ def renderizar_tablero():
                 
                 if submit_manual and nombre_manual.strip():
                     prod_key = nombre_manual.strip().upper()
-                    estado_global["productos_manuales"][prod_key] = {
+                    st.session_state.productos_manuales_state[prod_key] = {
                         "cantidad": int(cantidad_manual),
                         "infinito": es_infinito_nuevo
                     }
                     st.toast(f"Agregado: {prod_key}", icon="✅")
                     st.rerun()
 
-            if estado_global["productos_manuales"]:
+            if st.session_state.productos_manuales_state:
                 st.markdown("---")
                 st.markdown("### Modificar Productos Manuales")
-                for p_nombre, p_datos in list(estado_global["productos_manuales"].items()):
+                for p_nombre, p_datos in list(st.session_state.productos_manuales_state.items()):
                     p_cant = p_datos.get("cantidad", 1) if isinstance(p_datos, dict) else p_datos
                     p_inf = p_datos.get("infinito", False) if isinstance(p_datos, dict) else False
                     
@@ -797,7 +808,7 @@ def renderizar_tablero():
                                 btn_borrar_item = st.form_submit_button("Borrar")
 
                             if btn_aceptar_edit:
-                                estado_global["productos_manuales"][p_nombre] = {
+                                st.session_state.productos_manuales_state[p_nombre] = {
                                     "cantidad": int(nueva_cant_val),
                                     "infinito": nuevo_inf_val
                                 }
@@ -805,7 +816,7 @@ def renderizar_tablero():
                                 st.rerun()
 
                             if btn_borrar_item:
-                                estado_global["productos_manuales"].pop(p_nombre, None)
+                                st.session_state.productos_manuales_state.pop(p_nombre, None)
                                 estado_global["completados"].discard(p_nombre)
                                 estado_global["cantidades_al_completar"].pop(p_nombre, None)
                                 st.toast(f"Producto borrado: {p_nombre}", icon="ℹ️")
@@ -820,8 +831,8 @@ def renderizar_tablero():
                 restaurar_estado()
                 st.rerun()
 
-    # RENDERIZAR NOTAS ACTIVAS CON LLAVES ÚNICAS
-    notas_filtradas = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
+    # RENDERIZAR NOTAS ACTIVAS CON PERSISTENCIA
+    notas_filtradas = [(idx + 1, txt) for idx, txt in enumerate(st.session_state.notas_tablero_state) if txt.strip()]
     
     if notas_filtradas:
         total_notas_validas = len(notas_filtradas)
