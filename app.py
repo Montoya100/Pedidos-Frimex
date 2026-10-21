@@ -43,7 +43,7 @@ def obtener_estado_global():
         "completados": set(),
         "cantidades_al_completar": {},
         "productos_manuales": {},  
-        "notas_tablero": ["PONERLE ETIQUETA A 20 CHURRITOS", "PRIORIDAD PEDIDOS FRIMEX", ""], 
+        "notas_tablero": ["", "", ""],  # Inician vacías para que tú las controles desde Opciones
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False
@@ -246,7 +246,7 @@ st.markdown(f"""
         100% {{ opacity: 1; transform: translateY(0); background-position: 0 0; }}
     }}
 
-    /* BANNER DE NOTAS ESTILIZADO (CON SU RECUADRO FLOTANTE ONE UI Y TEXTO GRANDE) */
+    /* BANNER DE NOTAS ESTILIZADO ONE UI */
     .banner-notas-container {{
         background: linear-gradient(135deg, #182232 0%, #111827 50%, #0077ed 200%);
         background-size: 200% 100%;
@@ -730,6 +730,7 @@ def renderizar_tablero():
         with st.popover("OPCIONES", use_container_width=True):
             st.markdown("### Notas del Tablero")
             with st.form("form_notas_tablero", clear_on_submit=False):
+                # Textos de ejemplo como placeholders en lugar de valores fijos
                 n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. PONERLE ETIQUETA A 20 CHURRITOS")
                 n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD PEDIDOS FRIMEX")
                 n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="EJ. LIMPIAR ÁREA AL TERMINAR")
@@ -820,7 +821,7 @@ def renderizar_tablero():
                 restaurar_estado()
                 st.rerun()
 
-    # RENDERIZAR NOTAS ACTIVAS CON SU ESTILO VISUAL ORIGINAL EN UNA SOLA FILA
+    # RENDERIZAR NOTAS ACTIVAS CON EL ESTILO VISUAL ONE UI Y BOTÓN LATERAL
     notas_filtradas = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
     
     if notas_filtradas:
