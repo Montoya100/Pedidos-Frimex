@@ -43,7 +43,7 @@ def obtener_estado_global():
         "completados": set(),
         "cantidades_al_completar": {},
         "productos_manuales": {},  
-        "notas_tablero": ["", "", ""],  # Inician vacías para que tú las controles desde Opciones
+        "notas_tablero": ["", "", ""],  
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False
@@ -287,8 +287,8 @@ st.markdown(f"""
         word-break: break-word;
     }}
 
-    /* ESTILO PARA EL BOTÓN DE EXPANSIÓN AL LADO DERECHO */
-    div[data-testid="stElementContainer"]:has(button[key="btn_toggle_desglose_notas"]) button {{
+    /* ESTILO PARA LOS BOTONES DE EXPANSIÓN AL LADO DERECHO */
+    div[data-testid="stElementContainer"]:has(button[key^="btn_toggle_"]) button {{
         height: 64px !important;
         min-height: 64px !important;
         border-radius: 16px !important;
@@ -730,7 +730,6 @@ def renderizar_tablero():
         with st.popover("OPCIONES", use_container_width=True):
             st.markdown("### Notas del Tablero")
             with st.form("form_notas_tablero", clear_on_submit=False):
-                # Textos de ejemplo como placeholders en lugar de valores fijos
                 n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. PONERLE ETIQUETA A 20 CHURRITOS")
                 n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD PEDIDOS FRIMEX")
                 n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="EJ. LIMPIAR ÁREA AL TERMINAR")
@@ -821,7 +820,7 @@ def renderizar_tablero():
                 restaurar_estado()
                 st.rerun()
 
-    # RENDERIZAR NOTAS ACTIVAS CON EL ESTILO VISUAL ONE UI Y BOTÓN LATERAL
+    # RENDERIZAR NOTAS ACTIVAS CON LLAVES ÚNICAS
     notas_filtradas = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
     
     if notas_filtradas:
@@ -842,7 +841,7 @@ def renderizar_tablero():
                     """, unsafe_allow_html=True)
                 if total_notas_validas > 1:
                     with col_btn:
-                        st.button("▲ COLAPSAR", key="btn_toggle_desglose_notas", on_click=alternar_desglose, use_container_width=True)
+                        st.button("▲ COLAPSAR", key=f"btn_toggle_colapsar_{num_nota}", on_click=alternar_desglose, use_container_width=True)
                 st.markdown("<div style='margin-bottom: 6px;'></div>", unsafe_allow_html=True)
         else:
             st.session_state.indice_nota_carrusel = (st.session_state.indice_nota_carrusel + 1) % total_notas_validas
@@ -857,7 +856,7 @@ def renderizar_tablero():
                     </div>
                 """, unsafe_allow_html=True)
             with col_btn:
-                st.button(f"▼ VER ({total_notas_validas})", key="btn_toggle_desglose_notas", on_click=alternar_desglose, use_container_width=True)
+                st.button(f"▼ VER ({total_notas_validas})", key="btn_toggle_ver_todas", on_click=alternar_desglose, use_container_width=True)
 
     for prod, info in list(st.session_state.popups_nuevos.items()):
         if (ahora_utc - info["hora"]).total_seconds() >= 30:
