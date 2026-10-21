@@ -42,7 +42,7 @@ def obtener_estado_global():
     return {
         "completados": set(),
         "cantidades_al_completar": {},
-        "productos_manuales": {},  # Guardado persistente {nombre: cantidad}
+        "productos_manuales": {},  # Guardado persistente {nombre: {"cantidad": num, "infinito": bool}}
         "notas_tablero": ["", "", ""], # Hasta 3 notas independientes
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
@@ -55,7 +55,7 @@ def borrar_todo():
     estado_global["respaldo"] = {
         "completados": estado_global["completados"].copy(),
         "cantidades_al_completar": estado_global["cantidades_al_completar"].copy(),
-        "productos_manuales": estado_global["productos_manuales"].copy(),
+        "productos_manuales": {k: v.copy() for k, v in estado_global["productos_manuales"].items()},
         "notas_tablero": estado_global["notas_tablero"].copy(),
         "hora_corte_utc": estado_global["hora_corte_utc"]
     }
@@ -71,7 +71,7 @@ def restaurar_estado():
     if estado_global["respaldo"]:
         estado_global["completados"] = estado_global["respaldo"]["completados"].copy()
         estado_global["cantidades_al_completar"] = estado_global["respaldo"]["cantidades_al_completar"].copy()
-        estado_global["productos_manuales"] = estado_global["respaldo"]["productos_manuales"].copy()
+        estado_global["productos_manuales"] = {k: v.copy() for k, v in estado_global["respaldo"]["productos_manuales"].items()}
         estado_global["notas_tablero"] = estado_global["respaldo"]["notas_tablero"].copy()
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
@@ -222,7 +222,6 @@ st.markdown(f"""
 
     .stApp {{ background-color: #0b0d13 !important; }}
     
-    /* OCULTAR ELEMENTOS NATIVOS DE STREAMLIT */
     #MainMenu, footer, header, 
     div[data-testid="stToolbar"], 
     div[data-testid="stDecoration"], 
@@ -242,7 +241,6 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* ANIMACIÓN DE ENTRADA Y DEGRADADO PARA LAS NOTAS */
     @keyframes deslizarDegradado {{
         0% {{ opacity: 0; transform: translateY(-10px); background-position: 200% 0; }}
         100% {{ opacity: 1; transform: translateY(0); background-position: 0 0; }}
@@ -496,12 +494,11 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SCRIPT JS: WAKE LOCK + REMOCIÓN ACTIVA DE LA MARCA DE AGUA
+# SCRIPT JS: WAKE LOCK + REMOCIÓN ACTIVA
 # ==========================================
 ocultar_marca_js = """
 <script>
 async function iniciarUtilidades() {
-    // 1. Mantener pantalla activa
     if ('wakeLock' in navigator) {
         try {
             let wakeLock = await navigator.wakeLock.request('screen');
@@ -513,16 +510,11 @@ async function iniciarUtilidades() {
         } catch (err) {}
     }
 
-    // 2. Remover dinámicamente la marca de agua y footer flotante de Streamlit
     function limpiarUI() {
         const elementosAEliminar = document.querySelectorAll('footer, #MainMenu, header, [data-testid="stDecoration"], [data-testid="stStatusWidget"], .stAppDeployButton');
         elementosAEliminar.forEach(el => el.remove());
         
-        // Buscar elementos flotantes por contenido o clases parciales
         document.querySelectorAll('*').forEach(el => {
-            if (el.shadowRoot) {
-                // Limpiar si hay elementos internos
-            }
             const txt = el.innerText || "";
             if (txt.includes("Made with Streamlit") || txt.includes("Streamlit")) {
                 if (el.tagName === 'FOOTER' || el.tagName === 'DIV' && el.style.position === 'fixed') {
@@ -575,6 +567,7 @@ def obtener_recibos_hoy():
 def renderizar_tablero():
     recibos = obtener_recibos_hoy()
     conteo_productos = {}
+    infinitos_activos = set()
     ultima_hora_loyverse_utc = None
 
     if recibos:
@@ -601,9 +594,21 @@ def renderizar_tablero():
                 cant_num = int(cantidad) if float(cantidad).is_integer() else cantidad
                 conteo_productos[nombre_completo] = conteo_productos.get(nombre_completo, 0) + cant_num
 
-    # FUSIONAR PRODUCTOS MANUALES DE FORMA PERSISTENTE
-    for prod_manual, cant_manual in estado_global["productos_manuales"].items():
-        conteo_productos[prod_manual] = conteo_productos.get(prod_manual, 0) + cant_manual
+    # FUSIONAR PRODUCTOS MANUALES (SOPORTANDO CANTIDAD O INFINITO)
+    for prod_manual, datos in estado_global["productos_manuales"].items():
+        if isinstance(datos, dict):
+            cant_manual = datos.get("cantidad", 1)
+            es_infinito = datos.get("infinito", False)
+        else:
+            # Compatibilidad con estructuras anteriores
+            cant_manual = datos
+            es_infinito = False
+
+        if es_infinito:
+            conteo_productos[prod_manual] = 1  # Valor base para que aparezca en el tablero
+            infinitos_activos.add(prod_manual)
+        else:
+            conteo_productos[prod_manual] = conteo_productos.get(prod_manual, 0) + cant_manual
 
     tz_mexico = zoneinfo.ZoneInfo("America/Mexico_City")
     if ultima_hora_loyverse_utc:
@@ -612,7 +617,7 @@ def renderizar_tablero():
         hora_sync_loyverse = "SIN RECIBOS"
 
     for prod, cant_total in conteo_productos.items():
-        if prod in estado_global["completados"]:
+        if prod in estado_global["completados"] and prod not in infinitos_activos:
             cant_marcada = estado_global["cantidades_al_completar"].get(prod, cant_total)
             if cant_total > cant_marcada:
                 estado_global["completados"].remove(prod)
@@ -632,22 +637,28 @@ def renderizar_tablero():
     hora_mexico_12h = ahora_mexico.strftime("%I:%M:%S %p")
 
     # CÁLCULO DE PENDIENTES
-    piezas_totales = sum(conteo_productos.values())
+    piezas_totales = sum([1 if p in infinitos_activos else c for p, c in conteo_productos.items()])
     piezas_pendientes = 0
     
     for prod, cant_total in conteo_productos.items():
-        if prod in estado_global["completados"]:
-            cant_marcada = estado_global["cantidades_al_completar"].get(prod, cant_total)
-            piezas_pendientes += max(0, cant_total - cant_marcada)
+        if prod in infinitos_activos:
+            if prod not in estado_global["completados"]:
+                piezas_pendientes += 1
         else:
-            cant_marcada = estado_global["cantidades_al_completar"].get(prod, 0)
-            piezas_pendientes += (cant_total - cant_marcada)
+            if prod in estado_global["completados"]:
+                cant_marcada = estado_global["cantidades_al_completar"].get(prod, cant_total)
+                piezas_pendientes += max(0, cant_total - cant_marcada)
+            else:
+                cant_marcada = estado_global["cantidades_al_completar"].get(prod, 0)
+                piezas_pendientes += (cant_total - cant_marcada)
 
     if "ultimo_conteo" not in st.session_state:
         st.session_state.ultimo_conteo = conteo_productos.copy()
     else:
         nuevo_pedido_detectado = False
         for prod, cant in conteo_productos.items():
+            if prod in infinitos_activos:
+                continue
             cant_anterior = st.session_state.ultimo_conteo.get(prod, 0)
             if cant > cant_anterior:
                 diferencia = cant - cant_anterior
@@ -694,15 +705,15 @@ def renderizar_tablero():
             # SECCIÓN: GESTIÓN DE HASTA 3 NOTAS INDEPENDIENTES
             st.markdown("### Notas del Tablero")
             with st.form("form_notas_tablero", clear_on_submit=False):
-                n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. PONER ETIQUETA A CHURRITO")
-                n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD A PEDIDOS")
+                n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. LOTE 1 CON EXTRA SAL")
+                n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD PEDIDOS PARA LLEVAR")
                 n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="EJ. LIMPIAR ÁREA AL TERMINAR")
                 
                 col_n1, col_n2 = st.columns(2)
                 with col_n1:
-                    btn_guardar_notas = st.form_submit_button("Guardar", use_container_width=True)
+                    btn_guardar_notas = st.form_submit_button("Guardar Notas", use_container_width=True)
                 with col_n2:
-                    btn_limpiar_notas = st.form_submit_button("Borrar", use_container_width=True)
+                    btn_limpiar_notas = st.form_submit_button("Limpiar Todas", use_container_width=True)
 
                 if btn_guardar_notas:
                     nuevas_notas = [n1.strip().upper(), n2.strip().upper(), n3.strip().upper()]
@@ -722,29 +733,38 @@ def renderizar_tablero():
                     st.rerun()
 
             st.markdown("---")
-            # SECCIÓN: AGREGAR PRODUCTO MANUAL
-            st.markdown("### Agregar Producto")
+            # SECCIÓN: AGREGAR PRODUCTO MANUAL (CON OPCIÓN DE INFINITO)
+            st.markdown("### Agregar Producto Manual")
             with st.form("form_agregar_manual", clear_on_submit=True):
                 nombre_manual = st.text_input("Nombre del producto")
+                es_infinito_nuevo = st.checkbox("Marcar como Infinito (∞ / Hasta terminar)")
                 cantidad_manual = st.number_input("Cantidad", min_value=1, value=1, step=1)
                 submit_manual = st.form_submit_button("Agregar al tablero")
                 
                 if submit_manual and nombre_manual.strip():
                     prod_key = nombre_manual.strip().upper()
-                    estado_global["productos_manuales"][prod_key] = estado_global["productos_manuales"].get(prod_key, 0) + int(cantidad_manual)
-                    st.toast(f"Agregado: {prod_key} (+{cantidad_manual})", icon="✅")
+                    estado_global["productos_manuales"][prod_key] = {
+                        "cantidad": int(cantidad_manual),
+                        "infinito": es_infinito_nuevo
+                    }
+                    st.toast(f"Agregado: {prod_key}", icon="✅")
                     st.rerun()
 
             # SECCIÓN: EDICIÓN / BORRADO DE PRODUCTOS MANUALES
             if estado_global["productos_manuales"]:
                 st.markdown("---")
-                st.markdown("### Modificar")
-                for p_nombre, p_cant in list(estado_global["productos_manuales"].items()):
-                    st.markdown(f"**{p_nombre}** (Actual: {p_cant})")
+                st.markdown("### Modificar Productos Manuales")
+                for p_nombre, p_datos in list(estado_global["productos_manuales"].items()):
+                    p_cant = p_datos.get("cantidad", 1) if isinstance(p_datos, dict) else p_datos
+                    p_inf = p_datos.get("infinito", False) if isinstance(p_datos, dict) else False
+                    
+                    st.markdown(f"**{p_nombre}** ({'∞' if p_inf else p_cant})")
                     
                     with st.expander(f"Editar {p_nombre}"):
                         with st.form(key=f"form_edit_{p_nombre}"):
-                            nueva_cant_val = st.number_input("Nueva cantidad", min_value=1, value=p_cant, step=1)
+                            nuevo_inf_val = st.checkbox("Infinito (∞)", value=p_inf, key=f"inf_{p_nombre}")
+                            nueva_cant_val = st.number_input("Cantidad", min_value=1, value=p_cant, step=1, key=f"cant_{p_nombre}")
+                            
                             col_e1, col_e2 = st.columns(2)
                             with col_e1:
                                 btn_aceptar_edit = st.form_submit_button("Aceptar")
@@ -752,8 +772,11 @@ def renderizar_tablero():
                                 btn_borrar_item = st.form_submit_button("Borrar")
 
                             if btn_aceptar_edit:
-                                estado_global["productos_manuales"][p_nombre] = int(nueva_cant_val)
-                                st.toast(f"Cantidad actualizada: {p_nombre} -> {nueva_cant_val}", icon="✅")
+                                estado_global["productos_manuales"][p_nombre] = {
+                                    "cantidad": int(nueva_cant_val),
+                                    "infinito": nuevo_inf_val
+                                }
+                                st.toast(f"Actualizado: {p_nombre}", icon="✅")
                                 st.rerun()
 
                             if btn_borrar_item:
@@ -772,7 +795,7 @@ def renderizar_tablero():
                 restaurar_estado()
                 st.rerun()
 
-    # RENDERIZAR LOS BANNERS DE NOTAS ACTIVAS (CON ANIMACIÓN Y DEGRADADO)
+    # RENDERIZAR LOS BANNERS DE NOTAS ACTIVAS
     for idx_n, nota_txt in enumerate(estado_global["notas_tablero"]):
         if nota_txt:
             st.markdown(f"""
@@ -849,12 +872,18 @@ def renderizar_tablero():
                     for idx, (producto, cant_total) in enumerate(grupo):
                         with cols[idx]:
                             es_completado = producto in estado_global["completados"]
-                            cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
-                            cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
+                            es_infinito = producto in infinitos_activos
+
+                            if es_infinito:
+                                valor_mostrar = "∞"
+                            else:
+                                cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
+                                cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
+                                valor_mostrar = str(cant_mostrar)
 
                             ultima_upd = st.session_state.tiempos_actualizacion.get(producto)
                             es_reciente = False
-                            if ultima_upd and (ahora_utc - ultima_upd).total_seconds() < 120 and not es_completado:
+                            if ultima_upd and (ahora_utc - ultima_upd).total_seconds() < 120 and not es_completado and not es_infinito:
                                 es_reciente = True
 
                             if es_reciente:
@@ -867,15 +896,13 @@ def renderizar_tablero():
                                 clase_css = "card-master-pendiente"
                                 texto_estado = "MARCAR COMO TERMINADO"
 
-                            valor_mostrar = "∞" if cant_mostrar == 1 else str(cant_mostrar)
-
                             info_popup = st.session_state.popups_nuevos.get(producto)
                             html_incremento = ""
-                            if info_popup and not es_completado:
+                            if info_popup and not es_completado and not es_infinito:
                                 inc = info_popup["incremento"]
                                 html_incremento = f'<span class="txt-incremento">+{inc}</span>'
 
-                            # TARJETA VISUAL GIGANTE (CON TACHADO AUTOMÁTICO EN COMPLETADOS)
+                            # TARJETA VISUAL GIGANTE
                             st.markdown(f"""
                                 <div class="card-master-container {clase_css}">
                                     <div class="card-master-title">{producto} {html_incremento}</div>
