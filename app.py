@@ -208,7 +208,7 @@ def reproducir_sonido_celebracion():
 # ==========================================
 st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=JetBrains+Mono:wght@800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&family=JetBrains+Mono:wght@800;900&display=swap');
 
     div[data-testid="stAppViewContainer"],
     div[data-testid="stMain"],
@@ -220,7 +220,6 @@ st.markdown(f"""
         animation: none !important;
     }}
 
-    /* Fondo principal estilo Dark Mode One UI */
     .stApp {{ background-color: #0b0f19 !important; font-family: 'Plus Jakarta Sans', sans-serif !important; }}
     
     #MainMenu, footer, header, 
@@ -247,14 +246,14 @@ st.markdown(f"""
         100% {{ opacity: 1; transform: translateY(0); background-position: 0 0; }}
     }}
 
-    /* Banners de notas con estética de notificaciones flotantes One UI */
+    /* BANNER DE NOTAS AMPLIADO UN 15% MÁS (TEXTO 28PX) CON TIPO CARRUSEL INTERACTIVO */
     .banner-notas-container {{
         background: linear-gradient(135deg, #182232 0%, #111827 50%, #0077ed 200%);
         background-size: 200% 100%;
         animation: deslizarDegradado 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         border: 1px solid rgba(0, 119, 237, 0.3);
-        border-radius: 20px;
-        padding: 14px 22px;
+        border-radius: 22px;
+        padding: 16px 24px;
         margin-bottom: 12px;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
         display: flex;
@@ -267,25 +266,53 @@ st.markdown(f"""
     .banner-notas-tag {{
         background: #0077ed;
         color: #ffffff;
-        font-weight: 800;
-        font-size: 13px !important;
+        font-weight: 900;
+        font-size: 14px !important;
         letter-spacing: 1.5px;
-        padding: 6px 12px;
-        border-radius: 12px;
+        padding: 8px 16px;
+        border-radius: 14px;
         text-transform: uppercase;
         white-space: nowrap;
     }}
 
     .banner-notas-text {{
-        color: #f3f4f6;
-        font-size: 22px !important;
-        font-weight: 800 !important;
+        color: #ffffff;
+        font-size: 28px !important;
+        font-weight: 900 !important;
         line-height: 1.25;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.8px;
         text-transform: uppercase !important;
         flex: 1 !important;
         width: 100% !important;
         word-break: break-word;
+    }}
+
+    .banner-notas-hint {{
+        color: #60a5fa;
+        font-size: 13px !important;
+        font-weight: 800;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        white-space: nowrap;
+        background: rgba(0, 119, 237, 0.15);
+        padding: 6px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 119, 237, 0.3);
+    }}
+
+    /* BOTÓN TOTALMENTE INVISIBLE PARA HACER CLICKABLE EL BANNER DE NOTAS */
+    div[data-testid="stElementContainer"]:has(button[key="btn_toggle_desglose_notas"]) {{
+        margin-bottom: 0px !important;
+        margin-top: -8px !important;
+    }}
+    
+    div[data-testid="stElementContainer"]:has(button[key="btn_toggle_desglose_notas"]) button {{
+        height: 0px !important;
+        min-height: 0px !important;
+        padding: 0px !important;
+        border: none !important;
+        background: transparent !important;
+        opacity: 0 !important;
     }}
 
     .full-screen-celebracion {{
@@ -403,7 +430,7 @@ st.markdown(f"""
 
     .footer-sutil span {{ color: #34c759 !important; font-weight: 900 !important; }}
 
-    /* TARJETAS MAESTRAS ESTILO ONE UI (BORDES ULTRA REDONDEADOS Y SOMBRAS SUAVES) */
+    /* TARJETAS MAESTRAS ESTILO ONE UI */
     .card-master-container {{
         border-radius: 24px;
         padding: 18px 20px;
@@ -494,13 +521,13 @@ st.markdown(f"""
         .card-master-title {{ font-size: 21px !important; }}
         .card-master-num {{ font-size: 52px !important; }}
         .card-master-container {{ min-height: 96px !important; padding: 14px 16px !important; border-radius: 20px !important; }}
-        .banner-notas-text {{ font-size: 17px !important; }}
+        .banner-notas-text {{ font-size: 20px !important; }}
     }}
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SCRIPT JS: WAKE LOCK + LIMPIEZA
+# SCRIPT JS: WAKE LOCK + LIMPIEZA UI
 # ==========================================
 ocultar_marca_js = """
 <script>
@@ -637,6 +664,12 @@ def renderizar_tablero():
     if "reproducido_modal_audio" not in st.session_state:
         st.session_state.reproducido_modal_audio = False
 
+    if "indice_nota_carrusel" not in st.session_state:
+        st.session_state.indice_nota_carrusel = 0
+
+    if "desglosar_notas" not in st.session_state:
+        st.session_state.desglosar_notas = False
+
     ahora_utc = datetime.now(timezone.utc)
     ahora_mexico = datetime.now(tz_mexico)
     hora_mexico_12h = ahora_mexico.strftime("%I:%M:%S %p")
@@ -709,8 +742,8 @@ def renderizar_tablero():
         with st.popover("OPCIONES", use_container_width=True):
             st.markdown("### Notas del Tablero")
             with st.form("form_notas_tablero", clear_on_submit=False):
-                n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. LOTE 1 CON EXTRA SAL")
-                n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD PEDIDOS PARA LLEVAR")
+                n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. PONERLE ETIQUETA A 20 CHURRITOS")
+                n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD PEDIDOS FRIMEX")
                 n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="EJ. LIMPIAR ÁREA AL TERMINAR")
                 
                 col_n1, col_n2 = st.columns(2)
@@ -723,6 +756,7 @@ def renderizar_tablero():
                     nuevas_notas = [n1.strip().upper(), n2.strip().upper(), n3.strip().upper()]
                     if nuevas_notas != estado_global["notas_tablero"]:
                         estado_global["notas_tablero"] = nuevas_notas
+                        st.session_state.indice_nota_carrusel = 0
                         reproducir_sonido_nota()
                         st.toast("Notas actualizadas en el tablero", icon="✅")
                     else:
@@ -732,6 +766,7 @@ def renderizar_tablero():
                 if btn_limpiar_notas:
                     if any(estado_global["notas_tablero"]):
                         estado_global["notas_tablero"] = ["", "", ""]
+                        st.session_state.indice_nota_carrusel = 0
                         reproducir_sonido_nota()
                         st.toast("Todas las notas fueron eliminadas", icon="ℹ️")
                     st.rerun()
@@ -797,13 +832,38 @@ def renderizar_tablero():
                 restaurar_estado()
                 st.rerun()
 
-    # RENDERIZAR NOTAS ACTIVAS
-    for idx_n, nota_txt in enumerate(estado_global["notas_tablero"]):
-        if nota_txt:
+    # RENDERIZAR NOTAS ACTIVAS CON LÓGICA DE CARRUSEL (ROTACIÓN Y DESGLOSE INTERACTIVO)
+    notas_filtradas = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
+    
+    if notas_filtradas:
+        total_notas_validas = len(notas_filtradas)
+        
+        # BOTÓN PARA DESGLOSAR O COLAPSAR
+        def alternar_desglose():
+            st.session_state.desglosar_notas = not st.session_state.desglosar_notas
+
+        st.button("TOGGLE_NOTAS", key="btn_toggle_desglose_notas", on_click=alternar_desglose, use_container_width=True)
+
+        if st.session_state.desglosar_notas or total_notas_validas == 1:
+            # MOSTRAR TODAS LAS NOTAS DESGLOSADAS
+            for num_nota, nota_txt in notas_filtradas:
+                st.markdown(f"""
+                    <div class="banner-notas-container">
+                        <div class="banner-notas-tag">NOTA {num_nota}</div>
+                        <div class="banner-notas-text">{nota_txt.upper()}</div>
+                        {f'<div class="banner-notas-hint">▲ COLAPSAR</div>' if total_notas_validas > 1 else ''}
+                    </div>
+                """, unsafe_allow_html=True)
+        else:
+            # MOSTRAR EN MODO CARRUSEL ROTATIVO CADA 5 SEGUNDOS
+            st.session_state.indice_nota_carrusel = (st.session_state.indice_nota_carrusel + 1) % total_notas_validas
+            num_nota_actual, texto_actual = notas_filtradas[st.session_state.indice_nota_carrusel]
+            
             st.markdown(f"""
                 <div class="banner-notas-container">
-                    <div class="banner-notas-tag">NOTA {idx_n + 1}</div>
-                    <div class="banner-notas-text">{nota_txt.upper()}</div>
+                    <div class="banner-notas-tag">NOTA {num_nota_actual}/{total_notas_validas}</div>
+                    <div class="banner-notas-text">{texto_actual.upper()}</div>
+                    <div class="banner-notas-hint">▼ DESGLOSAR TODAS</div>
                 </div>
             """, unsafe_allow_html=True)
 
