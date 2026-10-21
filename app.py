@@ -42,16 +42,13 @@ def obtener_estado_global():
     return {
         "completados": set(),
         "cantidades_al_completar": {},
+        "notas_tablero": ["", "", ""],  # Sincronizado globalmente para todas las pantallas
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False
     }
 
 estado_global = obtener_estado_global()
-
-# Asegurar persistencia absoluta en session_state para Notas y Productos Manuales
-if "notas_tablero_state" not in st.session_state:
-    st.session_state.notas_tablero_state = ["", "", ""]
 
 if "productos_manuales_state" not in st.session_state:
     st.session_state.productos_manuales_state = {}
@@ -61,14 +58,14 @@ def borrar_todo():
         "completados": estado_global["completados"].copy(),
         "cantidades_al_completar": estado_global["cantidades_al_completar"].copy(),
         "productos_manuales": {k: v.copy() for k, v in st.session_state.productos_manuales_state.items()},
-        "notas_tablero": st.session_state.notas_tablero_state.copy(),
+        "notas_tablero": estado_global["notas_tablero"].copy(),
         "hora_corte_utc": estado_global["hora_corte_utc"]
     }
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
     estado_global["completados"].clear()
     estado_global["cantidades_al_completar"].clear()
     st.session_state.productos_manuales_state.clear()
-    st.session_state.notas_tablero_state = ["", "", ""]
+    estado_global["notas_tablero"] = ["", "", ""]
     estado_global["descartar_celebracion"] = False
     st.toast("Tablero limpiado correctamente", icon="ℹ️")
 
@@ -77,7 +74,7 @@ def restaurar_estado():
         estado_global["completados"] = estado_global["respaldo"]["completados"].copy()
         estado_global["cantidades_al_completar"] = estado_global["respaldo"]["cantidades_al_completar"].copy()
         st.session_state.productos_manuales_state = {k: v.copy() for k, v in estado_global["respaldo"]["productos_manuales"].items()}
-        st.session_state.notas_tablero_state = estado_global["respaldo"]["notas_tablero"].copy()
+        estado_global["notas_tablero"] = estado_global["respaldo"]["notas_tablero"].copy()
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
         estado_global["descartar_celebracion"] = False
@@ -292,10 +289,13 @@ st.markdown(f"""
         word-break: break-word;
     }}
 
-    /* ESTILO GENERAL PARA LOS BOTONES DE NOTAS LATERALES */
+    /* ESTILO PARA LOS BOTONES DE NOTAS (MÁS COMPACTOS Y AJUSTADOS AL TEXTO) */
     div[data-testid="stElementContainer"]:has(button[key^="btn_toggle_"]) button {{
         height: 64px !important;
         min-height: 64px !important;
+        width: auto !important;
+        padding-left: 18px !important;
+        padding-right: 18px !important;
         border-radius: 16px !important;
         background-color: #151c2c !important;
         border: 1px solid rgba(0, 119, 237, 0.4) !important;
@@ -735,9 +735,9 @@ def renderizar_tablero():
         with st.popover("OPCIONES", use_container_width=True):
             st.markdown("### Notas del Tablero")
             with st.form("form_notas_tablero", clear_on_submit=False):
-                n1 = st.text_input("Nota 1", value=st.session_state.notas_tablero_state[0], placeholder="EJ. PONERLE ETIQUETA A 20 CHURRITOS")
-                n2 = st.text_input("Nota 2", value=st.session_state.notas_tablero_state[1], placeholder="EJ. PRIORIDAD PEDIDOS FRIMEX")
-                n3 = st.text_input("Nota 3", value=st.session_state.notas_tablero_state[2], placeholder="EJ. LIMPIAR ÁREA AL TERMINAR")
+                n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. PONERLE ETIQUETA A 20 CHURRITOS")
+                n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD PEDIDOS FRIMEX")
+                n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="EJ. LIMPIAR ÁREA AL TERMINAR")
                 
                 col_n1, col_n2 = st.columns(2)
                 with col_n1:
@@ -747,8 +747,8 @@ def renderizar_tablero():
 
                 if btn_guardar_notas:
                     nuevas_notas = [n1.strip().upper(), n2.strip().upper(), n3.strip().upper()]
-                    if nuevas_notas != st.session_state.notas_tablero_state:
-                        st.session_state.notas_tablero_state = nuevas_notas
+                    if nuevas_notas != estado_global["notas_tablero"]:
+                        estado_global["notas_tablero"] = nuevas_notas
                         st.session_state.indice_nota_carrusel = 0
                         reproducir_sonido_nota()
                         st.toast("Notas actualizadas en el tablero", icon="✅")
@@ -757,8 +757,8 @@ def renderizar_tablero():
                     st.rerun()
 
                 if btn_limpiar_notas:
-                    if any(st.session_state.notas_tablero_state):
-                        st.session_state.notas_tablero_state = ["", "", ""]
+                    if any(estado_global["notas_tablero"]):
+                        estado_global["notas_tablero"] = ["", "", ""]
                         st.session_state.indice_nota_carrusel = 0
                         reproducir_sonido_nota()
                         st.toast("Todas las notas fueron eliminadas", icon="ℹ️")
@@ -825,8 +825,8 @@ def renderizar_tablero():
                 restaurar_estado()
                 st.rerun()
 
-    # RENDERIZAR NOTAS ACTIVAS CON UN SOLO BOTÓN DE COLAPSAR LIMPIO Y ÚNICO
-    notas_filtradas = [(idx + 1, txt) for idx, txt in enumerate(st.session_state.notas_tablero_state) if txt.strip()]
+    # RENDERIZAR NOTAS ACTIVAS CON ANCHO COMPACTO AJUSTADO AL TEXTO
+    notas_filtradas = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
     
     if notas_filtradas:
         total_notas_validas = len(notas_filtradas)
@@ -836,8 +836,7 @@ def renderizar_tablero():
 
         if st.session_state.desglosar_notas or total_notas_validas == 1:
             for i, (num_nota, nota_txt) in enumerate(notas_filtradas):
-                # Si hay varias notas, solo ponemos el botón de colapsar en la PRIMERA nota para que no se repita
-                col_banner, col_btn = st.columns([0.84, 0.16]) if (total_notas_validas > 1 and i == 0) else (st.columns([1, 0.001]) if total_notas_validas > 1 else (st.columns([1, 0.001])))
+                col_banner, col_btn = st.columns([0.90, 0.10]) if (total_notas_validas > 1 and i == 0) else (st.columns([1, 0.001]) if total_notas_validas > 1 else (st.columns([1, 0.001])))
                 
                 with col_banner:
                     st.markdown(f"""
@@ -847,17 +846,16 @@ def renderizar_tablero():
                         </div>
                     """, unsafe_allow_html=True)
                 
-                # Renderizamos el botón único de colapsar exclusivamente en la primera columna lateral
                 if total_notas_validas > 1 and i == 0:
                     with col_btn:
-                        st.button("▲ COLAPSAR", key="btn_toggle_colapsar_unico", on_click=alternar_desglose, use_container_width=True)
+                        st.button("▲ COLAPSAR", key="btn_toggle_colapsar_unico", on_click=alternar_desglose, use_container_width=False)
                 
                 st.markdown("<div style='margin-bottom: 6px;'></div>", unsafe_allow_html=True)
         else:
             st.session_state.indice_nota_carrusel = (st.session_state.indice_nota_carrusel + 1) % total_notas_validas
             num_nota_actual, texto_actual = notas_filtradas[st.session_state.indice_nota_carrusel]
             
-            col_banner, col_btn = st.columns([0.82, 0.18])
+            col_banner, col_btn = st.columns([0.88, 0.12])
             with col_banner:
                 st.markdown(f"""
                     <div class="banner-notas-container">
@@ -866,7 +864,7 @@ def renderizar_tablero():
                     </div>
                 """, unsafe_allow_html=True)
             with col_btn:
-                st.button(f"▼ VER ({total_notas_validas})", key="btn_toggle_ver_todas", on_click=alternar_desglose, use_container_width=True)
+                st.button(f"▼ VER ({total_notas_validas})", key="btn_toggle_ver_todas", on_click=alternar_desglose, use_container_width=False)
 
     for prod, info in list(st.session_state.popups_nuevos.items()):
         if (ahora_utc - info["hora"]).total_seconds() >= 30:
