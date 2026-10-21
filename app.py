@@ -42,7 +42,7 @@ def obtener_estado_global():
     return {
         "completados": set(),
         "cantidades_al_completar": {},
-        "notas_tablero": ["", "", ""],  # Sincronizado globalmente para todas las pantallas
+        "notas_tablero": ["", "", ""],
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False
@@ -289,14 +289,12 @@ st.markdown(f"""
         word-break: break-word;
     }}
 
-    /* ESTILO PARA LOS BOTONES DE NOTAS (MÁS COMPACTOS Y AJUSTADOS AL TEXTO) */
+    /* ESTILO PARA LOS BOTONES SUPERIORES (OPCIONES Y VER/COLAPSAR) */
+    div[data-testid="stPopover"] button,
     div[data-testid="stElementContainer"]:has(button[key^="btn_toggle_"]) button {{
-        height: 64px !important;
-        min-height: 64px !important;
-        width: auto !important;
-        padding-left: 18px !important;
-        padding-right: 18px !important;
-        border-radius: 16px !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        border-radius: 14px !important;
         background-color: #151c2c !important;
         border: 1px solid rgba(0, 119, 237, 0.4) !important;
         color: #60a5fa !important;
@@ -305,6 +303,7 @@ st.markdown(f"""
         letter-spacing: 1px !important;
         text-transform: uppercase !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        width: 100% !important;
         white-space: nowrap !important;
     }}
 
@@ -412,10 +411,6 @@ st.markdown(f"""
 
     .divider-completados::before, .divider-completados::after {{ content: ''; flex: 1; border-bottom: 1px solid #34c759; opacity: 0.25; }}
     .divider-completados span {{ padding: 0 14px; background-color: #0b0f19; }}
-
-    div[data-testid="stPopover"] button {{
-        height: 38px !important; font-size: 12px !important; font-weight: 800 !important; background-color: #151c2c !important; color: #9ca3af !important; border: 1px solid rgba(255,255,255,0.08) !important; border-radius: 12px !important;
-    }}
 
     .footer-sutil {{
         position: fixed; bottom: 0; left: 0; right: 0; background: #070a10; border-top: 1px solid rgba(255,255,255,0.06); padding: 6px 16px; text-align: center; font-size: 11px !important; font-weight: 800 !important; color: #6b7280 !important; z-index: 999;
@@ -708,7 +703,7 @@ def renderizar_tablero():
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
     # ENCABEZADO
-    col_hdr_left, col_hdr_right = st.columns([0.82, 0.18])
+    col_hdr_left, col_hdr_right = st.columns([0.72, 0.28])
     
     with col_hdr_left:
         st.markdown(f"""
@@ -732,139 +727,142 @@ def renderizar_tablero():
         """, unsafe_allow_html=True)
 
     with col_hdr_right:
-        with st.popover("OPCIONES", use_container_width=True):
-            st.markdown("### Notas del Tablero")
-            with st.form("form_notas_tablero", clear_on_submit=False):
-                n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. PONERLE ETIQUETA A 20 CHURRITOS")
-                n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD PEDIDOS FRIMEX")
-                n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="EJ. LIMPIAR ÁREA AL TERMINAR")
-                
-                col_n1, col_n2 = st.columns(2)
-                with col_n1:
-                    btn_guardar_notas = st.form_submit_button("Guardar Notas", use_container_width=True)
-                with col_n2:
-                    btn_limpiar_notas = st.form_submit_button("Limpiar Todas", use_container_width=True)
+        # CONTENEDOR COMPARTIDO EN LA MISMA FILA: OPCIONES Y BOTÓN DE NOTAS (VER/COLAPSAR)
+        notas_filtradas_header = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
+        total_notas_h = len(notas_filtradas_header)
 
-                if btn_guardar_notas:
-                    nuevas_notas = [n1.strip().upper(), n2.strip().upper(), n3.strip().upper()]
-                    if nuevas_notas != estado_global["notas_tablero"]:
-                        estado_global["notas_tablero"] = nuevas_notas
-                        st.session_state.indice_nota_carrusel = 0
-                        reproducir_sonido_nota()
-                        st.toast("Notas actualizadas en el tablero", icon="✅")
-                    else:
-                        st.toast("Sin cambios en las notas", icon="ℹ️")
-                    st.rerun()
+        def alternar_desglose_h():
+            st.session_state.desglosar_notas = not st.session_state.desglosar_notas
 
-                if btn_limpiar_notas:
-                    if any(estado_global["notas_tablero"]):
-                        estado_global["notas_tablero"] = ["", "", ""]
-                        st.session_state.indice_nota_carrusel = 0
-                        reproducir_sonido_nota()
-                        st.toast("Todas las notas fueron eliminadas", icon="ℹ️")
-                    st.rerun()
+        subcol1, subcol2 = st.columns(2)
+        
+        with subcol1:
+            with st.popover("OPCIONES", use_container_width=True):
+                st.markdown("### Notas del Tablero")
+                with st.form("form_notas_tablero", clear_on_submit=False):
+                    n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. PONERLE ETIQUETA A 20 CHURRITOS")
+                    n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD PEDIDOS FRIMEX")
+                    n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="EJ. LIMPIAR ÁREA AL TERMINAR")
+                    
+                    col_n1, col_n2 = st.columns(2)
+                    with col_n1:
+                        btn_guardar_notas = st.form_submit_button("Guardar Notas", use_container_width=True)
+                    with col_n2:
+                        btn_limpiar_notas = st.form_submit_button("Limpiar Todas", use_container_width=True)
 
-            st.markdown("---")
-            st.markdown("### Agregar Producto Manual")
-            with st.form("form_agregar_manual", clear_on_submit=True):
-                nombre_manual = st.text_input("Nombre del producto")
-                es_infinito_nuevo = st.checkbox("Marcar como Infinito (∞ / Hasta terminar)")
-                cantidad_manual = st.number_input("Cantidad", min_value=1, value=1, step=1)
-                submit_manual = st.form_submit_button("Agregar al tablero")
-                
-                if submit_manual and nombre_manual.strip():
-                    prod_key = nombre_manual.strip().upper()
-                    st.session_state.productos_manuales_state[prod_key] = {
-                        "cantidad": int(cantidad_manual),
-                        "infinito": es_infinito_nuevo
-                    }
-                    st.toast(f"Agregado: {prod_key}", icon="✅")
-                    st.rerun()
+                    if btn_guardar_notas:
+                        nuevas_notas = [n1.strip().upper(), n2.strip().upper(), n3.strip().upper()]
+                        if nuevas_notas != estado_global["notas_tablero"]:
+                            estado_global["notas_tablero"] = nuevas_notas
+                            st.session_state.indice_nota_carrusel = 0
+                            reproducir_sonido_nota()
+                            st.toast("Notas actualizadas en el tablero", icon="✅")
+                        else:
+                            st.toast("Sin cambios en las notas", icon="ℹ️")
+                        st.rerun()
 
-            if st.session_state.productos_manuales_state:
+                    if btn_limpiar_notas:
+                        if any(estado_global["notas_tablero"]):
+                            estado_global["notas_tablero"] = ["", "", ""]
+                            st.session_state.indice_nota_carrusel = 0
+                            reproducir_sonido_nota()
+                            st.toast("Todas las notas fueron eliminadas", icon="ℹ️")
+                        st.rerun()
+
                 st.markdown("---")
-                st.markdown("### Modificar Productos Manuales")
-                for p_nombre, p_datos in list(st.session_state.productos_manuales_state.items()):
-                    p_cant = p_datos.get("cantidad", 1) if isinstance(p_datos, dict) else p_datos
-                    p_inf = p_datos.get("infinito", False) if isinstance(p_datos, dict) else False
+                st.markdown("### Agregar Producto Manual")
+                with st.form("form_agregar_manual", clear_on_submit=True):
+                    nombre_manual = st.text_input("Nombre del producto")
+                    es_infinito_nuevo = st.checkbox("Marcar como Infinito (∞ / Hasta terminar)")
+                    cantidad_manual = st.number_input("Cantidad", min_value=1, value=1, step=1)
+                    submit_manual = st.form_submit_button("Agregar al tablero")
                     
-                    st.markdown(f"**{p_nombre}** ({'∞' if p_inf else p_cant})")
-                    
-                    with st.expander(f"Editar {p_nombre}"):
-                        with st.form(key=f"form_edit_{p_nombre}"):
-                            nuevo_inf_val = st.checkbox("Infinito (∞)", value=p_inf, key=f"inf_{p_nombre}")
-                            nueva_cant_val = st.number_input("Cantidad", min_value=1, value=p_cant, step=1, key=f"cant_{p_nombre}")
-                            
-                            col_e1, col_e2 = st.columns(2)
-                            with col_e1:
-                                btn_aceptar_edit = st.form_submit_button("Aceptar")
-                            with col_e2:
-                                btn_borrar_item = st.form_submit_button("Borrar")
+                    if submit_manual and nombre_manual.strip():
+                        prod_key = nombre_manual.strip().upper()
+                        st.session_state.productos_manuales_state[prod_key] = {
+                            "cantidad": int(cantidad_manual),
+                            "infinito": es_infinito_nuevo
+                        }
+                        st.toast(f"Agregado: {prod_key}", icon="✅")
+                        st.rerun()
 
-                            if btn_aceptar_edit:
-                                st.session_state.productos_manuales_state[p_nombre] = {
-                                    "cantidad": int(nueva_cant_val),
-                                    "infinito": nuevo_inf_val
-                                }
-                                st.toast(f"Actualizado: {p_nombre}", icon="✅")
-                                st.rerun()
+                if st.session_state.productos_manuales_state:
+                    st.markdown("---")
+                    st.markdown("### Modificar Productos Manuales")
+                    for p_nombre, p_datos in list(st.session_state.productos_manuales_state.items()):
+                        p_cant = p_datos.get("cantidad", 1) if isinstance(p_datos, dict) else p_datos
+                        p_inf = p_datos.get("infinito", False) if isinstance(p_datos, dict) else False
+                        
+                        st.markdown(f"**{p_nombre}** ({'∞' if p_inf else p_cant})")
+                        
+                        with st.expander(f"Editar {p_nombre}"):
+                            with st.form(key=f"form_edit_{p_nombre}"):
+                                nuevo_inf_val = st.checkbox("Infinito (∞)", value=p_inf, key=f"inf_{p_nombre}")
+                                nueva_cant_val = st.number_input("Cantidad", min_value=1, value=p_cant, step=1, key=f"cant_{p_nombre}")
+                                
+                                col_e1, col_e2 = st.columns(2)
+                                with col_e1:
+                                    btn_aceptar_edit = st.form_submit_button("Aceptar")
+                                with col_e2:
+                                    btn_borrar_item = st.form_submit_button("Borrar")
 
-                            if btn_borrar_item:
-                                st.session_state.productos_manuales_state.pop(p_nombre, None)
-                                estado_global["completados"].discard(p_nombre)
-                                estado_global["cantidades_al_completar"].pop(p_nombre, None)
-                                st.toast(f"Producto borrado: {p_nombre}", icon="ℹ️")
-                                st.rerun()
+                                if btn_aceptar_edit:
+                                    st.session_state.productos_manuales_state[p_nombre] = {
+                                        "cantidad": int(nueva_cant_val),
+                                        "infinito": nuevo_inf_val
+                                    }
+                                    st.toast(f"Actualizado: {p_nombre}", icon="✅")
+                                    st.rerun()
 
-            st.markdown("---")
-            st.markdown("### Acciones de Tablero")
-            if st.button("Borrar todo", use_container_width=True):
-                borrar_todo()
-                st.rerun()
-            if st.button("Restaurar", use_container_width=True):
-                restaurar_estado()
-                st.rerun()
+                                if btn_borrar_item:
+                                    st.session_state.productos_manuales_state.pop(p_nombre, None)
+                                    estado_global["completados"].discard(p_nombre)
+                                    estado_global["cantidades_al_completar"].pop(p_nombre, None)
+                                    st.toast(f"Producto borrado: {p_nombre}", icon="ℹ️")
+                                    st.rerun()
 
-    # RENDERIZAR NOTAS ACTIVAS CON ANCHO COMPACTO AJUSTADO AL TEXTO
+                st.markdown("---")
+                st.markdown("### Acciones de Tablero")
+                if st.button("Borrar todo", use_container_width=True):
+                    borrar_todo()
+                    st.rerun()
+                if st.button("Restaurar", use_container_width=True):
+                    restaurar_estado()
+                    st.rerun()
+
+        with subcol2:
+            if total_notas_h > 1:
+                if st.session_state.get("desglosar_notas", False):
+                    st.button("▲ COLAPSAR", key="btn_toggle_colapsar_header", on_click=alternar_desglose_h, use_container_width=True)
+                else:
+                    st.button(f"▼ VER ({total_notas_h})", key="btn_toggle_ver_header", on_click=alternar_desglose_h, use_container_width=True)
+
+    # RENDERIZAR NOTAS ACTIVAS DEBAJO DEL ENCABEZADO
     notas_filtradas = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
     
     if notas_filtradas:
         total_notas_validas = len(notas_filtradas)
-        
-        def alternar_desglose():
-            st.session_state.desglosar_notas = not st.session_state.desglosar_notas
 
-        if st.session_state.desglosar_notas or total_notas_validas == 1:
-            for i, (num_nota, nota_txt) in enumerate(notas_filtradas):
-                col_banner, col_btn = st.columns([0.90, 0.10]) if (total_notas_validas > 1 and i == 0) else (st.columns([1, 0.001]) if total_notas_validas > 1 else (st.columns([1, 0.001])))
-                
-                with col_banner:
-                    st.markdown(f"""
-                        <div class="banner-notas-container">
-                            <div class="banner-notas-tag">NOTA {num_nota}</div>
-                            <div class="banner-notas-text">{nota_txt.upper()}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                
-                if total_notas_validas > 1 and i == 0:
-                    with col_btn:
-                        st.button("▲ COLAPSAR", key="btn_toggle_colapsar_unico", on_click=alternar_desglose, use_container_width=False)
-                
+        if st.session_state.get("desglosar_notas", False) or total_notas_validas == 1:
+            for num_nota, nota_txt in notas_filtradas:
+                st.markdown(f"""
+                    <div class="banner-notas-container">
+                        <div class="banner-notas-tag">NOTA {num_nota}</div>
+                        <div class="banner-notas-text">{nota_txt.upper()}</div>
+                    </div>
+                """, unsafe_allow_html=True)
                 st.markdown("<div style='margin-bottom: 6px;'></div>", unsafe_allow_html=True)
         else:
             st.session_state.indice_nota_carrusel = (st.session_state.indice_nota_carrusel + 1) % total_notas_validas
             num_nota_actual, texto_actual = notas_filtradas[st.session_state.indice_nota_carrusel]
             
-            col_banner, col_btn = st.columns([0.88, 0.12])
-            with col_banner:
-                st.markdown(f"""
-                    <div class="banner-notas-container">
-                        <div class="banner-notas-tag">NOTA {num_nota_actual}/{total_notas_validas}</div>
-                        <div class="banner-notas-text">{texto_actual.upper()}</div>
-                    </div>
-                """, unsafe_allow_html=True)
-            with col_btn:
-                st.button(f"▼ VER ({total_notas_validas})", key="btn_toggle_ver_todas", on_click=alternar_desglose, use_container_width=False)
+            st.markdown(f"""
+                <div class="banner-notas-container">
+                    <div class="banner-notas-tag">NOTA {num_nota_actual}/{total_notas_validas}</div>
+                    <div class="banner-notas-text">{texto_actual.upper()}</div>
+                </div>
+            """, unsafe_allow_html=True)
+            st.markdown("<div style='margin-bottom: 6px;'></div>", unsafe_allow_html=True)
 
     for prod, info in list(st.session_state.popups_nuevos.items()):
         if (ahora_utc - info["hora"]).total_seconds() >= 30:
