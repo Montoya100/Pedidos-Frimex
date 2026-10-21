@@ -292,8 +292,8 @@ st.markdown(f"""
         word-break: break-word;
     }}
 
-    /* ESTILO PARA EL PRIMER BOTÓN DE EXPANSIÓN VISIBLE */
-    div[data-testid="stElementContainer"]:has(button[key="btn_toggle_colapsar_1"]) button {{
+    /* ESTILO GENERAL PARA LOS BOTONES DE NOTAS LATERALES */
+    div[data-testid="stElementContainer"]:has(button[key^="btn_toggle_"]) button {{
         height: 64px !important;
         min-height: 64px !important;
         border-radius: 16px !important;
@@ -306,12 +306,6 @@ st.markdown(f"""
         text-transform: uppercase !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.25);
         white-space: nowrap !important;
-    }}
-
-    /* OCULTAR VISUALMENTE LOS BOTONES ADICIONALES (NOTA 2 Y 3) */
-    div[data-testid="stElementContainer"]:has(button[key="btn_toggle_colapsar_2"]),
-    div[data-testid="stElementContainer"]:has(button[key="btn_toggle_colapsar_3"]) {{
-        display: none !important;
     }}
 
     .full-screen-celebracion {{
@@ -831,7 +825,7 @@ def renderizar_tablero():
                 restaurar_estado()
                 st.rerun()
 
-    # RENDERIZAR NOTAS ACTIVAS CON PERSISTENCIA
+    # RENDERIZAR NOTAS ACTIVAS CON UN SOLO BOTÓN DE COLAPSAR LIMPIO Y ÚNICO
     notas_filtradas = [(idx + 1, txt) for idx, txt in enumerate(st.session_state.notas_tablero_state) if txt.strip()]
     
     if notas_filtradas:
@@ -841,8 +835,10 @@ def renderizar_tablero():
             st.session_state.desglosar_notas = not st.session_state.desglosar_notas
 
         if st.session_state.desglosar_notas or total_notas_validas == 1:
-            for num_nota, nota_txt in notas_filtradas:
-                col_banner, col_btn = st.columns([0.84, 0.16]) if total_notas_validas > 1 else (st.columns([1, 0.001]))
+            for i, (num_nota, nota_txt) in enumerate(notas_filtradas):
+                # Si hay varias notas, solo ponemos el botón de colapsar en la PRIMERA nota para que no se repita
+                col_banner, col_btn = st.columns([0.84, 0.16]) if (total_notas_validas > 1 and i == 0) else (st.columns([1, 0.001]) if total_notas_validas > 1 else (st.columns([1, 0.001])))
+                
                 with col_banner:
                     st.markdown(f"""
                         <div class="banner-notas-container">
@@ -850,9 +846,12 @@ def renderizar_tablero():
                             <div class="banner-notas-text">{nota_txt.upper()}</div>
                         </div>
                     """, unsafe_allow_html=True)
-                if total_notas_validas > 1:
+                
+                # Renderizamos el botón único de colapsar exclusivamente en la primera columna lateral
+                if total_notas_validas > 1 and i == 0:
                     with col_btn:
-                        st.button("▲ COLAPSAR", key=f"btn_toggle_colapsar_{num_nota}", on_click=alternar_desglose, use_container_width=True)
+                        st.button("▲ COLAPSAR", key="btn_toggle_colapsar_unico", on_click=alternar_desglose, use_container_width=True)
+                
                 st.markdown("<div style='margin-bottom: 6px;'></div>", unsafe_allow_html=True)
         else:
             st.session_state.indice_nota_carrusel = (st.session_state.indice_nota_carrusel + 1) % total_notas_validas
