@@ -289,20 +289,33 @@ st.markdown(f"""
         word-break: break-word;
     }}
 
-    /* ESTILO UNIFICADO PARA AMBOS BOTONES SUPERIORES (OPCIONES Y VER/COLAPSAR) */
+    /* FORZAR QUE AMBOS BOTONES SUPERIORES COMPARTAN SIEMPRE LA MISMA FILA Y MISMO ESTILO REDONDEADO AZUL */
+    div[data-testid="stHorizontalBlock"]:has(div[data-testid="stPopover"]) {{
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }}
+    
+    div[data-testid="stHorizontalBlock"]:has(div[data-testid="stPopover"]) > div[data-testid="column"] {{
+        width: 50% !important;
+        flex: 1 1 50% !important;
+        min-width: 0 !important;
+    }}
+
     div[data-testid="stPopover"] button,
     div[data-testid="stElementContainer"]:has(button[key^="btn_toggle_"]) button {{
         height: 44px !important;
         min-height: 44px !important;
-        border-radius: 14px !important;
+        border-radius: 16px !important;
         background-color: #151c2c !important;
-        border: 1px solid rgba(0, 119, 237, 0.4) !important;
+        border: 1px solid rgba(0, 119, 237, 0.5) !important;
         color: #60a5fa !important;
         font-weight: 900 !important;
-        font-size: 12px !important;
-        letter-spacing: 1px !important;
+        font-size: 11px !important;
+        letter-spacing: 0.8px !important;
         text-transform: uppercase !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        box-shadow: 0 4px 12px rgba(0, 119, 237, 0.2);
         width: 100% !important;
         white-space: nowrap !important;
     }}
@@ -483,7 +496,6 @@ st.markdown(f"""
     @media (max-width: 768px) {{
         .block-container {{ padding-left: 6px !important; padding-right: 6px !important; }}
         div[data-testid="column"] {{ width: 100% !important; flex: 1 1 100% !important; margin-bottom: 4px !important; }}
-        div[data-testid="stHorizontalBlock"] {{ flex-direction: row !important; width: 100% !important; gap: 6px !important; }}
         .clocks-group {{ display: none !important; }}
         
         .header-logo-container {{
@@ -703,7 +715,7 @@ def renderizar_tablero():
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
     # ENCABEZADO
-    col_hdr_left, col_hdr_right = st.columns([0.68, 0.32])
+    col_hdr_left, col_hdr_right = st.columns([0.65, 0.35])
     
     with col_hdr_left:
         st.markdown(f"""
@@ -727,7 +739,7 @@ def renderizar_tablero():
         """, unsafe_allow_html=True)
 
     with col_hdr_right:
-        # CONTENEDOR COMPARTIDO EN LA MISMA FILA: OPCIONES Y BOTÓN DE NOTAS ESTILIZADO
+        # CONTENEDOR COMPARTIDO EN LA MISMA FILA ESTRICTA (OPCIONES + VER/COLAPSAR)
         notas_filtradas_header = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
         total_notas_h = len(notas_filtradas_header)
 
