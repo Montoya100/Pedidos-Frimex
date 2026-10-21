@@ -10,7 +10,7 @@ import zoneinfo
 # 1. CONFIGURACIÓN DE PÁGINA
 # ==========================================
 st.set_page_config(
-    page_title="MOSTACHO BOTANAS", 
+    page_title="MOSTACHO BOTANAS - ONE UI", 
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -42,8 +42,8 @@ def obtener_estado_global():
     return {
         "completados": set(),
         "cantidades_al_completar": {},
-        "productos_manuales": {},  # Guardado persistente {nombre: {"cantidad": num, "infinito": bool}}
-        "notas_tablero": ["", "", ""], # Hasta 3 notas independientes
+        "productos_manuales": {},  
+        "notas_tablero": ["", "", ""], 
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False
@@ -204,11 +204,11 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS Y SCRIPT LIMPIADOR DE STREAMLIT
+# 3. ESTILOS CSS - ESTILO ONE UI DE SAMSUNG
 # ==========================================
 st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=JetBrains+Mono:wght@800;900&display=swap');
 
     div[data-testid="stAppViewContainer"],
     div[data-testid="stMain"],
@@ -220,7 +220,8 @@ st.markdown(f"""
         animation: none !important;
     }}
 
-    .stApp {{ background-color: #0b0d13 !important; }}
+    /* Fondo principal estilo Dark Mode One UI */
+    .stApp {{ background-color: #0b0f19 !important; font-family: 'Plus Jakarta Sans', sans-serif !important; }}
     
     #MainMenu, footer, header, 
     div[data-testid="stToolbar"], 
@@ -234,10 +235,10 @@ st.markdown(f"""
     }}
     
     .block-container {{
-        padding-top: 0.4rem !important; 
-        padding-bottom: 3.5rem !important;
-        padding-left: 0.2rem !important; 
-        padding-right: 0.2rem !important;
+        padding-top: 0.6rem !important; 
+        padding-bottom: 4rem !important;
+        padding-left: 0.5rem !important; 
+        padding-right: 0.5rem !important;
         max-width: 100% !important;
     }}
 
@@ -246,15 +247,16 @@ st.markdown(f"""
         100% {{ opacity: 1; transform: translateY(0); background-position: 0 0; }}
     }}
 
+    /* Banners de notas con estética de notificaciones flotantes One UI */
     .banner-notas-container {{
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0284c7 200%);
+        background: linear-gradient(135deg, #182232 0%, #111827 50%, #0077ed 200%);
         background-size: 200% 100%;
-        animation: deslizarDegradado 0.6s ease-out forwards;
-        border: 2px solid #0284c7;
-        border-radius: 12px;
-        padding: 12px 20px;
-        margin-bottom: 10px;
-        box-shadow: 0 4px 16px rgba(2, 132, 199, 0.25);
+        animation: deslizarDegradado 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        border: 1px solid rgba(0, 119, 237, 0.3);
+        border-radius: 20px;
+        padding: 14px 22px;
+        margin-bottom: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
         display: flex;
         align-items: center;
         width: 100% !important;
@@ -263,23 +265,23 @@ st.markdown(f"""
     }}
 
     .banner-notas-tag {{
-        background: #0284c7;
+        background: #0077ed;
         color: #ffffff;
-        font-weight: 900;
-        font-size: 14px !important;
-        letter-spacing: 2px;
-        padding: 6px 14px;
-        border-radius: 6px;
+        font-weight: 800;
+        font-size: 13px !important;
+        letter-spacing: 1.5px;
+        padding: 6px 12px;
+        border-radius: 12px;
         text-transform: uppercase;
         white-space: nowrap;
     }}
 
     .banner-notas-text {{
-        color: #f8fafc;
-        font-size: 24px !important;
-        font-weight: 900 !important;
+        color: #f3f4f6;
+        font-size: 22px !important;
+        font-weight: 800 !important;
         line-height: 1.25;
-        letter-spacing: 0.8px;
+        letter-spacing: 0.5px;
         text-transform: uppercase !important;
         flex: 1 !important;
         width: 100% !important;
@@ -287,10 +289,10 @@ st.markdown(f"""
     }}
 
     .full-screen-celebracion {{
-        background: linear-gradient(180deg, #161219 0%, #0c0d12 100%);
-        border: 2px solid #f97316;
-        border-radius: 24px;
-        box-shadow: 0 0 60px rgba(249, 115, 22, 0.5);
+        background: linear-gradient(180deg, #1e1b18 0%, #0b0f19 100%);
+        border: 1px solid rgba(255, 149, 0, 0.3);
+        border-radius: 28px;
+        box-shadow: 0 0 50px rgba(255, 149, 0, 0.25);
         padding: 40px 24px 28px 24px;
         text-align: center;
         margin: 10px 0 20px 0;
@@ -306,114 +308,117 @@ st.markdown(f"""
             padding: 60px 40px !important;
             justify-content: center !important;
         }}
-        .img-celebracion-logo {{ height: 150px !important; margin-bottom: 24px !important; }}
-        .txt-celebracion-titulo {{ font-size: 42px !important; letter-spacing: 3px !important; margin-bottom: 12px !important; }}
-        .txt-celebracion-sub {{ font-size: 20px !important; margin-bottom: 36px !important; }}
+        .img-celebracion-logo {{ height: 140px !important; margin-bottom: 24px !important; }}
+        .txt-celebracion-titulo {{ font-size: 40px !important; letter-spacing: 2px !important; margin-bottom: 12px !important; }}
+        .txt-celebracion-sub {{ font-size: 18px !important; margin-bottom: 36px !important; }}
         div[data-testid="stElementContainer"]:has(button[key="btn_pantalla_completa_cerrar"]) {{
-            max-width: 280px !important;
+            max-width: 260px !important;
             margin: 0 auto !important;
         }}
     }}
 
     .header-logo-container {{
         display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 8px; width: 100%; padding: 0 4px; flex-wrap: nowrap; gap: 8px;
+        margin-bottom: 12px; width: 100%; padding: 0 4px; flex-wrap: nowrap; gap: 8px;
     }}
     
-    .header-left-group {{ display: flex; align-items: center; gap: 12px; flex-wrap: nowrap; }}
-    .header-logo-img {{ height: 56px !important; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); display: block !important; }}
+    .header-left-group {{ display: flex; align-items: center; gap: 14px; flex-wrap: nowrap; }}
+    .header-logo-img {{ height: 58px !important; width: auto; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); display: block !important; }}
 
     .header-title {{
-        color: #ffffff; font-weight: 900; font-size: 23px !important;
-        line-height: 1.1; letter-spacing: 1.2px; margin: 0; padding: 0; white-space: nowrap;
+        color: #ffffff; font-weight: 800; font-size: 24px !important;
+        line-height: 1.1; letter-spacing: 0.8px; margin: 0; padding: 0; white-space: nowrap;
         text-transform: uppercase;
     }}
 
-    .sub-brand-line {{ display: flex; align-items: center; gap: 8px; font-size: 12px; color: #64748b; font-weight: 800; letter-spacing: 1px; }}
+    .sub-brand-line {{ display: flex; align-items: center; gap: 8px; font-size: 11px; color: #9ca3af; font-weight: 700; letter-spacing: 1px; }}
     .sync-text-inline {{ color: #38bdf8; font-weight: 700; }}
     .clocks-group {{ display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }}
 
     .header-clock {{
-        background: #161922; border: 1px solid #2a2e39; border-radius: 8px; padding: 6px 14px;
-        color: #ffffff !important; font-size: 22px !important; font-weight: 900 !important;
-        letter-spacing: 1.2px; display: flex; align-items: center; gap: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.4); white-space: nowrap;
+        background: #151c2c; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 8px 16px;
+        color: #ffffff !important; font-size: 20px !important; font-weight: 800 !important;
+        letter-spacing: 1px; display: flex; align-items: center; gap: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: nowrap;
     }}
 
     .status-dot {{
-        height: 9px; width: 9px; background-color: #10b981; border-radius: 50%; display: inline-block;
-        box-shadow: 0 0 8px #10b981; animation: pulseDot 2s infinite;
+        height: 10px; width: 10px; background-color: #34c759; border-radius: 50%; display: inline-block;
+        box-shadow: 0 0 10px #34c759; animation: pulseDot 2s infinite;
     }}
 
     @keyframes pulseDot {{ 0% {{ opacity: 0.4; }} 50% {{ opacity: 1; }} 100% {{ opacity: 0.4; }} }}
 
     @keyframes pulseGlow {{
-        0% {{ box-shadow: 0 0 4px rgba(56, 189, 248, 0.4); border-color: #38bdf8; }}
-        50% {{ box-shadow: 0 0 18px rgba(56, 189, 248, 0.9); border-color: #60a5fa; }}
-        100% {{ box-shadow: 0 0 4px rgba(56, 189, 248, 0.4); border-color: #38bdf8; }}
+        0% {{ box-shadow: 0 0 8px rgba(0, 119, 237, 0.4); border-color: #0077ed; }}
+        50% {{ box-shadow: 0 0 22px rgba(0, 119, 237, 0.8); border-color: #3b82f6; }}
+        100% {{ box-shadow: 0 0 8px rgba(0, 119, 237, 0.4); border-color: #0077ed; }}
     }}
 
     .anim-pulso-nuevo {{ animation: pulseGlow 1.2s infinite ease-in-out !important; }}
 
     .txt-incremento {{
-        display: inline-block; background-color: #1e3a8a; color: #93c5fd;
-        font-size: 20px !important; font-weight: 900 !important; padding: 2px 8px;
-        border-radius: 6px; margin-left: 6px; border: 1px solid #3b82f6; vertical-align: middle;
+        display: inline-block; background-color: rgba(0, 119, 237, 0.25); color: #60a5fa;
+        font-size: 18px !important; font-weight: 800 !important; padding: 2px 10px;
+        border-radius: 10px; margin-left: 8px; border: 1px solid rgba(0, 119, 237, 0.4); vertical-align: middle;
     }}
 
     .metrics-row {{
         display: flex; justify-content: space-around; align-items: center;
-        background: #141822; border-radius: 10px; padding: 10px 16px 14px 16px;
-        margin-bottom: 14px; border: 1px solid #232936; position: relative; overflow: hidden;
+        background: #111827; border-radius: 20px; padding: 12px 18px 16px 18px;
+        margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.06); position: relative; overflow: hidden;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.3);
     }}
 
-    .progress-bar-bg {{ position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: #1f2430; }}
+    .progress-bar-bg {{ position: absolute; bottom: 0; left: 0; right: 0; height: 5px; background: #1f2937; }}
     .progress-bar-fill {{
-        height: 100%; background: linear-gradient(90deg, #fb923c 0%, #f97316 100%);
-        box-shadow: 0 0 8px rgba(249, 115, 22, 0.6); transition: width 0.5s ease-in-out;
+        height: 100%; background: linear-gradient(90deg, #ff9500 0%, #ffcc00 100%);
+        box-shadow: 0 0 10px rgba(255, 149, 0, 0.6); transition: width 0.5s ease-in-out;
+        border-radius: 0 4px 4px 0;
     }}
 
     .metric-inline {{
-        display: flex; align-items: center; gap: 10px; font-size: 15px !important;
-        font-weight: 800 !important; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase;
+        display: flex; align-items: center; gap: 10px; font-size: 14px !important;
+        font-weight: 700 !important; color: #9ca3af; letter-spacing: 0.5px; text-transform: uppercase;
     }}
 
-    .metric-inline .val {{ font-size: 22px !important; font-weight: 900 !important; color: #f87171; }}
-    .pct-avance {{ font-size: 13px !important; font-weight: 800 !important; color: #94a3b8 !important; letter-spacing: 0.8px; text-transform: uppercase; }}
+    .metric-inline .val {{ font-size: 20px !important; font-weight: 800 !important; color: #f87171; }}
+    .pct-avance {{ font-size: 13px !important; font-weight: 800 !important; color: #9ca3af !important; letter-spacing: 0.8px; text-transform: uppercase; }}
 
     .divider-completados {{
-        display: flex; align-items: center; text-align: center; color: #10b981;
-        font-size: 11px; font-weight: 900; letter-spacing: 2px; margin: 18px 0 12px 0;
+        display: flex; align-items: center; text-align: center; color: #34c759;
+        font-size: 11px; font-weight: 800; letter-spacing: 2px; margin: 20px 0 14px 0;
     }}
 
-    .divider-completados::before, .divider-completados::after {{ content: ''; flex: 1; border-bottom: 1px solid #10b981; opacity: 0.3; }}
-    .divider-completados span {{ padding: 0 12px; background-color: #0b0d13; }}
+    .divider-completados::before, .divider-completados::after {{ content: ''; flex: 1; border-bottom: 1px solid #34c759; opacity: 0.25; }}
+    .divider-completados span {{ padding: 0 14px; background-color: #0b0f19; }}
 
     div[data-testid="stPopover"] button {{
-        height: 36px !important; font-size: 12px !important; font-weight: 800 !important; background-color: #141822 !important; color: #94a3b8 !important; border: 1px solid #232936 !important; border-radius: 8px !important;
+        height: 38px !important; font-size: 12px !important; font-weight: 800 !important; background-color: #151c2c !important; color: #9ca3af !important; border: 1px solid rgba(255,255,255,0.08) !important; border-radius: 12px !important;
     }}
 
     .footer-sutil {{
-        position: fixed; bottom: 0; left: 0; right: 0; background: #090b10; border-top: 1px solid #181d28; padding: 5px 16px; text-align: center; font-size: 11px !important; font-weight: 800 !important; color: #64748b !important; z-index: 999;
+        position: fixed; bottom: 0; left: 0; right: 0; background: #070a10; border-top: 1px solid rgba(255,255,255,0.06); padding: 6px 16px; text-align: center; font-size: 11px !important; font-weight: 800 !important; color: #6b7280 !important; z-index: 999;
     }}
 
-    .footer-sutil span {{ color: #10b981 !important; font-weight: 900 !important; }}
+    .footer-sutil span {{ color: #34c759 !important; font-weight: 900 !important; }}
 
-    /* TARJETA MAESTRA CON TIPOGRAFÍA GIGANTE */
+    /* TARJETAS MAESTRAS ESTILO ONE UI (BORDES ULTRA REDONDEADOS Y SOMBRAS SUAVES) */
     .card-master-container {{
-        border-radius: 14px;
-        padding: 16px 18px;
-        margin-bottom: 6px;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+        border-radius: 24px;
+        padding: 18px 20px;
+        margin-bottom: 8px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.45);
         display: flex;
         align-items: center;
         justify-content: space-between;
-        min-height: 120px;
+        min-height: 126px;
+        backdrop-filter: blur(10px);
     }}
 
-    .card-master-pendiente {{ background: #dc2626 !important; border: 2px solid #ef4444 !important; color: #ffffff !important; }}
+    .card-master-pendiente {{ background: #dc2626 !important; border: 1px solid rgba(239, 68, 68, 0.4) !important; color: #ffffff !important; }}
     
-    .card-master-completado {{ background: #059669 !important; border: 2px solid #10b981 !important; color: #ffffff !important; opacity: 0.75; }}
+    .card-master-completado {{ background: #047857 !important; border: 1px solid rgba(16, 185, 129, 0.4) !important; color: #ffffff !important; opacity: 0.75; }}
     .card-master-completado .card-master-title,
     .card-master-completado .card-master-num {{
         text-decoration: line-through !important;
@@ -421,11 +426,11 @@ st.markdown(f"""
         text-decoration-color: rgba(255, 255, 255, 0.8) !important;
     }}
 
-    .card-master-reciente {{ background: #2563eb !important; border: 2px solid #60a5fa !important; color: #ffffff !important; }}
+    .card-master-reciente {{ background: #1d4ed8 !important; border: 1px solid rgba(96, 165, 250, 0.4) !important; color: #ffffff !important; }}
 
     .card-master-title {{
-        font-size: 32px !important;
-        font-weight: 900 !important;
+        font-size: 30px !important;
+        font-weight: 800 !important;
         text-transform: uppercase !important;
         line-height: 1.15 !important;
         flex: 1;
@@ -434,31 +439,32 @@ st.markdown(f"""
 
     .card-master-num {{
         font-family: 'JetBrains Mono', monospace !important;
-        font-size: 76px !important;
+        font-size: 72px !important;
         font-weight: 900 !important;
         line-height: 1 !important;
         text-align: center;
-        min-width: 100px;
+        min-width: 90px;
     }}
 
-    /* BOTÓN NATIVO INFERIOR */
+    /* BOTONES TIPO PÍLDORA FLOTANTE */
     div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) {{ margin-bottom: 16px !important; }}
     
     div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button {{
         height: 44px !important;
         min-height: 44px !important;
         width: 100% !important;
-        border-radius: 8px !important;
-        background-color: #161922 !important;
-        border: 1px solid #2a2e39 !important;
-        color: #ffffff !important;
-        font-weight: 900 !important;
-        font-size: 14px !important;
-        letter-spacing: 2px !important;
+        border-radius: 16px !important;
+        background-color: #151c2c !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        color: #f3f4f6 !important;
+        font-weight: 800 !important;
+        font-size: 13px !important;
+        letter-spacing: 1.5px !important;
         text-transform: uppercase !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     }}
 
-    /* VERSIÓN MÓVIL */
+    /* VERSIÓN MÓVIL Y TABLET COMPACTA */
     @media (max-width: 768px) {{
         .block-container {{ padding-left: 6px !important; padding-right: 6px !important; }}
         div[data-testid="column"] {{ width: 100% !important; flex: 1 1 100% !important; margin-bottom: 4px !important; }}
@@ -472,29 +478,29 @@ st.markdown(f"""
             padding: 0 2px !important;
         }}
         .header-logo-img {{
-            height: 44px !important;
+            height: 46px !important;
             display: block !important;
             visibility: visible !important;
         }}
-        .header-title {{ font-size: 16px !important; }}
+        .header-title {{ font-size: 17px !important; }}
         .sub-brand-line {{ font-size: 10px !important; }}
         .pct-avance {{ font-size: 11px !important; }}
 
         .full-screen-celebracion {{ padding: 28px 16px 20px 16px !important; }}
         .img-celebracion-logo {{ height: 100px !important; margin-bottom: 16px !important; }}
-        .txt-celebracion-titulo {{ font-size: 28px !important; margin-bottom: 8px !important; }}
-        .txt-celebracion-sub {{ font-size: 16px !important; margin-bottom: 24px !important; }}
+        .txt-celebracion-titulo {{ font-size: 26px !important; margin-bottom: 8px !important; }}
+        .txt-celebracion-sub {{ font-size: 15px !important; margin-bottom: 24px !important; }}
         
-        .card-master-title {{ font-size: 22px !important; }}
-        .card-master-num {{ font-size: 56px !important; }}
-        .card-master-container {{ min-height: 100px !important; padding: 12px 14px !important; }}
-        .banner-notas-text {{ font-size: 18px !important; }}
+        .card-master-title {{ font-size: 21px !important; }}
+        .card-master-num {{ font-size: 52px !important; }}
+        .card-master-container {{ min-height: 96px !important; padding: 14px 16px !important; border-radius: 20px !important; }}
+        .banner-notas-text {{ font-size: 17px !important; }}
     }}
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SCRIPT JS: WAKE LOCK + REMOCIÓN ACTIVA
+# SCRIPT JS: WAKE LOCK + LIMPIEZA
 # ==========================================
 ocultar_marca_js = """
 <script>
@@ -561,7 +567,7 @@ def obtener_recibos_hoy():
     return todos_los_recibos
 
 # ==========================================
-# 5. TABLERO DE PEDIDOS EN TIEMPO REAL (CADA 5 SEGUNDOS)
+# 5. TABLERO DE PEDIDOS EN TIEMPO REAL
 # ==========================================
 @st.fragment(run_every=5)
 def renderizar_tablero():
@@ -594,18 +600,17 @@ def renderizar_tablero():
                 cant_num = int(cantidad) if float(cantidad).is_integer() else cantidad
                 conteo_productos[nombre_completo] = conteo_productos.get(nombre_completo, 0) + cant_num
 
-    # FUSIONAR PRODUCTOS MANUALES (SOPORTANDO CANTIDAD O INFINITO)
+    # FUSIONAR PRODUCTOS MANUALES
     for prod_manual, datos in estado_global["productos_manuales"].items():
         if isinstance(datos, dict):
             cant_manual = datos.get("cantidad", 1)
             es_infinito = datos.get("infinito", False)
         else:
-            # Compatibilidad con estructuras anteriores
             cant_manual = datos
             es_infinito = False
 
         if es_infinito:
-            conteo_productos[prod_manual] = 1  # Valor base para que aparezca en el tablero
+            conteo_productos[prod_manual] = 1  
             infinitos_activos.add(prod_manual)
         else:
             conteo_productos[prod_manual] = conteo_productos.get(prod_manual, 0) + cant_manual
@@ -702,7 +707,6 @@ def renderizar_tablero():
 
     with col_hdr_right:
         with st.popover("OPCIONES", use_container_width=True):
-            # SECCIÓN: GESTIÓN DE HASTA 3 NOTAS INDEPENDIENTES
             st.markdown("### Notas del Tablero")
             with st.form("form_notas_tablero", clear_on_submit=False):
                 n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. LOTE 1 CON EXTRA SAL")
@@ -733,7 +737,6 @@ def renderizar_tablero():
                     st.rerun()
 
             st.markdown("---")
-            # SECCIÓN: AGREGAR PRODUCTO MANUAL (CON OPCIÓN DE INFINITO)
             st.markdown("### Agregar Producto Manual")
             with st.form("form_agregar_manual", clear_on_submit=True):
                 nombre_manual = st.text_input("Nombre del producto")
@@ -750,7 +753,6 @@ def renderizar_tablero():
                     st.toast(f"Agregado: {prod_key}", icon="✅")
                     st.rerun()
 
-            # SECCIÓN: EDICIÓN / BORRADO DE PRODUCTOS MANUALES
             if estado_global["productos_manuales"]:
                 st.markdown("---")
                 st.markdown("### Modificar Productos Manuales")
@@ -795,7 +797,7 @@ def renderizar_tablero():
                 restaurar_estado()
                 st.rerun()
 
-    # RENDERIZAR LOS BANNERS DE NOTAS ACTIVAS
+    # RENDERIZAR NOTAS ACTIVAS
     for idx_n, nota_txt in enumerate(estado_global["notas_tablero"]):
         if nota_txt:
             st.markdown(f"""
@@ -805,7 +807,6 @@ def renderizar_tablero():
                 </div>
             """, unsafe_allow_html=True)
 
-    # LIMPIEZA DE NOTIFICACIONES EXPIRADAS (> 30 SEG)
     for prod, info in list(st.session_state.popups_nuevos.items()):
         if (ahora_utc - info["hora"]).total_seconds() >= 30:
             st.session_state.popups_nuevos.pop(prod, None)
@@ -822,7 +823,7 @@ def renderizar_tablero():
             </div>
             <div class="metric-inline">
                 <span>Pendientes:</span>
-                <span class="val" style="color: {'#10b981' if piezas_pendientes == 0 else '#f87171'};">{piezas_pendientes}</span>
+                <span class="val" style="color: {'#34c759' if piezas_pendientes == 0 else '#f87171'};">{piezas_pendientes}</span>
             </div>
             <div class="pct-avance">{pct_progreso}% COMPLETADO</div>
             <div class="progress-bar-bg">
@@ -839,9 +840,9 @@ def renderizar_tablero():
 
         st.markdown(f"""
             <div class="full-screen-celebracion">
-                <img src="{LOGO_URL}" class="img-celebracion-logo" style="width: auto; filter: drop-shadow(0 6px 20px rgba(249, 115, 22, 0.7));" alt="Logo">
-                <h2 class="txt-celebracion-titulo" style="color: #fb923c; font-weight: 900; text-transform: uppercase;">PRODUCCIÓN FINALIZADA</h2>
-                <p class="txt-celebracion-sub" style="color: #94a3b8; font-weight: 700;">Se han completado todos los pedidos pendientes.</p>
+                <img src="{LOGO_URL}" class="img-celebracion-logo" style="width: auto; filter: drop-shadow(0 6px 20px rgba(255, 149, 0, 0.6));" alt="Logo">
+                <h2 class="txt-celebracion-titulo" style="color: #ff9500; font-weight: 800; text-transform: uppercase;">PRODUCCIÓN FINALIZADA</h2>
+                <p class="txt-celebracion-sub" style="color: #9ca3af; font-weight: 700;">Se han completado todos los pedidos pendientes.</p>
             </div>
         """, unsafe_allow_html=True)
 
@@ -902,7 +903,7 @@ def renderizar_tablero():
                                 inc = info_popup["incremento"]
                                 html_incremento = f'<span class="txt-incremento">+{inc}</span>'
 
-                            # TARJETA VISUAL GIGANTE
+                            # TARJETA ONE UI
                             st.markdown(f"""
                                 <div class="card-master-container {clase_css}">
                                     <div class="card-master-title">{producto} {html_incremento}</div>
@@ -910,7 +911,7 @@ def renderizar_tablero():
                                 </div>
                             """, unsafe_allow_html=True)
 
-                            # BOTÓN INFERIOR
+                            # BOTÓN PÍLDORA
                             st.button(
                                 texto_estado, 
                                 key=f"tarjeta_btn_{producto}", 
