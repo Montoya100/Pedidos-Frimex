@@ -241,6 +241,68 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
+    @keyframes deslizarDegradado {{
+        0% {{ opacity: 0; transform: translateY(-10px); background-position: 200% 0; }}
+        100% {{ opacity: 1; transform: translateY(0); background-position: 0 0; }}
+    }}
+
+    /* BANNER DE NOTAS ESTILIZADO (CON SU RECUADRO FLOTANTE ONE UI Y TEXTO GRANDE) */
+    .banner-notas-container {{
+        background: linear-gradient(135deg, #182232 0%, #111827 50%, #0077ed 200%);
+        background-size: 200% 100%;
+        animation: deslizarDegradado 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        border: 1px solid rgba(0, 119, 237, 0.3);
+        border-radius: 22px;
+        padding: 14px 20px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        width: 100% !important;
+        box-sizing: border-box;
+        gap: 14px;
+        min-height: 64px;
+    }}
+
+    .banner-notas-tag {{
+        background: #0077ed;
+        color: #ffffff;
+        font-weight: 900;
+        font-size: 13px !important;
+        letter-spacing: 1.5px;
+        padding: 8px 14px;
+        border-radius: 14px;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }}
+
+    .banner-notas-text {{
+        color: #ffffff;
+        font-size: 26px !important;
+        font-weight: 900 !important;
+        line-height: 1.25;
+        letter-spacing: 0.8px;
+        text-transform: uppercase !important;
+        flex: 1 !important;
+        width: 100% !important;
+        word-break: break-word;
+    }}
+
+    /* ESTILO PARA EL BOTÓN DE EXPANSIÓN AL LADO DERECHO */
+    div[data-testid="stElementContainer"]:has(button[key="btn_toggle_desglose_notas"]) button {{
+        height: 64px !important;
+        min-height: 64px !important;
+        border-radius: 16px !important;
+        background-color: #151c2c !important;
+        border: 1px solid rgba(0, 119, 237, 0.4) !important;
+        color: #60a5fa !important;
+        font-weight: 900 !important;
+        font-size: 12px !important;
+        letter-spacing: 1px !important;
+        text-transform: uppercase !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        white-space: nowrap !important;
+    }}
+
     .full-screen-celebracion {{
         background: linear-gradient(180deg, #1e1b18 0%, #0b0f19 100%);
         border: 1px solid rgba(255, 149, 0, 0.3);
@@ -417,30 +479,6 @@ st.markdown(f"""
         box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     }}
 
-    /* BOTÓN NATIVO DE NOTAS (DISEÑO LIMPIO EN UNA SOLA FILA) */
-    div[data-testid="stElementContainer"]:has(button[key="btn_toggle_desglose_notas"]) button {{
-        height: 64px !important;
-        border-radius: 16px !important;
-        background-color: #151c2c !important;
-        border: 1px solid rgba(0, 119, 237, 0.4) !important;
-        color: #60a5fa !important;
-        font-weight: 800 !important;
-        font-size: 12px !important;
-        letter-spacing: 1px !important;
-        text-transform: uppercase !important;
-    }}
-
-    /* CAJA NATIVA PARA EL TEXTO DEL BANNER */
-    .stAlert {{
-        background-color: #111827 !important;
-        border: 1px solid rgba(0, 119, 237, 0.3) !important;
-        border-radius: 16px !important;
-        color: #ffffff !important;
-        font-weight: 800 !important;
-        font-size: 22px !important;
-        padding: 12px 18px !important;
-    }}
-
     /* VERSIÓN MÓVIL Y TABLET COMPACTA */
     @media (max-width: 768px) {{
         .block-container {{ padding-left: 6px !important; padding-right: 6px !important; }}
@@ -471,6 +509,7 @@ st.markdown(f"""
         .card-master-title {{ font-size: 21px !important; }}
         .card-master-num {{ font-size: 52px !important; }}
         .card-master-container {{ min-height: 96px !important; padding: 14px 16px !important; border-radius: 20px !important; }}
+        .banner-notas-text {{ font-size: 20px !important; }}
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -781,7 +820,7 @@ def renderizar_tablero():
                 restaurar_estado()
                 st.rerun()
 
-    # RENDERIZAR NOTAS ACTIVAS (CON COLUMNAS NATIVAS, SIN HTML COMPLICADO)
+    # RENDERIZAR NOTAS ACTIVAS CON SU ESTILO VISUAL ORIGINAL EN UNA SOLA FILA
     notas_filtradas = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
     
     if notas_filtradas:
@@ -794,17 +833,28 @@ def renderizar_tablero():
             for num_nota, nota_txt in notas_filtradas:
                 col_banner, col_btn = st.columns([0.84, 0.16]) if total_notas_validas > 1 else (st.columns([1, 0.001]))
                 with col_banner:
-                    st.info(f"NOTA {num_nota}: {nota_txt.upper()}")
+                    st.markdown(f"""
+                        <div class="banner-notas-container">
+                            <div class="banner-notas-tag">NOTA {num_nota}</div>
+                            <div class="banner-notas-text">{nota_txt.upper()}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
                 if total_notas_validas > 1:
                     with col_btn:
                         st.button("▲ COLAPSAR", key="btn_toggle_desglose_notas", on_click=alternar_desglose, use_container_width=True)
+                st.markdown("<div style='margin-bottom: 6px;'></div>", unsafe_allow_html=True)
         else:
             st.session_state.indice_nota_carrusel = (st.session_state.indice_nota_carrusel + 1) % total_notas_validas
             num_nota_actual, texto_actual = notas_filtradas[st.session_state.indice_nota_carrusel]
             
             col_banner, col_btn = st.columns([0.82, 0.18])
             with col_banner:
-                st.info(f"NOTA {num_nota_actual}/{total_notas_validas}: {texto_actual.upper()}")
+                st.markdown(f"""
+                    <div class="banner-notas-container">
+                        <div class="banner-notas-tag">NOTA {num_nota_actual}/{total_notas_validas}</div>
+                        <div class="banner-notas-text">{texto_actual.upper()}</div>
+                    </div>
+                """, unsafe_allow_html=True)
             with col_btn:
                 st.button(f"▼ VER ({total_notas_validas})", key="btn_toggle_desglose_notas", on_click=alternar_desglose, use_container_width=True)
 
