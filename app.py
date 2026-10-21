@@ -289,7 +289,7 @@ st.markdown(f"""
         word-break: break-word;
     }}
 
-    /* ESTILO PARA LOS BOTONES SUPERIORES (OPCIONES Y VER/COLAPSAR) */
+    /* ESTILO UNIFICADO PARA AMBOS BOTONES SUPERIORES (OPCIONES Y VER/COLAPSAR) */
     div[data-testid="stPopover"] button,
     div[data-testid="stElementContainer"]:has(button[key^="btn_toggle_"]) button {{
         height: 44px !important;
@@ -703,7 +703,7 @@ def renderizar_tablero():
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
     # ENCABEZADO
-    col_hdr_left, col_hdr_right = st.columns([0.72, 0.28])
+    col_hdr_left, col_hdr_right = st.columns([0.68, 0.32])
     
     with col_hdr_left:
         st.markdown(f"""
@@ -727,7 +727,7 @@ def renderizar_tablero():
         """, unsafe_allow_html=True)
 
     with col_hdr_right:
-        # CONTENEDOR COMPARTIDO EN LA MISMA FILA: OPCIONES Y BOTÓN DE NOTAS (VER/COLAPSAR)
+        # CONTENEDOR COMPARTIDO EN LA MISMA FILA: OPCIONES Y BOTÓN DE NOTAS ESTILIZADO
         notas_filtradas_header = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
         total_notas_h = len(notas_filtradas_header)
 
@@ -833,7 +833,7 @@ def renderizar_tablero():
         with subcol2:
             if total_notas_h > 1:
                 if st.session_state.get("desglosar_notas", False):
-                    st.button("▲ COLAPSAR", key="btn_toggle_colapsar_header", on_click=alternar_desglose_h, use_container_width=True)
+                    st.button("▲ COLAPS", key="btn_toggle_colapsar_header", on_click=alternar_desglose_h, use_container_width=True)
                 else:
                     st.button(f"▼ VER ({total_notas_h})", key="btn_toggle_ver_header", on_click=alternar_desglose_h, use_container_width=True)
 
