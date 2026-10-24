@@ -288,89 +288,98 @@ st.markdown(f"""
         word-break: break-word;
     }}
 
-    /* NAVBAR INFERIOR FLOTANTE ONE UI */
-    .navbar-bottom-container {{
+    /* CÁPSULA FLOTANTE INFERIOR ÚNICA (ESTILO NAVBAR) */
+    .capsula-navbar-flotante {{
         position: fixed;
-        bottom: 12px;
+        bottom: 14px;
         left: 50%;
         transform: translateX(-50%);
-        width: 94%;
-        max-width: 500px;
-        background: rgba(21, 28, 44, 0.88);
+        width: auto;
+        min-width: 280px;
+        background: rgba(17, 24, 39, 0.92);
         backdrop-filter: blur(16px);
-        border: 1px solid rgba(0, 119, 237, 0.35);
-        border-radius: 24px;
-        padding: 8px 14px;
+        border: 1px solid rgba(0, 119, 237, 0.4);
+        border-radius: 30px;
+        padding: 6px 16px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        justify-content: center;
+        gap: 20px;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7);
         z-index: 99999;
+        transition: transform 0.3s ease, opacity 0.3s ease;
     }}
 
-    /* ESTILIZADO DE LOS ELEMENTOS DENTRO DE LA NAVBAR INFERIOR */
-    .nav-item-btn button {{
+    /* CLASE PARA OCULTAR LA CÁPSULA AL HACER SCROLL HACIA ABAJO EN MÓVIL */
+    .capsula-navbar-flotante.oculta {{
+        transform: translate(-50%, 100px) !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }}
+
+    /* BOTONES INTERNOS DE LA CÁPSULA (SÓLO ICONOS) */
+    .capsula-item button {{
         background: transparent !important;
         border: none !important;
         color: #60a5fa !important;
-        font-weight: 800 !important;
-        font-size: 11px !important;
-        letter-spacing: 0.5px !important;
+        font-size: 20px !important;
+        font-weight: 900 !important;
         box-shadow: none !important;
-        height: 38px !important;
-        min-height: 38px !important;
-        padding: 0 8px !important;
+        height: 42px !important;
+        min-height: 42px !important;
+        width: 42px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        border-radius: 14px !important;
+        border-radius: 50% !important;
+        padding: 0 !important;
     }}
 
-    .nav-item-btn button:hover {{
-        background: rgba(0, 119, 237, 0.18) !important;
+    .capsula-item button:hover {{
+        background: rgba(0, 119, 237, 0.25) !important;
         color: #ffffff !important;
     }}
 
-    .nav-center-info {{
+    /* INFORMACIÓN CENTRAL EN LA CÁPSULA */
+    .capsula-centro {{
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        color: #ffffff;
         text-align: center;
-        padding: 0 10px;
+        padding: 0 6px;
     }}
 
-    .nav-center-title {{
-        font-size: 10px !important;
+    .capsula-centro-title {{
+        font-size: 9px !important;
         font-weight: 800 !important;
         color: #9ca3af;
         letter-spacing: 1px;
         text-transform: uppercase;
     }}
 
-    .nav-center-val {{
-        font-size: 14px !important;
+    .capsula-centro-val {{
+        font-size: 13px !important;
         font-weight: 900 !important;
         color: #34c759;
     }}
 
-    /* BOTÓN AJUSTES/POPOVER DENTRO DE NAVBAR */
-    .nav-item-popover div[data-testid="stPopover"] button {{
-        height: 38px !important;
-        min-height: 38px !important;
-        border-radius: 14px !important;
+    /* POPUP DE AJUSTES DENTRO DE LA CÁPSULA */
+    .capsula-popover div[data-testid="stPopover"] button {{
         background: transparent !important;
         border: none !important;
         color: #60a5fa !important;
-        font-weight: 800 !important;
-        font-size: 11px !important;
+        font-size: 20px !important;
         box-shadow: none !important;
-        padding: 0 8px !important;
+        height: 42px !important;
+        min-height: 42px !important;
+        width: 42px !important;
+        border-radius: 50% !important;
+        padding: 0 !important;
     }}
 
-    .nav-item-popover div[data-testid="stPopover"] button:hover {{
-        background: rgba(0, 119, 237, 0.18) !important;
+    .capsula-popover div[data-testid="stPopover"] button:hover {{
+        background: rgba(0, 119, 237, 0.25) !important;
         color: #ffffff !important;
     }}
 
@@ -575,9 +584,9 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SCRIPT JS: WAKE LOCK + LIMPIEZA UI
+# SCRIPT JS: WAKE LOCK + SCROLL INTELIGENTE CÁPSULA
 # ==========================================
-ocultar_marca_js = """
+utilidades_js = """
 <script>
 async function iniciarUtilidades() {
     if ('wakeLock' in navigator) {
@@ -590,6 +599,28 @@ async function iniciarUtilidades() {
             });
         } catch (err) {}
     }
+
+    // COMPORTAMIENTO DE SCROLL PARA LA CÁPSULA FLOTANTE EN MÓVIL
+    let ultimoScrollY = window.scrollY;
+    
+    window.addEventListener('scroll', function() {
+        // En tablets o pantallas anchas (>= 769px) siempre se mantiene fija
+        if (window.innerWidth >= 769) return;
+
+        const capsula = document.querySelector('.capsula-navbar-flotante');
+        if (!capsula) return;
+
+        let scrollActual = window.scrollY;
+        
+        if (scrollActual > ultimoScrollY && scrollActual > 50) {
+            // Bajando -> Ocultar
+            capsula.classList.add('oculta');
+        } else {
+            // Subiendo o arriba -> Mostrar
+            capsula.classList.remove('oculta');
+        }
+        ultimoScrollY = scrollActual;
+    });
 
     function limpiarUI() {
         const elementosAEliminar = document.querySelectorAll('footer, #MainMenu, header, [data-testid="stDecoration"], [data-testid="stStatusWidget"], .stAppDeployButton');
@@ -611,7 +642,7 @@ async function iniciarUtilidades() {
 iniciarUtilidades();
 </script>
 """
-components.html(ocultar_marca_js, height=0, width=0)
+components.html(utilidades_js, height=0, width=0)
 
 # ==========================================
 # 4. CONSULTA A LA API DE LOYVERSE
@@ -863,7 +894,6 @@ def renderizar_tablero():
                 else:
                     activos.append((prod, cant_total))
 
-            # ORDENAMIENTO: Primero los recientes (tarjeta azul al inicio), luego los demás por cantidad descendente
             def clave_ordenamiento(item):
                 producto, cant_total = item
                 es_infinito = producto in infinitos_activos
@@ -913,7 +943,6 @@ def renderizar_tablero():
                                 inc = info_popup["incremento"]
                                 html_incremento = f'<span class="txt-incremento">+{inc}</span>'
 
-                            # TARJETA ONE UI
                             st.markdown(f"""
                                 <div class="card-master-container {clase_css}">
                                     <div class="card-master-title">{producto} {html_incremento}</div>
@@ -921,7 +950,6 @@ def renderizar_tablero():
                                 </div>
                             """, unsafe_allow_html=True)
 
-                            # BOTÓN PÍLDORA
                             st.button(
                                 texto_estado, 
                                 key=f"tarjeta_btn_{producto}", 
@@ -945,46 +973,50 @@ def renderizar_tablero():
             st.info("No hay pedidos registrados en este periodo.")
 
     # ==========================================
-    # NAVBAR INFERIOR FLOTANTE (IZQ: NOTAS | CENTRO: PRODUCCIÓN | DER: AJUSTES)
+    # CÁPSULA FLOTANTE INFERIOR ÚNICA (3 OPCIONES POR ICONOS)
+    # IZQUIERDA: NOTAS | CENTRO: PRODUCCIÓN | DERECHA: AJUSTES
     # ==========================================
-    def alternar_desglose_nav():
+    def alternar_desglose_capsula():
         st.session_state.desglosar_notas = not st.session_state.get("desglosar_notas", False)
 
     num_notas_activas = len([t for t in estado_global["notas_tablero"] if t.strip()])
-    label_notas = f"🔔 NOTAS ({num_notas_activas})" if num_notas_activas > 0 else "🔔 NOTAS"
+    label_nota_icono = f"🔔" if num_notas_activas == 0 else f"🔔" # O un indicador visual
 
-    nav_col1, nav_col2, nav_col3 = st.columns([0.35, 0.30, 0.35])
+    # Renderizamos la cápsula usando un contenedor HTML flotante y componentes interactivos de Streamlit dentro
+    st.markdown('<div class="capsula-navbar-flotante">', unsafe_allow_html=True)
+    
+    col_c1, col_c2, col_c3 = st.columns(3)
 
-    # IZQUIERDA: NOTAS
-    with nav_col1:
-        st.markdown('<div class="nav-item-btn">', unsafe_allow_html=True)
-        st.button(label_notas, key="btn_nav_notas", on_click=alternar_desglose_nav, use_container_width=True)
+    # 1. IZQUIERDA: NOTAS (ÍCONO)
+    with col_c1:
+        st.markdown('<div class="capsula-item">', unsafe_allow_html=True)
+        st.button("🔔", key="btn_capsula_notas", on_click=alternar_desglose_capsula, help="Ver / Colapsar Notas")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # CENTRO: PRODUCCIÓN
-    with nav_col2:
+    # 2. CENTRO: PRODUCCIÓN (RESUMEN)
+    with col_c2:
         st.markdown(f"""
-            <div class="nav-center-info">
-                <div class="nav-center-title">PRODUCCIÓN</div>
-                <div class="nav-center-val">{piezas_completadas} / {piezas_totales} PZS</div>
+            <div class="capsula-centro">
+                <div class="capsula-centro-title">PRODUCCIÓN</div>
+                <div class="capsula-centro-val">{piezas_completadas}/{piezas_totales}</div>
             </div>
         """, unsafe_allow_html=True)
 
-    # DERECHA: AJUSTES
-    with nav_col3:
-        st.markdown('<div class="nav-item-popover">', unsafe_allow_html=True)
-        with st.popover("⚙️ AJUSTES", use_container_width=True):
+    # 3. DERECHA: AJUSTES (ÍCONO ENGRANAJE)
+    with col_c3:
+        st.markdown('<div class="capsula-popover">', unsafe_allow_html=True)
+        with st.popover("⚙️", help="Ajustes y Opciones"):
             st.markdown("### Notas del Tablero")
             with st.form("form_notas_tablero", clear_on_submit=False):
-                n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. PONERLE ETIQUETA A 20 CHURRITOS")
-                n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD PEDIDOS FRIMEX")
-                n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="EJ. LIMPIAR ÁREA AL TERMINAR")
+                n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. ETIQUETA A 20 CHURRITOS")
+                n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD FRIMEX")
+                n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="EJ. LIMPIAR ÁREA")
                 
                 col_n1, col_n2 = st.columns(2)
                 with col_n1:
-                    btn_guardar_notas = st.form_submit_button("Guardar Notas", use_container_width=True)
+                    btn_guardar_notas = st.form_submit_button("Guardar", use_container_width=True)
                 with col_n2:
-                    btn_limpiar_notas = st.form_submit_button("Limpiar Todas", use_container_width=True)
+                    btn_limpiar_notas = st.form_submit_button("Limpiar", use_container_width=True)
 
                 if btn_guardar_notas:
                     nuevas_notas = [n1.strip().upper(), n2.strip().upper(), n3.strip().upper()]
@@ -992,7 +1024,7 @@ def renderizar_tablero():
                         estado_global["notas_tablero"] = nuevas_notas
                         st.session_state.indice_nota_carrusel = 0
                         reproducir_sonido_nota()
-                        st.toast("Notas actualizadas en el tablero", icon="✅")
+                        st.toast("Notas actualizadas", icon="✅")
                     st.rerun()
 
                 if btn_limpiar_notas:
@@ -1000,14 +1032,14 @@ def renderizar_tablero():
                         estado_global["notas_tablero"] = ["", "", ""]
                         st.session_state.indice_nota_carrusel = 0
                         reproducir_sonido_nota()
-                        st.toast("Todas las notas fueron eliminadas", icon="ℹ️")
+                        st.toast("Notas eliminadas", icon="ℹ️")
                     st.rerun()
 
             st.markdown("---")
             st.markdown("### Agregar Producto Manual")
             with st.form("form_agregar_manual", clear_on_submit=True):
                 nombre_manual = st.text_input("Nombre del producto")
-                es_infinito_nuevo = st.checkbox("Marcar como Infinito (∞ / Hasta terminar)")
+                es_infinito_nuevo = st.checkbox("Infinito (∞ / Hasta terminar)")
                 cantidad_manual = st.number_input("Cantidad", min_value=1, value=1, step=1)
                 submit_manual = st.form_submit_button("Agregar al tablero")
                 
@@ -1017,12 +1049,12 @@ def renderizar_tablero():
                         "cantidad": int(cantidad_manual),
                         "infinito": es_infinito_nuevo
                     }
-                    st.toast(f"Agregado global: {prod_key}", icon="✅")
+                    st.toast(f"Agregado: {prod_key}", icon="✅")
                     st.rerun()
 
             if estado_global["productos_manuales_global"]:
                 st.markdown("---")
-                st.markdown("### Modificar Productos Manuales")
+                st.markdown("### Modificar Manuales")
                 for p_nombre, p_datos in list(estado_global["productos_manuales_global"].items()):
                     p_cant = p_datos.get("cantidad", 1) if isinstance(p_datos, dict) else p_datos
                     p_inf = p_datos.get("infinito", False) if isinstance(p_datos, dict) else False
@@ -1052,11 +1084,11 @@ def renderizar_tablero():
                                 estado_global["productos_manuales_global"].pop(p_nombre, None)
                                 estado_global["completados"].discard(p_nombre)
                                 estado_global["cantidades_al_completar"].pop(p_nombre, None)
-                                st.toast(f"Producto borrado: {p_nombre}", icon="ℹ️")
+                                st.toast(f"Borrado: {p_nombre}", icon="ℹ️")
                                 st.rerun()
 
             st.markdown("---")
-            st.markdown("### Acciones de Tablero")
+            st.markdown("### Acciones")
             if st.button("Borrar todo", use_container_width=True):
                 borrar_todo()
                 st.rerun()
@@ -1064,5 +1096,7 @@ def renderizar_tablero():
                 restaurar_estado()
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
 renderizar_tablero()
