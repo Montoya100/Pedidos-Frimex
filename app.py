@@ -43,6 +43,7 @@ def obtener_estado_global():
         "completados": set(),
         "cantidades_al_completar": {},
         "notas_tablero": ["", "", ""],
+        "productos_manuales_global": {},  # Sincronizado globalmente entre todas las pantallas
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False
@@ -50,21 +51,18 @@ def obtener_estado_global():
 
 estado_global = obtener_estado_global()
 
-if "productos_manuales_state" not in st.session_state:
-    st.session_state.productos_manuales_state = {}
-
 def borrar_todo():
     estado_global["respaldo"] = {
         "completados": estado_global["completados"].copy(),
         "cantidades_al_completar": estado_global["cantidades_al_completar"].copy(),
-        "productos_manuales": {k: v.copy() for k, v in st.session_state.productos_manuales_state.items()},
+        "productos_manuales_global": {k: v.copy() for k, v in estado_global["productos_manuales_global"].items()},
         "notas_tablero": estado_global["notas_tablero"].copy(),
         "hora_corte_utc": estado_global["hora_corte_utc"]
     }
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
     estado_global["completados"].clear()
     estado_global["cantidades_al_completar"].clear()
-    st.session_state.productos_manuales_state.clear()
+    estado_global["productos_manuales_global"].clear()
     estado_global["notas_tablero"] = ["", "", ""]
     estado_global["descartar_celebracion"] = False
     st.toast("Tablero limpiado correctamente", icon="ℹ️")
@@ -73,7 +71,7 @@ def restaurar_estado():
     if estado_global["respaldo"]:
         estado_global["completados"] = estado_global["respaldo"]["completados"].copy()
         estado_global["cantidades_al_completar"] = estado_global["respaldo"]["cantidades_al_completar"].copy()
-        st.session_state.productos_manuales_state = {k: v.copy() for k, v in estado_global["respaldo"]["productos_manuales"].items()}
+        estado_global["productos_manuales_global"] = {k: v.copy() for k, v in estado_global["respaldo"]["productos_manuales_global"].items()}
         estado_global["notas_tablero"] = estado_global["respaldo"]["notas_tablero"].copy()
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
@@ -635,8 +633,8 @@ def renderizar_tablero():
                 cant_num = int(cantidad) if float(cantidad).is_integer() else cantidad
                 conteo_productos[nombre_completo] = conteo_productos.get(nombre_completo, 0) + cant_num
 
-    # FUSIONAR PRODUCTOS MANUALES DESDE SESSION STATE
-    for prod_manual, datos in st.session_state.productos_manuales_state.items():
+    # FUSIONAR PRODUCTOS MANUALES DESDE EL ESTADO GLOBAL COMPARTIDO
+    for prod_manual, datos in estado_global["productos_manuales_global"].items():
         if isinstance(datos, dict):
             cant_manual = datos.get("cantidad", 1)
             es_infinito = datos.get("infinito", False)
@@ -747,7 +745,6 @@ def renderizar_tablero():
         """, unsafe_allow_html=True)
 
     with col_hdr_right:
-        # CONTENEDOR COMPARTIDO EN LA MISMA FILA ESTRICTA (OPCIONES + BOTÓN DE NOTAS CON EL MISMO ESTILO REDONDEADO AZUL)
         notas_filtradas_header = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
         total_notas_h = len(notas_filtradas_header)
 
@@ -799,17 +796,17 @@ def renderizar_tablero():
                     
                     if submit_manual and nombre_manual.strip():
                         prod_key = nombre_manual.strip().upper()
-                        st.session_state.productos_manuales_state[prod_key] = {
+                        estado_global["productos_manuales_global"][prod_key] = {
                             "cantidad": int(cantidad_manual),
                             "infinito": es_infinito_nuevo
                         }
-                        st.toast(f"Agregado: {prod_key}", icon="✅")
+                        st.toast(f"Agregado global: {prod_key}", icon="✅")
                         st.rerun()
 
-                if st.session_state.productos_manuales_state:
+                if estado_global["productos_manuales_global"]:
                     st.markdown("---")
                     st.markdown("### Modificar Productos Manuales")
-                    for p_nombre, p_datos in list(st.session_state.productos_manuales_state.items()):
+                    for p_nombre, p_datos in list(estado_global["productos_manuales_global"].items()):
                         p_cant = p_datos.get("cantidad", 1) if isinstance(p_datos, dict) else p_datos
                         p_inf = p_datos.get("infinito", False) if isinstance(p_datos, dict) else False
                         
@@ -827,7 +824,7 @@ def renderizar_tablero():
                                     btn_borrar_item = st.form_submit_button("Borrar")
 
                                 if btn_aceptar_edit:
-                                    st.session_state.productos_manuales_state[p_nombre] = {
+                                    estado_global["productos_manuales_global"][p_nombre] = {
                                         "cantidad": int(nueva_cant_val),
                                         "infinito": nuevo_inf_val
                                     }
@@ -835,7 +832,7 @@ def renderizar_tablero():
                                     st.rerun()
 
                                 if btn_borrar_item:
-                                    st.session_state.productos_manuales_state.pop(p_nombre, None)
+                                    estado_global["productos_manuales_global"].pop(p_nombre, None)
                                     estado_global["completados"].discard(p_nombre)
                                     estado_global["cantidades_al_completar"].pop(p_nombre, None)
                                     st.toast(f"Producto borrado: {p_nombre}", icon="ℹ️")
@@ -939,7 +936,17 @@ def renderizar_tablero():
                 else:
                     activos.append((prod, cant_total))
 
-            activos.sort(key=lambda x: x[1], reverse=True)
+            # ORDENAMIENTO: Primero los recientes (tarjeta azul al inicio), luego los demás por cantidad descendente
+            def clave_ordenamiento(item):
+                producto, cant_total = item
+                es_infinito = producto in infinitos_activos
+                ultima_upd = st.session_state.tiempos_actualizacion.get(producto)
+                es_reciente = bool(ultima_upd and (ahora_utc - ultima_upd).total_seconds() < 120 and not es_infinito)
+                # Si es reciente, le damos máxima prioridad (0), si no, orden descendente por cantidad
+                prioridad = 0 if es_reciente else 1
+                return (prioridad, -cant_total)
+
+            activos.sort(key=clave_ordenamiento)
             completados.sort(key=lambda x: x[1], reverse=True)
 
             def renderizar_lista_productos(lista):
