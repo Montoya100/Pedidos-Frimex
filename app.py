@@ -43,7 +43,7 @@ def obtener_estado_global():
         "completados": set(),
         "cantidades_al_completar": {},
         "notas_tablero": ["", "", ""],
-        "productos_manuales_global": {},  # Estructura: {"NOMBRE": {"cantidad": X, "infinito": Bool, "urgente": Bool}}
+        "productos_manuales_global": {},  
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False
@@ -81,6 +81,7 @@ def restaurar_estado():
         st.toast("Sin respaldo previo disponible", icon="⚠️")
 
 def alternar_estado(producto, cantidad_actual):
+    # ACCIÓN INMEDIATA EN MEMORIA (RESPUESTA INSTÁNTNEA)
     if producto in estado_global["completados"]:
         estado_global["completados"].remove(producto)
         estado_global["cantidades_al_completar"].pop(producto, None)
@@ -204,7 +205,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS - TÍTULO BRILLANTE Y BOTONES OSCUROS
+# 3. ESTILOS CSS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -346,7 +347,6 @@ st.markdown(f"""
     .header-left-group {{ display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }}
     .header-logo-img {{ height: 38px !important; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); display: block !important; }}
 
-    /* TÍTULO PRINCIPAL RESALTADO EN BLANCO BRILLANTE */
     .header-title {{
         color: #ffffff !important; 
         font-weight: 900 !important; 
@@ -428,7 +428,6 @@ st.markdown(f"""
 
     .footer-sutil span {{ color: #34c759 !important; font-weight: 900 !important; }}
 
-    /* TARJETAS MAESTRAS OPTIMIZADAS PARA 4 COLUMNAS EN TV */
     .card-master-container {{
         border-radius: 14px;
         padding: 10px 12px;
@@ -520,7 +519,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SCRIPT JS: WAKE LOCK + LIMPIEZA UI + FORZAR MODO OSCURO NATIVO
+# SCRIPT JS: WAKE LOCK + LIMPIEZA UI
 # ==========================================
 ocultar_marca_js = """
 <script>
@@ -561,17 +560,17 @@ iniciarUtilidades();
 components.html(ocultar_marca_js, height=0, width=0)
 
 # ==========================================
-# 4. CONSULTA A LA API DE LOYVERSE
+# 4. CONSULTA A LA API DE LOYVERSE (CON CACHÉ RÁPIDA DE 10s)
 # ==========================================
-def obtener_recibos_hoy():
-    created_at_min = estado_global["hora_corte_utc"].strftime("%Y-%m-%dT%H:%M:%SZ")
+@st.cache_data(ttl=10, show_spinner=False)
+def obtener_recibos_hoy_cached(created_at_min_str):
     url = "https://api.loyverse.com/v1.0/receipts"
-    params = {"created_at_min": created_at_min, "limit": 250}
+    params = {"created_at_min": created_at_min_str, "limit": 250}
     todos_los_recibos = []
 
     try:
         while True:
-            response = requests.get(url, headers=HEADERS_LOYVERSE, params=params, timeout=5)
+            response = requests.get(url, headers=HEADERS_LOYVERSE, params=params, timeout=4)
             if response.status_code != 200:
                 break
 
@@ -587,6 +586,10 @@ def obtener_recibos_hoy():
         pass
 
     return todos_los_recibos
+
+def obtener_recibos_hoy():
+    created_at_min = estado_global["hora_corte_utc"].strftime("%Y-%m-%dT%H:%M:%SZ")
+    return obtener_recibos_hoy_cached(created_at_min)
 
 # ==========================================
 # 5. TABLERO DE PEDIDOS EN TIEMPO REAL
@@ -1011,7 +1014,7 @@ def renderizar_tablero():
                                 </div>
                             """, unsafe_allow_html=True)
 
-                            # BOTÓN PÍLDORA
+                            # BOTÓN PÍLDORA CON RESPUESTA INSTÁNTNEA
                             st.button(
                                 texto_estado, 
                                 key=f"tarjeta_btn_{producto}", 
