@@ -204,7 +204,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS - CERO MARGEN SUPERIOR & 4 COLUMNAS TV
+# 3. ESTILOS CSS - FORZAR COLORES NEGATIVOS EN BOTONES
 # ==========================================
 st.markdown(f"""
     <style>
@@ -220,7 +220,7 @@ st.markdown(f"""
         animation: none !important;
     }}
 
-    .stApp {{ background-color: #0b0f19 !important; font-family: 'Plus Jakarta Sans', sans-serif !important; }}
+    .stApp {{ background-color: #0b0f19 !important; font-family: 'Plus Jakarta Sans', sans-serif !important; color-scheme: dark !important; }}
     
     #MainMenu, footer, header, 
     div[data-testid="stToolbar"], 
@@ -233,7 +233,6 @@ st.markdown(f"""
         pointer-events: none !important;
     }}
     
-    /* ELIMINAR EL MARGEN SUPERIOR PARA APROVECHAR TODA LA PANTALLA DE LA TV */
     .block-container {{
         padding-top: 0.1rem !important; 
         padding-bottom: 2.5rem !important;
@@ -471,28 +470,35 @@ st.markdown(f"""
         vertical-align: middle;
     }}
 
-    /* MEJORA DE FOCO PARA CONTROL REMOTO DE TV */
-    button:focus, div[data-testid="stPopover"] button:focus {{
-        outline: 3px solid #38bdf8 !important;
-        outline-offset: 2px !important;
-    }}
-
-    /* BOTONES TIPO PÍLDORA COMPACTOS */
-    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) {{ margin-bottom: 8px !important; }}
-    
-    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button {{
-        height: 30px !important;
-        min-height: 30px !important;
-        width: 100% !important;
-        border-radius: 10px !important;
+    /* =========================================================
+       CORRECCIÓN CLAVE: FORZAR ESTILOS OSCUROS/NEGATIVOS EN BOTONES 
+       PARA QUE LA TV NO LOS PINTE DE BLANCO
+       ========================================================= */
+    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button,
+    div[data-testid="stButton"] button {{
         background-color: #151c2c !important;
-        border: 1px solid rgba(255,255,255,0.08) !important;
-        color: #f3f4f6 !important;
+        background: #151c2c !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 10px !important;
         font-weight: 800 !important;
         font-size: 10px !important;
         letter-spacing: 0.8px !important;
         text-transform: uppercase !important;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.25) !important;
+    }}
+
+    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button:hover,
+    div[data-testid="stButton"] button:hover {{
+        background-color: #1e293b !important;
+        background: #1e293b !important;
+        color: #60a5fa !important;
+        border-color: #3b82f6 !important;
+    }}
+
+    button:focus, div[data-testid="stPopover"] button:focus {{
+        outline: 3px solid #38bdf8 !important;
+        outline-offset: 2px !important;
     }}
 
     @media (max-width: 768px) {{
@@ -510,7 +516,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SCRIPT JS: WAKE LOCK + LIMPIEZA UI + ENFOQUE TV
+# SCRIPT JS: WAKE LOCK + LIMPIEZA UI + FORZAR MODO OSCURO NATIVO
 # ==========================================
 ocultar_marca_js = """
 <script>
@@ -525,6 +531,9 @@ async function iniciarUtilidades() {
             });
         } catch (err) {}
     }
+
+    // Forzar modo oscuro en el DOM si el navegador soporta color-scheme
+    document.documentElement.style.colorScheme = 'dark';
 
     function limpiarUI() {
         const elementosAEliminar = document.querySelectorAll('footer, #MainMenu, header, [data-testid="stDecoration"], [data-testid="stStatusWidget"], .stAppDeployButton');
