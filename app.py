@@ -204,7 +204,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS - FORZAR COLORES NEGATIVOS EN BOTONES
+# 3. ESTILOS CSS - TÍTULO BRILLANTE Y BOTONES OSCUROS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -346,10 +346,18 @@ st.markdown(f"""
     .header-left-group {{ display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }}
     .header-logo-img {{ height: 38px !important; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); display: block !important; }}
 
+    /* TÍTULO PRINCIPAL RESALTADO EN BLANCO BRILLANTE */
     .header-title {{
-        color: #ffffff; font-weight: 800; font-size: 18px !important;
-        line-height: 1.1; letter-spacing: 0.6px; margin: 0; padding: 0; white-space: nowrap;
+        color: #ffffff !important; 
+        font-weight: 900 !important; 
+        font-size: 19px !important;
+        line-height: 1.1; 
+        letter-spacing: 0.8px; 
+        margin: 0; 
+        padding: 0; 
+        white-space: nowrap;
         text-transform: uppercase;
+        text-shadow: 0 2px 10px rgba(255, 255, 255, 0.25);
     }}
 
     .sub-brand-line {{ display: flex; align-items: center; gap: 6px; font-size: 9px; color: #9ca3af; font-weight: 700; letter-spacing: 0.8px; }}
@@ -470,10 +478,6 @@ st.markdown(f"""
         vertical-align: middle;
     }}
 
-    /* =========================================================
-       CORRECCIÓN CLAVE: FORZAR ESTILOS OSCUROS/NEGATIVOS EN BOTONES 
-       PARA QUE LA TV NO LOS PINTE DE BLANCO
-       ========================================================= */
     div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button,
     div[data-testid="stButton"] button {{
         background-color: #151c2c !important;
@@ -532,7 +536,6 @@ async function iniciarUtilidades() {
         } catch (err) {}
     }
 
-    // Forzar modo oscuro en el DOM si el navegador soporta color-scheme
     document.documentElement.style.colorScheme = 'dark';
 
     function limpiarUI() {
