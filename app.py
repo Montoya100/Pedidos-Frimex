@@ -204,7 +204,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS - ESTILO ONE UI + AJUSTE TV
+# 3. ESTILOS CSS - CERO MARGEN SUPERIOR & 4 COLUMNAS TV
 # ==========================================
 st.markdown(f"""
     <style>
@@ -233,53 +233,55 @@ st.markdown(f"""
         pointer-events: none !important;
     }}
     
+    /* ELIMINAR EL MARGEN SUPERIOR PARA APROVECHAR TODA LA PANTALLA DE LA TV */
     .block-container {{
-        padding-top: 0.4rem !important; 
-        padding-bottom: 3rem !important;
-        padding-left: 0.4rem !important; 
-        padding-right: 0.4rem !important;
+        padding-top: 0.1rem !important; 
+        padding-bottom: 2.5rem !important;
+        padding-left: 0.3rem !important; 
+        padding-right: 0.3rem !important;
         max-width: 100% !important;
     }}
 
     @keyframes deslizarDegradado {{
-        0% {{ opacity: 0; transform: translateY(-10px); background-position: 200% 0; }}
+        0% {{ opacity: 0; transform: translateY(-5px); background-position: 200% 0; }}
         100% {{ opacity: 1; transform: translateY(0); background-position: 0 0; }}
     }}
 
     .banner-notas-container {{
         background: linear-gradient(135deg, #182232 0%, #111827 50%, #0077ed 200%);
         background-size: 200% 100%;
-        animation: deslizarDegradado 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        animation: deslizarDegradado 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         border: 1px solid rgba(0, 119, 237, 0.3);
-        border-radius: 18px;
-        padding: 10px 16px;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        border-radius: 14px;
+        padding: 8px 14px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
         display: flex;
         align-items: center;
         width: 100% !important;
         box-sizing: border-box;
-        gap: 12px;
-        min-height: 52px;
+        gap: 10px;
+        min-height: 44px;
+        margin-bottom: 4px;
     }}
 
     .banner-notas-tag {{
         background: #0077ed;
         color: #ffffff;
         font-weight: 900;
-        font-size: 11px !important;
-        letter-spacing: 1.5px;
-        padding: 6px 12px;
-        border-radius: 12px;
+        font-size: 10px !important;
+        letter-spacing: 1.2px;
+        padding: 4px 10px;
+        border-radius: 10px;
         text-transform: uppercase;
         white-space: nowrap;
     }}
 
     .banner-notas-text {{
         color: #ffffff;
-        font-size: 20px !important;
+        font-size: 18px !important;
         font-weight: 900 !important;
         line-height: 1.2;
-        letter-spacing: 0.8px;
+        letter-spacing: 0.6px;
         text-transform: uppercase !important;
         flex: 1 !important;
         width: 100% !important;
@@ -290,7 +292,7 @@ st.markdown(f"""
         display: flex !important;
         flex-direction: row !important;
         align-items: center !important;
-        gap: 6px !important;
+        gap: 4px !important;
     }}
     
     div[data-testid="stHorizontalBlock"]:has(div[data-testid="stPopover"]) > div[data-testid="column"] {{
@@ -301,9 +303,9 @@ st.markdown(f"""
 
     div[data-testid="stPopover"] button,
     div[data-testid="stElementContainer"]:has(button[key^="btn_toggle_"]) button {{
-        height: 38px !important;
-        min-height: 38px !important;
-        border-radius: 14px !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        border-radius: 12px !important;
         background-color: #151c2c !important;
         border: 1px solid rgba(0, 119, 237, 0.5) !important;
         color: #60a5fa !important;
@@ -311,7 +313,7 @@ st.markdown(f"""
         font-size: 10px !important;
         letter-spacing: 0.8px !important;
         text-transform: uppercase !important;
-        box-shadow: 0 3px 10px rgba(0, 119, 237, 0.2);
+        box-shadow: 0 2px 8px rgba(0, 119, 237, 0.2);
         width: 100% !important;
         white-space: nowrap !important;
     }}
@@ -326,11 +328,11 @@ st.markdown(f"""
     .full-screen-celebracion {{
         background: linear-gradient(180deg, #1e1b18 0%, #0b0f19 100%);
         border: 1px solid rgba(255, 149, 0, 0.3);
-        border-radius: 24px;
-        box-shadow: 0 0 40px rgba(255, 149, 0, 0.25);
-        padding: 30px 20px 20px 20px;
+        border-radius: 20px;
+        box-shadow: 0 0 30px rgba(255, 149, 0, 0.25);
+        padding: 24px 16px 16px 16px;
         text-align: center;
-        margin: 10px 0 16px 0;
+        margin: 6px 0 12px 0;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -339,177 +341,176 @@ st.markdown(f"""
 
     .header-logo-container {{
         display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 8px; width: 100%; padding: 0 2px; flex-wrap: nowrap; gap: 8px;
+        margin-bottom: 4px; width: 100%; padding: 0 2px; flex-wrap: nowrap; gap: 6px;
     }}
     
-    .header-left-group {{ display: flex; align-items: center; gap: 12px; flex-wrap: nowrap; }}
-    .header-logo-img {{ height: 44px !important; width: auto; object-fit: contain; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4)); display: block !important; }}
+    .header-left-group {{ display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }}
+    .header-logo-img {{ height: 38px !important; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); display: block !important; }}
 
     .header-title {{
-        color: #ffffff; font-weight: 800; font-size: 20px !important;
-        line-height: 1.1; letter-spacing: 0.8px; margin: 0; padding: 0; white-space: nowrap;
+        color: #ffffff; font-weight: 800; font-size: 18px !important;
+        line-height: 1.1; letter-spacing: 0.6px; margin: 0; padding: 0; white-space: nowrap;
         text-transform: uppercase;
     }}
 
-    .sub-brand-line {{ display: flex; align-items: center; gap: 8px; font-size: 10px; color: #9ca3af; font-weight: 700; letter-spacing: 1px; }}
+    .sub-brand-line {{ display: flex; align-items: center; gap: 6px; font-size: 9px; color: #9ca3af; font-weight: 700; letter-spacing: 0.8px; }}
     .sync-text-inline {{ color: #38bdf8; font-weight: 700; }}
-    .clocks-group {{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }}
+    .clocks-group {{ display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }}
 
     .header-clock {{
-        background: #151c2c; border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 6px 12px;
-        color: #ffffff !important; font-size: 16px !important; font-weight: 800 !important;
-        letter-spacing: 1px; display: flex; align-items: center; gap: 8px;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.3); white-space: nowrap;
+        background: #151c2c; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 4px 10px;
+        color: #ffffff !important; font-size: 14px !important; font-weight: 800 !important;
+        letter-spacing: 0.8px; display: flex; align-items: center; gap: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3); white-space: nowrap;
     }}
 
     .status-dot {{
-        height: 8px; width: 8px; background-color: #34c759; border-radius: 50%; display: inline-block;
-        box-shadow: 0 0 8px #34c759; animation: pulseDot 2s infinite;
+        height: 7px; width: 7px; background-color: #34c759; border-radius: 50%; display: inline-block;
+        box-shadow: 0 0 6px #34c759; animation: pulseDot 2s infinite;
     }}
 
     @keyframes pulseDot {{ 0% {{ opacity: 0.4; }} 50% {{ opacity: 1; }} 100% {{ opacity: 0.4; }} }}
 
     @keyframes pulseGlow {{
-        0% {{ box-shadow: 0 0 6px rgba(0, 119, 237, 0.4); border-color: #0077ed; }}
-        50% {{ box-shadow: 0 0 18px rgba(0, 119, 237, 0.8); border-color: #3b82f6; }}
-        100% {{ box-shadow: 0 0 6px rgba(0, 119, 237, 0.4); border-color: #0077ed; }}
+        0% {{ box-shadow: 0 0 5px rgba(0, 119, 237, 0.4); border-color: #0077ed; }}
+        50% {{ box-shadow: 0 0 15px rgba(0, 119, 237, 0.8); border-color: #3b82f6; }}
+        100% {{ box-shadow: 0 0 5px rgba(0, 119, 237, 0.4); border-color: #0077ed; }}
     }}
 
     .anim-pulso-nuevo {{ animation: pulseGlow 1.2s infinite ease-in-out !important; }}
 
     .txt-incremento {{
         display: inline-block; background-color: rgba(0, 119, 237, 0.25); color: #60a5fa;
-        font-size: 15px !important; font-weight: 800 !important; padding: 2px 8px;
-        border-radius: 8px; margin-left: 6px; border: 1px solid rgba(0, 119, 237, 0.4); vertical-align: middle;
+        font-size: 13px !important; font-weight: 800 !important; padding: 1px 6px;
+        border-radius: 6px; margin-left: 4px; border: 1px solid rgba(0, 119, 237, 0.4); vertical-align: middle;
     }}
 
     .metrics-row {{
         display: flex; justify-content: space-around; align-items: center;
-        background: #111827; border-radius: 16px; padding: 10px 14px 12px 14px;
-        margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.06); position: relative; overflow: hidden;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        background: #111827; border-radius: 14px; padding: 8px 12px 10px 12px;
+        margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.06); position: relative; overflow: hidden;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.3);
     }}
 
-    .progress-bar-bg {{ position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: #1f2937; }}
+    .progress-bar-bg {{ position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: #1f2937; }}
     .progress-bar-fill {{
         height: 100%; background: linear-gradient(90deg, #ff9500 0%, #ffcc00 100%);
-        box-shadow: 0 0 8px rgba(255, 149, 0, 0.6); transition: width 0.5s ease-in-out;
-        border-radius: 0 3px 3px 0;
+        box-shadow: 0 0 6px rgba(255, 149, 0, 0.6); transition: width 0.5s ease-in-out;
+        border-radius: 0 2px 2px 0;
     }}
 
     .metric-inline {{
-        display: flex; align-items: center; gap: 8px; font-size: 12px !important;
-        font-weight: 700 !important; color: #9ca3af; letter-spacing: 0.5px; text-transform: uppercase;
+        display: flex; align-items: center; gap: 6px; font-size: 11px !important;
+        font-weight: 700 !important; color: #9ca3af; letter-spacing: 0.4px; text-transform: uppercase;
     }}
 
-    .metric-inline .val {{ font-size: 16px !important; font-weight: 800 !important; color: #f87171; }}
-    .pct-avance {{ font-size: 11px !important; font-weight: 800 !important; color: #9ca3af !important; letter-spacing: 0.8px; text-transform: uppercase; }}
+    .metric-inline .val {{ font-size: 14px !important; font-weight: 800 !important; color: #f87171; }}
+    .pct-avance {{ font-size: 10px !important; font-weight: 800 !important; color: #9ca3af !important; letter-spacing: 0.6px; text-transform: uppercase; }}
 
     .divider-completados {{
         display: flex; align-items: center; text-align: center; color: #34c759;
-        font-size: 10px; font-weight: 800; letter-spacing: 2px; margin: 16px 0 10px 0;
+        font-size: 9px; font-weight: 800; letter-spacing: 1.5px; margin: 12px 0 8px 0;
     }}
 
     .divider-completados::before, .divider-completados::after {{ content: ''; flex: 1; border-bottom: 1px solid #34c759; opacity: 0.25; }}
-    .divider-completados span {{ padding: 0 10px; background-color: #0b0f19; }}
+    .divider-completados span {{ padding: 0 8px; background-color: #0b0f19; }}
 
     .footer-sutil {{
-        position: fixed; bottom: 0; left: 0; right: 0; background: #070a10; border-top: 1px solid rgba(255,255,255,0.06); padding: 4px 12px; text-align: center; font-size: 10px !important; font-weight: 800 !important; color: #6b7280 !important; z-index: 999;
+        position: fixed; bottom: 0; left: 0; right: 0; background: #070a10; border-top: 1px solid rgba(255,255,255,0.06); padding: 3px 10px; text-align: center; font-size: 9px !important; font-weight: 800 !important; color: #6b7280 !important; z-index: 999;
     }}
 
     .footer-sutil span {{ color: #34c759 !important; font-weight: 900 !important; }}
 
-    /* TARJETAS MAESTRAS COMPACTAS OPTIMIZADAS PARA TV (MUESTRA 9+ PRODUCTOS SIN SCROLL EXCESIVO) */
+    /* TARJETAS MAESTRAS OPTIMIZADAS PARA 4 COLUMNAS EN TV */
     .card-master-container {{
-        border-radius: 18px;
-        padding: 12px 14px;
-        margin-bottom: 6px;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+        border-radius: 14px;
+        padding: 10px 12px;
+        margin-bottom: 4px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.35);
         display: flex;
         align-items: center;
         justify-content: space-between;
-        min-height: 84px;
+        min-height: 72px;
         backdrop-filter: blur(10px);
     }}
 
     .card-master-pendiente {{ background: #dc2626 !important; border: 1px solid rgba(239, 68, 68, 0.4) !important; color: #ffffff !important; }}
-    .card-master-urgente {{ background: #b91c1c !important; border: 2px solid #fbbf24 !important; color: #ffffff !important; box-shadow: 0 0 20px rgba(251, 191, 36, 0.4) !important; }}
+    .card-master-urgente {{ background: #b91c1c !important; border: 2px solid #fbbf24 !important; color: #ffffff !important; box-shadow: 0 0 16px rgba(251, 191, 36, 0.4) !important; }}
     
     .card-master-completado {{ background: #047857 !important; border: 1px solid rgba(16, 185, 129, 0.4) !important; color: #ffffff !important; opacity: 0.75; }}
     .card-master-completado .card-master-title,
     .card-master-completado .card-master-num {{
         text-decoration: line-through !important;
-        text-decoration-thickness: 3px !important;
+        text-decoration-thickness: 2px !important;
         text-decoration-color: rgba(255, 255, 255, 0.8) !important;
     }}
 
     .card-master-reciente {{ background: #1d4ed8 !important; border: 1px solid rgba(96, 165, 250, 0.4) !important; color: #ffffff !important; }}
 
     .card-master-title {{
-        font-size: 20px !important;
+        font-size: 16px !important;
         font-weight: 800 !important;
         text-transform: uppercase !important;
         line-height: 1.15 !important;
         flex: 1;
-        padding-right: 8px;
+        padding-right: 6px;
     }}
 
     .card-master-num {{
         font-family: 'JetBrains Mono', monospace !important;
-        font-size: 48px !important;
+        font-size: 38px !important;
         font-weight: 900 !important;
         line-height: 1 !important;
         text-align: center;
-        min-width: 70px;
+        min-width: 56px;
     }}
 
-    .badge-urgente-flama {{
-        display: inline-block;
-        background: #fbbf24;
-        color: #78350f;
-        font-size: 10px;
-        font-weight: 900;
-        padding: 2px 6px;
-        border-radius: 6px;
-        margin-right: 6px;
+    .badge-urgente-emoji {{
+        font-size: 16px;
+        margin-right: 4px;
         vertical-align: middle;
-        letter-spacing: 0.5px;
+    }}
+
+    /* MEJORA DE FOCO PARA CONTROL REMOTO DE TV */
+    button:focus, div[data-testid="stPopover"] button:focus {{
+        outline: 3px solid #38bdf8 !important;
+        outline-offset: 2px !important;
     }}
 
     /* BOTONES TIPO PÍLDORA COMPACTOS */
-    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) {{ margin-bottom: 10px !important; }}
+    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) {{ margin-bottom: 8px !important; }}
     
     div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button {{
-        height: 34px !important;
-        min-height: 34px !important;
+        height: 30px !important;
+        min-height: 30px !important;
         width: 100% !important;
-        border-radius: 12px !important;
+        border-radius: 10px !important;
         background-color: #151c2c !important;
         border: 1px solid rgba(255,255,255,0.08) !important;
         color: #f3f4f6 !important;
         font-weight: 800 !important;
-        font-size: 11px !important;
-        letter-spacing: 1px !important;
+        font-size: 10px !important;
+        letter-spacing: 0.8px !important;
         text-transform: uppercase !important;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.25);
     }}
 
     @media (max-width: 768px) {{
-        .block-container {{ padding-left: 4px !important; padding-right: 4px !important; }}
+        .block-container {{ padding-left: 2px !important; padding-right: 2px !important; }}
         div[data-testid="column"] {{ width: 100% !important; flex: 1 1 100% !important; margin-bottom: 2px !important; }}
         .clocks-group {{ display: none !important; }}
         .header-logo-container {{ flex-direction: row !important; justify-content: space-between !important; align-items: center !important; padding: 0 2px !important; }}
-        .header-logo-img {{ height: 38px !important; display: block !important; }}
-        .header-title {{ font-size: 15px !important; }}
-        .card-master-title {{ font-size: 17px !important; }}
-        .card-master-num {{ font-size: 38px !important; }}
-        .card-master-container {{ min-height: 72px !important; padding: 10px 12px !important; border-radius: 16px !important; }}
+        .header-logo-img {{ height: 34px !important; display: block !important; }}
+        .header-title {{ font-size: 14px !important; }}
+        .card-master-title {{ font-size: 15px !important; }}
+        .card-master-num {{ font-size: 34px !important; }}
+        .card-master-container {{ min-height: 64px !important; padding: 8px 10px !important; border-radius: 12px !important; }}
     }}
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SCRIPT JS: WAKE LOCK + LIMPIEZA UI
+# SCRIPT JS: WAKE LOCK + LIMPIEZA UI + ENFOQUE TV
 # ==========================================
 ocultar_marca_js = """
 <script>
@@ -798,7 +799,7 @@ def renderizar_tablero():
                         p_inf = p_datos.get("infinito", False) if isinstance(p_datos, dict) else False
                         p_urg = p_datos.get("urgente", False) if isinstance(p_datos, dict) else False
                         
-                        st.markdown(f"**{p_nombre}** ({'🔥 URGENTE | ' if p_urg else ''}{'∞' if p_inf else p_cant})")
+                        st.markdown(f"**{p_nombre}** ({'🔥 | ' if p_urg else ''}{'∞' if p_inf else p_cant})")
                         
                         with st.expander(f"Editar {p_nombre}"):
                             with st.form(key=f"form_edit_{p_nombre}"):
@@ -857,7 +858,6 @@ def renderizar_tablero():
                         <div class="banner-notas-text">{nota_txt.upper()}</div>
                     </div>
                 """, unsafe_allow_html=True)
-                st.markdown("<div style='margin-bottom: 4px;'></div>", unsafe_allow_html=True)
         else:
             st.session_state.indice_nota_carrusel = (st.session_state.indice_nota_carrusel + 1) % total_notas_validas
             num_nota_actual, texto_actual = notas_filtradas[st.session_state.indice_nota_carrusel]
@@ -868,7 +868,6 @@ def renderizar_tablero():
                     <div class="banner-notas-text">{texto_actual.upper()}</div>
                 </div>
             """, unsafe_allow_html=True)
-            st.markdown("<div style='margin-bottom: 4px;'></div>", unsafe_allow_html=True)
 
     for prod, info in list(st.session_state.popups_nuevos.items()):
         if (ahora_utc - info["hora"]).total_seconds() >= 30:
@@ -903,9 +902,9 @@ def renderizar_tablero():
 
         st.markdown(f"""
             <div class="full-screen-celebracion">
-                <img src="{LOGO_URL}" class="img-celebracion-logo" style="height: 90px; width: auto; filter: drop-shadow(0 4px 16px rgba(255, 149, 0, 0.6));" alt="Logo">
-                <h2 style="color: #ff9500; font-weight: 800; font-size: 24px; text-transform: uppercase; margin-bottom: 8px;">PRODUCCIÓN FINALIZADA</h2>
-                <p style="color: #9ca3af; font-weight: 700; font-size: 14px; margin-bottom: 16px;">Se han completado todos los pedidos pendientes.</p>
+                <img src="{LOGO_URL}" class="img-celebracion-logo" style="height: 75px; width: auto; filter: drop-shadow(0 3px 12px rgba(255, 149, 0, 0.6));" alt="Logo">
+                <h2 style="color: #ff9500; font-weight: 800; font-size: 22px; text-transform: uppercase; margin-bottom: 6px;">PRODUCCIÓN FINALIZADA</h2>
+                <p style="color: #9ca3af; font-weight: 700; font-size: 13px; margin-bottom: 12px;">Se han completado todos los pedidos pendientes.</p>
             </div>
         """, unsafe_allow_html=True)
 
@@ -913,7 +912,7 @@ def renderizar_tablero():
             estado_global["descartar_celebracion"] = True
             st.rerun()
 
-    # RENDERIZADO DE TARJETAS MAESTRAS
+    # RENDERIZADO DE TARJETAS MAESTRAS EN 4 COLUMNAS
     else:
         if conteo_productos:
             activos = []
@@ -933,7 +932,6 @@ def renderizar_tablero():
                 ultima_upd = st.session_state.tiempos_actualizacion.get(producto)
                 es_reciente = bool(ultima_upd and (ahora_utc - ultima_upd).total_seconds() < 120 and not es_infinito)
                 
-                # Jerarquía de prioridad: Urgentes primero (0), luego Recientes (1), luego los demás (2)
                 if es_urgente:
                     prioridad = 0
                 elif es_reciente:
@@ -947,9 +945,10 @@ def renderizar_tablero():
             completados.sort(key=lambda x: x[1], reverse=True)
 
             def renderizar_lista_productos(lista):
-                for i in range(0, len(lista), 3):
-                    grupo = lista[i:i+3]
-                    cols = st.columns(3)
+                # 4 COLUMNAS PARA APROVECHAR AL MÁXIMO LA PANTALLA DE LA TV
+                for i in range(0, len(lista), 4):
+                    grupo = lista[i:i+4]
+                    cols = st.columns(4)
 
                     for idx, (producto, cant_total) in enumerate(grupo):
                         with cols[idx]:
@@ -972,7 +971,7 @@ def renderizar_tablero():
                             if es_urgente and not es_completado:
                                 clase_css = "card-master-urgente"
                                 texto_estado = "MARCAR COMO TERMINADO"
-                                html_flama = '<span class="badge-urgente-flama">🔥 URGENTE</span>'
+                                html_flama = '<span class="badge-urgente-emoji">🔥</span>'
                             elif es_reciente:
                                 clase_css = "card-master-reciente anim-pulso-nuevo"
                                 texto_estado = "MARCAR COMO TERMINADO"
@@ -992,7 +991,7 @@ def renderizar_tablero():
                                 inc = info_popup["incremento"]
                                 html_incremento = f'<span class="txt-incremento">+{inc}</span>'
 
-                            # TARJETA ONE UI COMPACTA
+                            # TARJETA ONE UI OPTIMIZADA
                             st.markdown(f"""
                                 <div class="card-master-container {clase_css}">
                                     <div class="card-master-title">{html_flama}{producto} {html_incremento}</div>
