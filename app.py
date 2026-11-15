@@ -43,7 +43,7 @@ def obtener_estado_global():
         "completados": set(),
         "cantidades_al_completar": {},
         "notas_tablero": ["", "", ""],
-        "productos_manuales_global": {},  # Sincronizado globalmente entre todas las pantallas
+        "productos_manuales_global": {},  # Estructura: {"NOMBRE": {"cantidad": X, "infinito": Bool, "urgente": Bool}}
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False
@@ -204,7 +204,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS - ESTILO ONE UI DE SAMSUNG
+# 3. ESTILOS CSS - ESTILO ONE UI + AJUSTE TV
 # ==========================================
 st.markdown(f"""
     <style>
@@ -234,10 +234,10 @@ st.markdown(f"""
     }}
     
     .block-container {{
-        padding-top: 0.6rem !important; 
-        padding-bottom: 4rem !important;
-        padding-left: 0.5rem !important; 
-        padding-right: 0.5rem !important;
+        padding-top: 0.4rem !important; 
+        padding-bottom: 3rem !important;
+        padding-left: 0.4rem !important; 
+        padding-right: 0.4rem !important;
         max-width: 100% !important;
     }}
 
@@ -246,40 +246,39 @@ st.markdown(f"""
         100% {{ opacity: 1; transform: translateY(0); background-position: 0 0; }}
     }}
 
-    /* BANNER DE NOTAS ESTILIZADO ONE UI */
     .banner-notas-container {{
         background: linear-gradient(135deg, #182232 0%, #111827 50%, #0077ed 200%);
         background-size: 200% 100%;
         animation: deslizarDegradado 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         border: 1px solid rgba(0, 119, 237, 0.3);
-        border-radius: 22px;
-        padding: 14px 20px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        border-radius: 18px;
+        padding: 10px 16px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
         display: flex;
         align-items: center;
         width: 100% !important;
         box-sizing: border-box;
-        gap: 14px;
-        min-height: 64px;
+        gap: 12px;
+        min-height: 52px;
     }}
 
     .banner-notas-tag {{
         background: #0077ed;
         color: #ffffff;
         font-weight: 900;
-        font-size: 13px !important;
+        font-size: 11px !important;
         letter-spacing: 1.5px;
-        padding: 8px 14px;
-        border-radius: 14px;
+        padding: 6px 12px;
+        border-radius: 12px;
         text-transform: uppercase;
         white-space: nowrap;
     }}
 
     .banner-notas-text {{
         color: #ffffff;
-        font-size: 26px !important;
+        font-size: 20px !important;
         font-weight: 900 !important;
-        line-height: 1.25;
+        line-height: 1.2;
         letter-spacing: 0.8px;
         text-transform: uppercase !important;
         flex: 1 !important;
@@ -287,7 +286,6 @@ st.markdown(f"""
         word-break: break-word;
     }}
 
-    /* FORZAR FILA ESTRICTA PARA LOS DOS BOTONES SUPERIORES */
     div[data-testid="stHorizontalBlock"]:has(div[data-testid="stPopover"]) {{
         display: flex !important;
         flex-direction: row !important;
@@ -301,20 +299,19 @@ st.markdown(f"""
         min-width: 0 !important;
     }}
 
-    /* ESTILO IDÉNTICO Y REDONDEADO PARA AMBOS BOTONES (OPCIONES Y VER NOTAS) */
     div[data-testid="stPopover"] button,
     div[data-testid="stElementContainer"]:has(button[key^="btn_toggle_"]) button {{
-        height: 44px !important;
-        min-height: 44px !important;
-        border-radius: 16px !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        border-radius: 14px !important;
         background-color: #151c2c !important;
         border: 1px solid rgba(0, 119, 237, 0.5) !important;
         color: #60a5fa !important;
         font-weight: 900 !important;
-        font-size: 11px !important;
+        font-size: 10px !important;
         letter-spacing: 0.8px !important;
         text-transform: uppercase !important;
-        box-shadow: 0 4px 12px rgba(0, 119, 237, 0.2);
+        box-shadow: 0 3px 10px rgba(0, 119, 237, 0.2);
         width: 100% !important;
         white-space: nowrap !important;
     }}
@@ -329,205 +326,184 @@ st.markdown(f"""
     .full-screen-celebracion {{
         background: linear-gradient(180deg, #1e1b18 0%, #0b0f19 100%);
         border: 1px solid rgba(255, 149, 0, 0.3);
-        border-radius: 28px;
-        box-shadow: 0 0 50px rgba(255, 149, 0, 0.25);
-        padding: 40px 24px 28px 24px;
+        border-radius: 24px;
+        box-shadow: 0 0 40px rgba(255, 149, 0, 0.25);
+        padding: 30px 20px 20px 20px;
         text-align: center;
-        margin: 10px 0 20px 0;
+        margin: 10px 0 16px 0;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
     }}
 
-    @media (min-width: 769px) {{
-        .full-screen-celebracion {{
-            min-height: 65vh !important;
-            padding: 60px 40px !important;
-            justify-content: center !important;
-        }}
-        .img-celebracion-logo {{ height: 140px !important; margin-bottom: 24px !important; }}
-        .txt-celebracion-titulo {{ font-size: 40px !important; letter-spacing: 2px !important; margin-bottom: 12px !important; }}
-        .txt-celebracion-sub {{ font-size: 18px !important; margin-bottom: 36px !important; }}
-        div[data-testid="stElementContainer"]:has(button[key="btn_pantalla_completa_cerrar"]) {{
-            max-width: 260px !important;
-            margin: 0 auto !important;
-        }}
-    }}
-
     .header-logo-container {{
         display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 12px; width: 100%; padding: 0 4px; flex-wrap: nowrap; gap: 8px;
+        margin-bottom: 8px; width: 100%; padding: 0 2px; flex-wrap: nowrap; gap: 8px;
     }}
     
-    .header-left-group {{ display: flex; align-items: center; gap: 14px; flex-wrap: nowrap; }}
-    .header-logo-img {{ height: 58px !important; width: auto; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); display: block !important; }}
+    .header-left-group {{ display: flex; align-items: center; gap: 12px; flex-wrap: nowrap; }}
+    .header-logo-img {{ height: 44px !important; width: auto; object-fit: contain; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4)); display: block !important; }}
 
     .header-title {{
-        color: #ffffff; font-weight: 800; font-size: 24px !important;
+        color: #ffffff; font-weight: 800; font-size: 20px !important;
         line-height: 1.1; letter-spacing: 0.8px; margin: 0; padding: 0; white-space: nowrap;
         text-transform: uppercase;
     }}
 
-    .sub-brand-line {{ display: flex; align-items: center; gap: 8px; font-size: 11px; color: #9ca3af; font-weight: 700; letter-spacing: 1px; }}
+    .sub-brand-line {{ display: flex; align-items: center; gap: 8px; font-size: 10px; color: #9ca3af; font-weight: 700; letter-spacing: 1px; }}
     .sync-text-inline {{ color: #38bdf8; font-weight: 700; }}
-    .clocks-group {{ display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }}
+    .clocks-group {{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }}
 
     .header-clock {{
-        background: #151c2c; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 8px 16px;
-        color: #ffffff !important; font-size: 20px !important; font-weight: 800 !important;
-        letter-spacing: 1px; display: flex; align-items: center; gap: 10px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: nowrap;
+        background: #151c2c; border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 6px 12px;
+        color: #ffffff !important; font-size: 16px !important; font-weight: 800 !important;
+        letter-spacing: 1px; display: flex; align-items: center; gap: 8px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.3); white-space: nowrap;
     }}
 
     .status-dot {{
-        height: 10px; width: 10px; background-color: #34c759; border-radius: 50%; display: inline-block;
-        box-shadow: 0 0 10px #34c759; animation: pulseDot 2s infinite;
+        height: 8px; width: 8px; background-color: #34c759; border-radius: 50%; display: inline-block;
+        box-shadow: 0 0 8px #34c759; animation: pulseDot 2s infinite;
     }}
 
     @keyframes pulseDot {{ 0% {{ opacity: 0.4; }} 50% {{ opacity: 1; }} 100% {{ opacity: 0.4; }} }}
 
     @keyframes pulseGlow {{
-        0% {{ box-shadow: 0 0 8px rgba(0, 119, 237, 0.4); border-color: #0077ed; }}
-        50% {{ box-shadow: 0 0 22px rgba(0, 119, 237, 0.8); border-color: #3b82f6; }}
-        100% {{ box-shadow: 0 0 8px rgba(0, 119, 237, 0.4); border-color: #0077ed; }}
+        0% {{ box-shadow: 0 0 6px rgba(0, 119, 237, 0.4); border-color: #0077ed; }}
+        50% {{ box-shadow: 0 0 18px rgba(0, 119, 237, 0.8); border-color: #3b82f6; }}
+        100% {{ box-shadow: 0 0 6px rgba(0, 119, 237, 0.4); border-color: #0077ed; }}
     }}
 
     .anim-pulso-nuevo {{ animation: pulseGlow 1.2s infinite ease-in-out !important; }}
 
     .txt-incremento {{
         display: inline-block; background-color: rgba(0, 119, 237, 0.25); color: #60a5fa;
-        font-size: 18px !important; font-weight: 800 !important; padding: 2px 10px;
-        border-radius: 10px; margin-left: 8px; border: 1px solid rgba(0, 119, 237, 0.4); vertical-align: middle;
+        font-size: 15px !important; font-weight: 800 !important; padding: 2px 8px;
+        border-radius: 8px; margin-left: 6px; border: 1px solid rgba(0, 119, 237, 0.4); vertical-align: middle;
     }}
 
     .metrics-row {{
         display: flex; justify-content: space-around; align-items: center;
-        background: #111827; border-radius: 20px; padding: 12px 18px 16px 18px;
-        margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.06); position: relative; overflow: hidden;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        background: #111827; border-radius: 16px; padding: 10px 14px 12px 14px;
+        margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.06); position: relative; overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }}
 
-    .progress-bar-bg {{ position: absolute; bottom: 0; left: 0; right: 0; height: 5px; background: #1f2937; }}
+    .progress-bar-bg {{ position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: #1f2937; }}
     .progress-bar-fill {{
         height: 100%; background: linear-gradient(90deg, #ff9500 0%, #ffcc00 100%);
-        box-shadow: 0 0 10px rgba(255, 149, 0, 0.6); transition: width 0.5s ease-in-out;
-        border-radius: 0 4px 4px 0;
+        box-shadow: 0 0 8px rgba(255, 149, 0, 0.6); transition: width 0.5s ease-in-out;
+        border-radius: 0 3px 3px 0;
     }}
 
     .metric-inline {{
-        display: flex; align-items: center; gap: 10px; font-size: 14px !important;
+        display: flex; align-items: center; gap: 8px; font-size: 12px !important;
         font-weight: 700 !important; color: #9ca3af; letter-spacing: 0.5px; text-transform: uppercase;
     }}
 
-    .metric-inline .val {{ font-size: 20px !important; font-weight: 800 !important; color: #f87171; }}
-    .pct-avance {{ font-size: 13px !important; font-weight: 800 !important; color: #9ca3af !important; letter-spacing: 0.8px; text-transform: uppercase; }}
+    .metric-inline .val {{ font-size: 16px !important; font-weight: 800 !important; color: #f87171; }}
+    .pct-avance {{ font-size: 11px !important; font-weight: 800 !important; color: #9ca3af !important; letter-spacing: 0.8px; text-transform: uppercase; }}
 
     .divider-completados {{
         display: flex; align-items: center; text-align: center; color: #34c759;
-        font-size: 11px; font-weight: 800; letter-spacing: 2px; margin: 20px 0 14px 0;
+        font-size: 10px; font-weight: 800; letter-spacing: 2px; margin: 16px 0 10px 0;
     }}
 
     .divider-completados::before, .divider-completados::after {{ content: ''; flex: 1; border-bottom: 1px solid #34c759; opacity: 0.25; }}
-    .divider-completados span {{ padding: 0 14px; background-color: #0b0f19; }}
+    .divider-completados span {{ padding: 0 10px; background-color: #0b0f19; }}
 
     .footer-sutil {{
-        position: fixed; bottom: 0; left: 0; right: 0; background: #070a10; border-top: 1px solid rgba(255,255,255,0.06); padding: 6px 16px; text-align: center; font-size: 11px !important; font-weight: 800 !important; color: #6b7280 !important; z-index: 999;
+        position: fixed; bottom: 0; left: 0; right: 0; background: #070a10; border-top: 1px solid rgba(255,255,255,0.06); padding: 4px 12px; text-align: center; font-size: 10px !important; font-weight: 800 !important; color: #6b7280 !important; z-index: 999;
     }}
 
     .footer-sutil span {{ color: #34c759 !important; font-weight: 900 !important; }}
 
-    /* TARJETAS MAESTRAS ESTILO ONE UI */
+    /* TARJETAS MAESTRAS COMPACTAS OPTIMIZADAS PARA TV (MUESTRA 9+ PRODUCTOS SIN SCROLL EXCESIVO) */
     .card-master-container {{
-        border-radius: 24px;
-        padding: 18px 20px;
-        margin-bottom: 8px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+        border-radius: 18px;
+        padding: 12px 14px;
+        margin-bottom: 6px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.4);
         display: flex;
         align-items: center;
         justify-content: space-between;
-        min-height: 126px;
+        min-height: 84px;
         backdrop-filter: blur(10px);
     }}
 
     .card-master-pendiente {{ background: #dc2626 !important; border: 1px solid rgba(239, 68, 68, 0.4) !important; color: #ffffff !important; }}
+    .card-master-urgente {{ background: #b91c1c !important; border: 2px solid #fbbf24 !important; color: #ffffff !important; box-shadow: 0 0 20px rgba(251, 191, 36, 0.4) !important; }}
     
     .card-master-completado {{ background: #047857 !important; border: 1px solid rgba(16, 185, 129, 0.4) !important; color: #ffffff !important; opacity: 0.75; }}
     .card-master-completado .card-master-title,
     .card-master-completado .card-master-num {{
         text-decoration: line-through !important;
-        text-decoration-thickness: 4px !important;
+        text-decoration-thickness: 3px !important;
         text-decoration-color: rgba(255, 255, 255, 0.8) !important;
     }}
 
     .card-master-reciente {{ background: #1d4ed8 !important; border: 1px solid rgba(96, 165, 250, 0.4) !important; color: #ffffff !important; }}
 
     .card-master-title {{
-        font-size: 30px !important;
+        font-size: 20px !important;
         font-weight: 800 !important;
         text-transform: uppercase !important;
         line-height: 1.15 !important;
         flex: 1;
-        padding-right: 12px;
+        padding-right: 8px;
     }}
 
     .card-master-num {{
         font-family: 'JetBrains Mono', monospace !important;
-        font-size: 72px !important;
+        font-size: 48px !important;
         font-weight: 900 !important;
         line-height: 1 !important;
         text-align: center;
-        min-width: 90px;
+        min-width: 70px;
     }}
 
-    /* BOTONES TIPO PÍLDORA FLOTANTE PARA PRODUCTOS */
-    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) {{ margin-bottom: 16px !important; }}
+    .badge-urgente-flama {{
+        display: inline-block;
+        background: #fbbf24;
+        color: #78350f;
+        font-size: 10px;
+        font-weight: 900;
+        padding: 2px 6px;
+        border-radius: 6px;
+        margin-right: 6px;
+        vertical-align: middle;
+        letter-spacing: 0.5px;
+    }}
+
+    /* BOTONES TIPO PÍLDORA COMPACTOS */
+    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) {{ margin-bottom: 10px !important; }}
     
     div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button {{
-        height: 44px !important;
-        min-height: 44px !important;
+        height: 34px !important;
+        min-height: 34px !important;
         width: 100% !important;
-        border-radius: 16px !important;
+        border-radius: 12px !important;
         background-color: #151c2c !important;
         border: 1px solid rgba(255,255,255,0.08) !important;
         color: #f3f4f6 !important;
         font-weight: 800 !important;
-        font-size: 13px !important;
-        letter-spacing: 1.5px !important;
+        font-size: 11px !important;
+        letter-spacing: 1px !important;
         text-transform: uppercase !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.25);
     }}
 
-    /* VERSIÓN MÓVIL Y TABLET COMPACTA */
     @media (max-width: 768px) {{
-        .block-container {{ padding-left: 6px !important; padding-right: 6px !important; }}
-        div[data-testid="column"] {{ width: 100% !important; flex: 1 1 100% !important; margin-bottom: 4px !important; }}
+        .block-container {{ padding-left: 4px !important; padding-right: 4px !important; }}
+        div[data-testid="column"] {{ width: 100% !important; flex: 1 1 100% !important; margin-bottom: 2px !important; }}
         .clocks-group {{ display: none !important; }}
-        
-        .header-logo-container {{
-            flex-direction: row !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            padding: 0 2px !important;
-        }}
-        .header-logo-img {{
-            height: 46px !important;
-            display: block !important;
-            visibility: visible !important;
-        }}
-        .header-title {{ font-size: 17px !important; }}
-        .sub-brand-line {{ font-size: 10px !important; }}
-        .pct-avance {{ font-size: 11px !important; }}
-
-        .full-screen-celebracion {{ padding: 28px 16px 20px 16px !important; }}
-        .img-celebracion-logo {{ height: 100px !important; margin-bottom: 16px !important; }}
-        .txt-celebracion-titulo {{ font-size: 26px !important; margin-bottom: 8px !important; }}
-        .txt-celebracion-sub {{ font-size: 15px !important; margin-bottom: 24px !important; }}
-        
-        .card-master-title {{ font-size: 21px !important; }}
-        .card-master-num {{ font-size: 52px !important; }}
-        .card-master-container {{ min-height: 96px !important; padding: 14px 16px !important; border-radius: 20px !important; }}
-        .banner-notas-text {{ font-size: 20px !important; }}
+        .header-logo-container {{ flex-direction: row !important; justify-content: space-between !important; align-items: center !important; padding: 0 2px !important; }}
+        .header-logo-img {{ height: 38px !important; display: block !important; }}
+        .header-title {{ font-size: 15px !important; }}
+        .card-master-title {{ font-size: 17px !important; }}
+        .card-master-num {{ font-size: 38px !important; }}
+        .card-master-container {{ min-height: 72px !important; padding: 10px 12px !important; border-radius: 16px !important; }}
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -607,6 +583,7 @@ def renderizar_tablero():
     recibos = obtener_recibos_hoy()
     conteo_productos = {}
     infinitos_activos = set()
+    urgentes_activos = set()
     ultima_hora_loyverse_utc = None
 
     if recibos:
@@ -638,15 +615,20 @@ def renderizar_tablero():
         if isinstance(datos, dict):
             cant_manual = datos.get("cantidad", 1)
             es_infinito = datos.get("infinito", False)
+            es_urgente = datos.get("urgente", False)
         else:
             cant_manual = datos
             es_infinito = False
+            es_urgente = False
 
         if es_infinito:
             conteo_productos[prod_manual] = 1  
             infinitos_activos.add(prod_manual)
         else:
             conteo_productos[prod_manual] = conteo_productos.get(prod_manual, 0) + cant_manual
+
+        if es_urgente:
+            urgentes_activos.add(prod_manual)
 
     tz_mexico = zoneinfo.ZoneInfo("America/Mexico_City")
     if ultima_hora_loyverse_utc:
@@ -757,15 +739,15 @@ def renderizar_tablero():
             with st.popover("OPCIONES", use_container_width=True):
                 st.markdown("### Notas del Tablero")
                 with st.form("form_notas_tablero", clear_on_submit=False):
-                    n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. PONERLE ETIQUETA A 20 CHURRITOS")
-                    n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD PEDIDOS FRIMEX")
-                    n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="EJ. LIMPIAR ÁREA AL TERMINAR")
+                    n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. ETIQUETAR CHURRITOS")
+                    n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD FRIMEX")
+                    n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="EJ. LIMPIAR ÁREA")
                     
                     col_n1, col_n2 = st.columns(2)
                     with col_n1:
-                        btn_guardar_notas = st.form_submit_button("Guardar Notas", use_container_width=True)
+                        btn_guardar_notas = st.form_submit_button("Guardar", use_container_width=True)
                     with col_n2:
-                        btn_limpiar_notas = st.form_submit_button("Limpiar Todas", use_container_width=True)
+                        btn_limpiar_notas = st.form_submit_button("Limpiar", use_container_width=True)
 
                     if btn_guardar_notas:
                         nuevas_notas = [n1.strip().upper(), n2.strip().upper(), n3.strip().upper()]
@@ -773,9 +755,9 @@ def renderizar_tablero():
                             estado_global["notas_tablero"] = nuevas_notas
                             st.session_state.indice_nota_carrusel = 0
                             reproducir_sonido_nota()
-                            st.toast("Notas actualizadas en el tablero", icon="✅")
+                            st.toast("Notas actualizadas", icon="✅")
                         else:
-                            st.toast("Sin cambios en las notas", icon="ℹ️")
+                            st.toast("Sin cambios", icon="ℹ️")
                         st.rerun()
 
                     if btn_limpiar_notas:
@@ -783,50 +765,58 @@ def renderizar_tablero():
                             estado_global["notas_tablero"] = ["", "", ""]
                             st.session_state.indice_nota_carrusel = 0
                             reproducir_sonido_nota()
-                            st.toast("Todas las notas fueron eliminadas", icon="ℹ️")
+                            st.toast("Notas eliminadas", icon="ℹ️")
                         st.rerun()
 
                 st.markdown("---")
-                st.markdown("### Agregar Producto Manual")
+                st.markdown("### Agregar / Gestionar Manuales")
                 with st.form("form_agregar_manual", clear_on_submit=True):
                     nombre_manual = st.text_input("Nombre del producto")
-                    es_infinito_nuevo = st.checkbox("Marcar como Infinito (∞ / Hasta terminar)")
+                    col_chk1, col_chk2 = st.columns(2)
+                    with col_chk1:
+                        es_infinito_nuevo = st.checkbox("Infinito (∞)")
+                    with col_chk2:
+                        es_urgente_nuevo = st.checkbox("🔥 Urgente")
                     cantidad_manual = st.number_input("Cantidad", min_value=1, value=1, step=1)
-                    submit_manual = st.form_submit_button("Agregar al tablero")
+                    submit_manual = st.form_submit_button("Agregar producto")
                     
                     if submit_manual and nombre_manual.strip():
                         prod_key = nombre_manual.strip().upper()
                         estado_global["productos_manuales_global"][prod_key] = {
                             "cantidad": int(cantidad_manual),
-                            "infinito": es_infinito_nuevo
+                            "infinito": es_infinito_nuevo,
+                            "urgente": es_urgente_nuevo
                         }
-                        st.toast(f"Agregado global: {prod_key}", icon="✅")
+                        st.toast(f"Agregado: {prod_key}", icon="✅")
                         st.rerun()
 
                 if estado_global["productos_manuales_global"]:
                     st.markdown("---")
-                    st.markdown("### Modificar Productos Manuales")
+                    st.markdown("### Modificar Manuales")
                     for p_nombre, p_datos in list(estado_global["productos_manuales_global"].items()):
                         p_cant = p_datos.get("cantidad", 1) if isinstance(p_datos, dict) else p_datos
                         p_inf = p_datos.get("infinito", False) if isinstance(p_datos, dict) else False
+                        p_urg = p_datos.get("urgente", False) if isinstance(p_datos, dict) else False
                         
-                        st.markdown(f"**{p_nombre}** ({'∞' if p_inf else p_cant})")
+                        st.markdown(f"**{p_nombre}** ({'🔥 URGENTE | ' if p_urg else ''}{'∞' if p_inf else p_cant})")
                         
                         with st.expander(f"Editar {p_nombre}"):
                             with st.form(key=f"form_edit_{p_nombre}"):
+                                nuevo_urg_val = st.checkbox("🔥 Urgente", value=p_urg, key=f"urg_{p_nombre}")
                                 nuevo_inf_val = st.checkbox("Infinito (∞)", value=p_inf, key=f"inf_{p_nombre}")
                                 nueva_cant_val = st.number_input("Cantidad", min_value=1, value=p_cant, step=1, key=f"cant_{p_nombre}")
                                 
                                 col_e1, col_e2 = st.columns(2)
                                 with col_e1:
-                                    btn_aceptar_edit = st.form_submit_button("Aceptar")
+                                    btn_aceptar_edit = st.form_submit_button("Guardar")
                                 with col_e2:
                                     btn_borrar_item = st.form_submit_button("Borrar")
 
                                 if btn_aceptar_edit:
                                     estado_global["productos_manuales_global"][p_nombre] = {
                                         "cantidad": int(nueva_cant_val),
-                                        "infinito": nuevo_inf_val
+                                        "infinito": nuevo_inf_val,
+                                        "urgente": nuevo_urg_val
                                     }
                                     st.toast(f"Actualizado: {p_nombre}", icon="✅")
                                     st.rerun()
@@ -835,11 +825,10 @@ def renderizar_tablero():
                                     estado_global["productos_manuales_global"].pop(p_nombre, None)
                                     estado_global["completados"].discard(p_nombre)
                                     estado_global["cantidades_al_completar"].pop(p_nombre, None)
-                                    st.toast(f"Producto borrado: {p_nombre}", icon="ℹ️")
+                                    st.toast(f"Borrado: {p_nombre}", icon="ℹ️")
                                     st.rerun()
 
                 st.markdown("---")
-                st.markdown("### Acciones de Tablero")
                 if st.button("Borrar todo", use_container_width=True):
                     borrar_todo()
                     st.rerun()
@@ -850,11 +839,11 @@ def renderizar_tablero():
         with subcol2:
             if total_notas_h > 1:
                 if st.session_state.get("desglosar_notas", False):
-                    st.button("▲ COLAPS", key="btn_toggle_colapsar_header", on_click=alternar_desglose_h, use_container_width=True)
+                    st.button("▲", key="btn_toggle_colapsar_header", on_click=alternar_desglose_h, use_container_width=True)
                 else:
-                    st.button(f"▼ VER ({total_notas_h})", key="btn_toggle_ver_header", on_click=alternar_desglose_h, use_container_width=True)
+                    st.button(f"▼ ({total_notas_h})", key="btn_toggle_ver_header", on_click=alternar_desglose_h, use_container_width=True)
 
-    # RENDERIZAR NOTAS ACTIVAS DEBAJO DEL ENCABEZADO
+    # RENDERIZAR NOTAS ACTIVAS
     notas_filtradas = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
     
     if notas_filtradas:
@@ -868,7 +857,7 @@ def renderizar_tablero():
                         <div class="banner-notas-text">{nota_txt.upper()}</div>
                     </div>
                 """, unsafe_allow_html=True)
-                st.markdown("<div style='margin-bottom: 6px;'></div>", unsafe_allow_html=True)
+                st.markdown("<div style='margin-bottom: 4px;'></div>", unsafe_allow_html=True)
         else:
             st.session_state.indice_nota_carrusel = (st.session_state.indice_nota_carrusel + 1) % total_notas_validas
             num_nota_actual, texto_actual = notas_filtradas[st.session_state.indice_nota_carrusel]
@@ -879,7 +868,7 @@ def renderizar_tablero():
                     <div class="banner-notas-text">{texto_actual.upper()}</div>
                 </div>
             """, unsafe_allow_html=True)
-            st.markdown("<div style='margin-bottom: 6px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='margin-bottom: 4px;'></div>", unsafe_allow_html=True)
 
     for prod, info in list(st.session_state.popups_nuevos.items()):
         if (ahora_utc - info["hora"]).total_seconds() >= 30:
@@ -914,9 +903,9 @@ def renderizar_tablero():
 
         st.markdown(f"""
             <div class="full-screen-celebracion">
-                <img src="{LOGO_URL}" class="img-celebracion-logo" style="width: auto; filter: drop-shadow(0 6px 20px rgba(255, 149, 0, 0.6));" alt="Logo">
-                <h2 class="txt-celebracion-titulo" style="color: #ff9500; font-weight: 800; text-transform: uppercase;">PRODUCCIÓN FINALIZADA</h2>
-                <p class="txt-celebracion-sub" style="color: #9ca3af; font-weight: 700;">Se han completado todos los pedidos pendientes.</p>
+                <img src="{LOGO_URL}" class="img-celebracion-logo" style="height: 90px; width: auto; filter: drop-shadow(0 4px 16px rgba(255, 149, 0, 0.6));" alt="Logo">
+                <h2 style="color: #ff9500; font-weight: 800; font-size: 24px; text-transform: uppercase; margin-bottom: 8px;">PRODUCCIÓN FINALIZADA</h2>
+                <p style="color: #9ca3af; font-weight: 700; font-size: 14px; margin-bottom: 16px;">Se han completado todos los pedidos pendientes.</p>
             </div>
         """, unsafe_allow_html=True)
 
@@ -936,14 +925,22 @@ def renderizar_tablero():
                 else:
                     activos.append((prod, cant_total))
 
-            # ORDENAMIENTO: Primero los recientes (tarjeta azul al inicio), luego los demás por cantidad descendente
+            # ORDENAMIENTO: 1º Urgentes, 2º Recientes, 3º Mayor cantidad
             def clave_ordenamiento(item):
                 producto, cant_total = item
+                es_urgente = producto in urgentes_activos
                 es_infinito = producto in infinitos_activos
                 ultima_upd = st.session_state.tiempos_actualizacion.get(producto)
                 es_reciente = bool(ultima_upd and (ahora_utc - ultima_upd).total_seconds() < 120 and not es_infinito)
-                # Si es reciente, le damos máxima prioridad (0), si no, orden descendente por cantidad
-                prioridad = 0 if es_reciente else 1
+                
+                # Jerarquía de prioridad: Urgentes primero (0), luego Recientes (1), luego los demás (2)
+                if es_urgente:
+                    prioridad = 0
+                elif es_reciente:
+                    prioridad = 1
+                else:
+                    prioridad = 2
+                    
                 return (prioridad, -cant_total)
 
             activos.sort(key=clave_ordenamiento)
@@ -958,6 +955,7 @@ def renderizar_tablero():
                         with cols[idx]:
                             es_completado = producto in estado_global["completados"]
                             es_infinito = producto in infinitos_activos
+                            es_urgente = producto in urgentes_activos
 
                             if es_infinito:
                                 valor_mostrar = "∞"
@@ -971,15 +969,22 @@ def renderizar_tablero():
                             if ultima_upd and (ahora_utc - ultima_upd).total_seconds() < 120 and not es_completado and not es_infinito:
                                 es_reciente = True
 
-                            if es_reciente:
+                            if es_urgente and not es_completado:
+                                clase_css = "card-master-urgente"
+                                texto_estado = "MARCAR COMO TERMINADO"
+                                html_flama = '<span class="badge-urgente-flama">🔥 URGENTE</span>'
+                            elif es_reciente:
                                 clase_css = "card-master-reciente anim-pulso-nuevo"
-                                texto_estado = "NUEVO"
+                                texto_estado = "MARCAR COMO TERMINADO"
+                                html_flama = ''
                             elif es_completado:
                                 clase_css = "card-master-completado"
                                 texto_estado = "MARCAR COMO PENDIENTE"
+                                html_flama = ''
                             else:
                                 clase_css = "card-master-pendiente"
                                 texto_estado = "MARCAR COMO TERMINADO"
+                                html_flama = ''
 
                             info_popup = st.session_state.popups_nuevos.get(producto)
                             html_incremento = ""
@@ -987,10 +992,10 @@ def renderizar_tablero():
                                 inc = info_popup["incremento"]
                                 html_incremento = f'<span class="txt-incremento">+{inc}</span>'
 
-                            # TARJETA ONE UI
+                            # TARJETA ONE UI COMPACTA
                             st.markdown(f"""
                                 <div class="card-master-container {clase_css}">
-                                    <div class="card-master-title">{producto} {html_incremento}</div>
+                                    <div class="card-master-title">{html_flama}{producto} {html_incremento}</div>
                                     <div class="card-master-num">{valor_mostrar}</div>
                                 </div>
                             """, unsafe_allow_html=True)
