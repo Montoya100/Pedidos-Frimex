@@ -81,7 +81,7 @@ def borrar_todo():
     estado_global["asignaciones_productos"].clear()
     estado_global["notas_tablero"] = ["", "", ""]
     estado_global["descartar_celebracion"] = False
-    st.toast("Tablero limpiado y barrera de corte establecida", icon=None)
+    st.toast("Tablero limpiado y barrera de corte establecida")
 
 def restaurar_estado():
     if estado_global["respaldo"]:
@@ -94,9 +94,9 @@ def restaurar_estado():
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
         estado_global["descartar_celebracion"] = False
-        st.toast("Tablero restaurado correctamente", icon=None)
+        st.toast("Tablero restaurado correctamente")
     else:
-        st.toast("Sin respaldo previo disponible", icon=None)
+        st.toast("Sin respaldo previo disponible")
 
 def alternar_estado(producto, cantidad_actual):
     if producto in estado_global["completados"]:
@@ -111,10 +111,10 @@ def alternar_estado(producto, cantidad_actual):
 def asignar_colaborador(producto, colaborador):
     if colaborador and colaborador != "NINGUNO":
         estado_global["asignaciones_productos"][producto] = colaborador
-        st.toast(f"Asignado a {colaborador}", icon=None)
+        st.toast(f"Asignado a {colaborador}")
     else:
         estado_global["asignaciones_productos"].pop(producto, None)
-        st.toast("Asignación retirada", icon=None)
+        st.toast("Asignación retirada")
 
 # ==========================================
 # SONIDOS DE NOTIFICACIÓN
@@ -504,34 +504,16 @@ st.markdown(f"""
         min-width: 56px;
     }}
 
-    /* ETIQUETA / INSIGNIA DE COLABORADOR MÁS VISIBLE */
-    .badge-asignado-prominente {{
-        display: inline-block;
-        background-color: #0f172a;
-        color: #ffedd5;
-        font-size: 11px !important;
+    /* NOMBRE DEL COLABORADOR EN BLANCO Y DESTACADO */
+    .colab-asignado-txt {{
+        font-size: 12px !important;
         font-weight: 900 !important;
-        padding: 3px 10px;
-        border-radius: 8px;
-        margin-top: 6px;
-        border: 1px solid #fb923c;
+        color: #ffffff !important;
+        margin-top: 5px;
         letter-spacing: 0.8px;
         text-transform: uppercase;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    }}
-
-    .badge-urgente-txt {{
-        display: inline-block;
-        background-color: rgba(0,0,0,0.3);
-        color: #fef08a;
-        font-size: 9px !important;
-        font-weight: 900 !important;
-        padding: 2px 6px;
-        border-radius: 6px;
-        margin-bottom: 4px;
-        border: 1px solid #fde047;
-        letter-spacing: 0.8px;
-        text-transform: uppercase;
+        border-top: 1px solid rgba(255, 255, 255, 0.25);
+        padding-top: 4px;
     }}
 
     /* BOTONERAS DE ACCIÓN EN TARJETAS */
@@ -841,13 +823,13 @@ def renderizar_tablero():
                         estado_global["notas_tablero"] = nuevas_notas
                         st.session_state.indice_nota_carrusel = 0
                         reproducir_sonido_nota()
-                        st.toast("Notas actualizadas", icon=None)
+                        st.toast("Notas actualizadas")
 
                     if btn_limpiar_notas:
                         estado_global["notas_tablero"] = ["", "", ""]
                         st.session_state.indice_nota_carrusel = 0
                         reproducir_sonido_nota()
-                        st.toast("Notas eliminadas", icon=None)
+                        st.toast("Notas eliminadas")
 
                 st.markdown("---")
                 st.markdown("### Ajustes de Colaboradores")
@@ -871,7 +853,7 @@ def renderizar_tablero():
 
                     if btn_guardar_colabs:
                         estado_global["colaboradores"] = [c.strip().upper() for c in colab_inputs if c.strip()]
-                        st.toast("Colaboradores actualizados", icon=None)
+                        st.toast("Colaboradores actualizados")
 
                 st.markdown("---")
                 st.markdown("### Agregar Productos Manuales")
@@ -892,7 +874,7 @@ def renderizar_tablero():
                             "infinito": es_infinito_nuevo,
                             "urgente": es_urgente_nuevo
                         }
-                        st.toast(f"Agregado: {prod_key}", icon=None)
+                        st.toast(f"Agregado: {prod_key}")
 
                 if estado_global["productos_manuales_global"]:
                     st.markdown("---")
@@ -922,14 +904,14 @@ def renderizar_tablero():
                                         "infinito": nuevo_inf_val,
                                         "urgente": nuevo_urg_val
                                     }
-                                    st.toast(f"Actualizado: {p_nombre}", icon=None)
+                                    st.toast(f"Actualizado: {p_nombre}")
 
                                 if btn_borrar_item:
                                     estado_global["productos_manuales_global"].pop(p_nombre, None)
                                     estado_global["completados"].discard(p_nombre)
                                     estado_global["cantidades_al_completar"].pop(p_nombre, None)
                                     estado_global["asignaciones_productos"].pop(p_nombre, None)
-                                    st.toast(f"Borrado: {p_nombre}", icon=None)
+                                    st.toast(f"Borrado: {p_nombre}")
 
                 st.markdown("---")
                 if st.button("Limpiar Tablero (Barrera)", use_container_width=True):
@@ -1073,23 +1055,23 @@ def renderizar_tablero():
                             if es_urgente and not es_completado:
                                 clase_css = "card-master-urgente"
                                 texto_estado = "TERMINAR"
-                                html_urgente_txt = '<div class="badge-urgente-txt">URGENTE</div>'
+                                html_flama = '🔥 '
                             elif colab_asignado and not es_completado:
                                 clase_css = "card-master-asignado"
                                 texto_estado = "TERMINAR"
-                                html_urgente_txt = ''
+                                html_flama = ''
                             elif es_reciente:
                                 clase_css = "card-master-reciente anim-pulso-nuevo"
                                 texto_estado = "TERMINAR"
-                                html_urgente_txt = ''
+                                html_flama = ''
                             elif es_completado:
                                 clase_css = "card-master-completado"
                                 texto_estado = "PENDIENTE"
-                                html_urgente_txt = ''
+                                html_flama = ''
                             else:
                                 clase_css = "card-master-pendiente"
                                 texto_estado = "TERMINAR"
-                                html_urgente_txt = ''
+                                html_flama = ''
 
                             info_popup = st.session_state.popups_nuevos.get(producto)
                             html_incremento = ""
@@ -1097,14 +1079,13 @@ def renderizar_tablero():
                                 inc = info_popup["incremento"]
                                 html_incremento = f'<span class="txt-incremento">+{inc}</span>'
 
-                            html_badge_colab = f'<div class="badge-asignado-prominente">{colab_asignado}</div>' if colab_asignado else ''
+                            html_badge_colab = f'<div class="colab-asignado-txt">{colab_asignado}</div>' if colab_asignado else ''
 
                             # TARJETA PRINCIPAL
                             st.markdown(f"""
                                 <div class="card-master-container {clase_css}">
-                                    {html_urgente_txt}
                                     <div class="card-content-top">
-                                        <div class="card-master-title">{producto} {html_incremento}</div>
+                                        <div class="card-master-title">{html_flama}{producto} {html_incremento}</div>
                                         <div class="card-master-num">{valor_mostrar}</div>
                                     </div>
                                     {html_badge_colab}
