@@ -13,7 +13,7 @@ st.set_page_config(
     page_title="MOSTACHO BOTANAS - ONE UI", 
     page_icon="logo.png" if os.path.exists("logo.png") else "⚡",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 LOYVERSE_TOKEN = "13d9288fbc264fb88a8112094407486a"
@@ -57,6 +57,9 @@ def obtener_estado_global():
         "productos_manuales_global": {},  
         "colaboradores": ["COLABORADOR 1", "COLABORADOR 2", "COLABORADOR 3", "COLABORADOR 4", "COLABORADOR 5", "COLABORADOR 6"],
         "asignaciones_productos": {}, # {producto: nombre_colaborador}
+        "urgentes_activos": set(),    # Productos marcados como urgentes
+        "tickets_completados_items": set(), # IDs únicos de items de tickets marcados como listos
+        "vista_actual": "TABLERO",    # "TABLERO" o "TICKETS"
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False
@@ -72,6 +75,8 @@ def borrar_todo():
         "notas_tablero": estado_global["notas_tablero"].copy(),
         "colaboradores": estado_global["colaboradores"].copy(),
         "asignaciones_productos": estado_global["asignaciones_productos"].copy(),
+        "urgentes_activos": estado_global["urgentes_activos"].copy(),
+        "tickets_completados_items": estado_global["tickets_completados_items"].copy(),
         "hora_corte_utc": estado_global["hora_corte_utc"]
     }
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
@@ -79,6 +84,8 @@ def borrar_todo():
     estado_global["cantidades_al_completar"].clear()
     estado_global["productos_manuales_global"].clear()
     estado_global["asignaciones_productos"].clear()
+    estado_global["urgentes_activos"].clear()
+    estado_global["tickets_completados_items"].clear()
     estado_global["notas_tablero"] = ["", "", ""]
     estado_global["descartar_celebracion"] = False
     st.toast("Tablero limpiado y barrera de corte establecida")
@@ -91,6 +98,8 @@ def restaurar_estado():
         estado_global["notas_tablero"] = estado_global["respaldo"]["notas_tablero"].copy()
         estado_global["colaboradores"] = estado_global["respaldo"]["colaboradores"].copy()
         estado_global["asignaciones_productos"] = estado_global["respaldo"]["asignaciones_productos"].copy()
+        estado_global["urgentes_activos"] = estado_global["respaldo"]["urgentes_activos"].copy()
+        estado_global["tickets_completados_items"] = estado_global["respaldo"]["tickets_completados_items"].copy()
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
         estado_global["descartar_celebracion"] = False
@@ -115,6 +124,14 @@ def asignar_colaborador(producto, colaborador):
     else:
         estado_global["asignaciones_productos"].pop(producto, None)
         st.toast("Asignación retirada")
+
+def alternar_urgente(producto):
+    if producto in estado_global["urgentes_activos"]:
+        estado_global["urgentes_activos"].remove(producto)
+        st.toast(f"Urgente retirado de {producto}")
+    else:
+        estado_global["urgentes_activos"].add(producto)
+        st.toast(f"¡{producto} marcado como URGENTE!", icon="🔥")
 
 # ==========================================
 # SONIDOS DE NOTIFICACIÓN
@@ -353,14 +370,14 @@ st.markdown(f"""
     .clocks-group {{ display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }}
 
     .header-clock {{
-        background: #151c2c; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 4px 10px;
-        color: #ffffff !important; font-size: 14px !important; font-weight: 800 !important;
+        background: #151c2c; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 6px 14px;
+        color: #ffffff !important; font-size: 15px !important; font-weight: 800 !important;
         letter-spacing: 0.8px; display: flex; align-items: center; gap: 6px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.3); white-space: nowrap;
     }}
 
     .status-dot {{
-        height: 7px; width: 7px; background-color: #34c759; border-radius: 50%; display: inline-block;
+        height: 8px; width: 8px; background-color: #34c759; border-radius: 50%; display: inline-block;
         box-shadow: 0 0 6px #34c759; animation: pulseDot 2s infinite;
     }}
 
@@ -600,13 +617,13 @@ def obtener_recibos_hoy():
     return obtener_recibos_hoy_cached(created_at_min)
 
 # ==========================================
-# 5. TABLERO DE PEDIDOS EN TIEMPO REAL
+# 5. APLICACIÓN PRINCIPAL
 # ==========================================
-def renderizar_tablero():
+def renderizar_aplicacion():
     recibos = obtener_recibos_hoy()
     conteo_productos = {}
     infinitos_activos = set()
-    urgentes_activos = set()
+    urgentes_activos = estado_global["urgentes_activos"]
     ultima_hora_loyverse_utc = None
 
     if recibos:
@@ -729,12 +746,23 @@ def renderizar_tablero():
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
     # ==========================================
-    # BARRA LATERAL (DRAWER) PARA CONFIGURACIÓN
+    # BARRA LATERAL (DRAWER) PARA CONFIGURACIÓN Y TICKETS
     # ==========================================
     with st.sidebar:
-        st.markdown("### PANEL DE AJUSTES Y CONFIGURACIÓN")
+        st.markdown("### PANEL DE AJUSTES")
         st.markdown("---")
         
+        # Botón destacado para acceder a la gestión independiente de tickets
+        if estado_global["vista_actual"] == "TABLERO":
+            if st.button("GESTIÓN DE TICKETS", use_container_width=True, type="primary"):
+                estado_global["vista_actual"] = "TICKETS"
+                st.rerun()
+        else:
+            if st.button("VOLVER AL TABLERO PRINCIPAL", use_container_width=True, type="primary"):
+                estado_global["vista_actual"] = "TABLERO"
+                st.rerun()
+
+        st.markdown("---")
         st.markdown("#### Notas del Tablero")
         with st.form("form_notas_tablero", clear_on_submit=False):
             n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. ETIQUETAR CHURRITOS")
@@ -805,6 +833,8 @@ def renderizar_tablero():
                     "infinito": es_infinito_nuevo,
                     "urgente": es_urgente_nuevo
                 }
+                if es_urgente_nuevo:
+                    estado_global["urgentes_activos"].add(prod_key)
                 st.toast(f"Agregado: {prod_key}")
                 st.rerun()
 
@@ -814,7 +844,7 @@ def renderizar_tablero():
             for p_nombre, p_datos in list(estado_global["productos_manuales_global"].items()):
                 p_cant = p_datos.get("cantidad", 1) if isinstance(p_datos, dict) else p_datos
                 p_inf = p_datos.get("infinito", False) if isinstance(p_datos, dict) else False
-                p_urg = p_datos.get("urgente", False) if isinstance(p_datos, dict) else False
+                p_urg = p_nombre in estado_global["urgentes_activos"]
                 
                 st.markdown(f"**{p_nombre}** ({'Urgente | ' if p_urg else ''}{'Inf' if p_inf else p_cant})")
                 
@@ -836,6 +866,10 @@ def renderizar_tablero():
                                 "infinito": nuevo_inf_val,
                                 "urgente": nuevo_urg_val
                             }
+                            if nuevo_urg_val:
+                                estado_global["urgentes_activos"].add(p_nombre)
+                            else:
+                                estado_global["urgentes_activos"].discard(p_nombre)
                             st.toast(f"Actualizado: {p_nombre}")
                             st.rerun()
 
@@ -844,6 +878,7 @@ def renderizar_tablero():
                             estado_global["completados"].discard(p_nombre)
                             estado_global["cantidades_al_completar"].pop(p_nombre, None)
                             estado_global["asignaciones_productos"].pop(p_nombre, None)
+                            estado_global["urgentes_activos"].discard(p_nombre)
                             st.toast(f"Borrado: {p_nombre}")
                             st.rerun()
 
@@ -856,9 +891,9 @@ def renderizar_tablero():
             st.rerun()
 
     # ==========================================
-    # ENCABEZADO PRINCIPAL
+    # ENCABEZADO PRINCIPAL (CON RELOJ Y BOTÓN DE DRAWER)
     # ==========================================
-    col_hdr_left, col_hdr_right = st.columns([0.70, 0.30])
+    col_hdr_left, col_hdr_mid, col_hdr_right = st.columns([0.45, 0.25, 0.30])
     
     with col_hdr_left:
         st.markdown(f"""
@@ -876,7 +911,7 @@ def renderizar_tablero():
             </div>
         """, unsafe_allow_html=True)
 
-    with col_hdr_right:
+    with col_hdr_mid:
         notas_filtradas_header = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
         total_notas_h = len(notas_filtradas_header)
 
@@ -897,6 +932,15 @@ def renderizar_tablero():
                         st.button("▲", key="btn_toggle_colapsar_header", on_click=alternar_desglose_h, use_container_width=True)
                     else:
                         st.button(f"▼ ({total_notas_h})", key="btn_toggle_ver_header", on_click=alternar_desglose_h, use_container_width=True)
+
+    with col_hdr_right:
+        st.markdown(f"""
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                <div class="header-clock" title="Hora local de México">
+                    <span class="status-dot"></span> <span>{hora_mexico_12h}</span>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
 
     # RENDERIZAR NOTAS ACTIVAS DESGLOSADAS SI APLICA
     notas_filtradas = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
@@ -934,164 +978,237 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-    # VISTA DE CELEBRACIÓN
-    if conteo_productos and piezas_pendientes == 0 and not estado_global["descartar_celebracion"]:
-        if not st.session_state.reproducido_modal_audio:
-            reproducir_sonido_celebracion()
-            st.session_state.reproducido_modal_audio = True
-
-        st.markdown(f"""
-            <div class="full-screen-celebracion">
-                <img src="{LOGO_URL}" class="img-celebracion-logo" style="height: 75px; width: auto; filter: drop-shadow(0 3px 12px rgba(255, 149, 0, 0.6));" alt="Logo">
-                <h2 style="color: #ff9500; font-weight: 800; font-size: 22px; text-transform: uppercase; margin-bottom: 6px;">PRODUCCIÓN FINALIZADA</h2>
-                <p style="color: #9ca3af; font-weight: 700; font-size: 13px; margin-bottom: 12px;">Se han completado todos los pedidos pendientes.</p>
-            </div>
-        """, unsafe_allow_html=True)
-
-        if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_pantalla_completa_cerrar"):
-            estado_global["descartar_celebracion"] = True
-            st.rerun()
-
-    # RENDERIZADO DE TARJETAS MAESTRAS EN 4 COLUMNAS
-    else:
-        if conteo_productos:
-            activos = []
-            completados = []
-
-            for prod, cant_total in conteo_productos.items():
-                if prod in estado_global["completados"]:
-                    completados.append((prod, cant_total))
-                else:
-                    activos.append((prod, cant_total))
-
-            def clave_ordenamiento(item):
-                producto, cant_total = item
-                es_urgente = producto in urgentes_activos
-                es_infinito = producto in infinitos_activos
-                ultima_upd = st.session_state.tiempos_actualizacion.get(producto)
-                es_reciente = bool(ultima_upd and (ahora_utc - ultima_upd).total_seconds() < 120 and not es_infinito)
+    # ==========================================
+    # VISTA 1: GESTIÓN INDEPENDIENTE DE TICKETS DESGLOSADOS
+    # ==========================================
+    if estado_global["vista_actual"] == "TICKETS":
+        st.markdown("### GESTIÓN INDEPENDIENTE DE TICKETS")
+        st.markdown("<p style='color: #9ca3af; font-size: 12px;'>Marca los productos terminados por cada ticket o actívalos como urgentes (🔥) para enviarlos al tablero principal.</p>", unsafe_allow_html=True)
+        
+        if recibos:
+            for idx_recibo, recibo in enumerate(recibos):
+                ticket_id = recibo.get("id", str(idx_recibo))
+                receipt_number = recibo.get("receipt_number", f"#{idx_recibo + 1}")
+                created_at_str = recibo.get("receipt_date") or recibo.get("created_at", "")
                 
-                if es_urgente:
-                    prioridad = 0
-                elif es_reciente:
-                    prioridad = 1
-                else:
-                    prioridad = 2
-                    
-                return (prioridad, -cant_total)
+                try:
+                    dt_ticket = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
+                    hora_ticket = dt_ticket.astimezone(tz_mexico).strftime("%I:%M:%S %p")
+                except:
+                    hora_ticket = "---"
 
-            activos.sort(key=clave_ordenamiento)
-            completados.sort(key=lambda x: x[1], reverse=True)
+                line_items = recibo.get("line_items", [])
+                
+                with st.container():
+                    st.markdown(f"""
+                        <div style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px; margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-weight: 900; color: #38bdf8; font-size: 14px;">TICKET {receipt_number}</span>
+                                <span style="font-size: 11px; color: #9ca3af; font-weight: 700;">HORA: {hora_ticket}</span>
+                            </div>
+                    """, unsafe_allow_html=True)
 
-            def renderizar_lista_productos(lista):
-                for i in range(0, len(lista), 4):
-                    grupo = lista[i:i+4]
-                    cols = st.columns(4)
+                    for idx_item, item in enumerate(line_items):
+                        nombre = item.get("item_name", "Producto")
+                        cantidad = item.get("quantity", 0)
+                        variante = item.get("variant_name")
+                        
+                        if variante and variante != "Default":
+                            nombre_completo = f"{nombre} ({variante})"
+                        else:
+                            nombre_completo = nombre
 
-                    for idx, (producto, cant_total) in enumerate(grupo):
-                        with cols[idx]:
-                            es_completado = producto in estado_global["completados"]
-                            es_infinito = producto in infinitos_activos
-                            es_urgente = producto in urgentes_activos
-                            colab_asignado = estado_global["asignaciones_productos"].get(producto)
+                        cant_num = int(cantidad) if float(cantidad).is_integer() else cantidad
+                        item_key_uid = f"{ticket_id}_{idx_item}_{nombre_completo}"
+                        
+                        esta_listo = item_key_uid in estado_global["tickets_completados_items"]
+                        es_urgente_prod = nombre_completo in estado_global["urgentes_activos"]
 
-                            if es_infinito:
-                                valor_mostrar = "∞"
-                            else:
-                                cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
-                                cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
-                                valor_mostrar = str(cant_mostrar)
+                        col_t1, col_t2, col_t3 = st.columns([0.65, 0.20, 0.15])
+                        
+                        with col_t1:
+                            chk_val = st.checkbox(f"{cant_num}x **{nombre_completo}**", value=esta_listo, key=f"chk_ticket_{item_key_uid}")
+                            if chk_val != esta_listo:
+                                if chk_val:
+                                    estado_global["tickets_completados_items"].add(item_key_uid)
+                                else:
+                                    estado_global["tickets_completados_items"].discard(item_key_uid)
+                                st.rerun()
 
-                            ultima_upd = st.session_state.tiempos_actualizacion.get(producto)
-                            es_reciente = False
-                            if ultima_upd and (ahora_utc - ultima_upd).total_seconds() < 120 and not es_completado and not es_infinito:
-                                es_reciente = True
+                        with col_t2:
+                            urg_label = "🔥 URGENTE" if es_urgente_prod else "⚡ NORMAL"
+                            if st.button(urg_label, key=f"btn_urg_{item_key_uid}", use_container_width=True):
+                                alternar_urgente(nombre_completo)
+                                st.rerun()
 
-                            # ESTILOS Y COLORES DE TARJETA
-                            if es_urgente and not es_completado:
-                                clase_css = "card-master-urgente"
-                                texto_estado = "TERMINAR"
-                                html_flama = '🔥 '
-                            elif colab_asignado and not es_completado:
-                                clase_css = "card-master-asignado"
-                                texto_estado = "TERMINAR"
-                                html_flama = ''
-                            elif es_reciente:
-                                clase_css = "card-master-reciente anim-pulso-nuevo"
-                                texto_estado = "TERMINAR"
-                                html_flama = ''
-                            elif es_completado:
-                                clase_css = "card-master-completado"
-                                texto_estado = "PENDIENTE"
-                                html_flama = ''
-                            else:
-                                clase_css = "card-master-pendiente"
-                                texto_estado = "TERMINAR"
-                                html_flama = ''
+                        with col_t3:
+                            estado_txt = "LISTO" if esta_listo else "PENDIENTE"
+                            color_txt = "#34c759" if esta_listo else "#f87171"
+                            st.markdown(f"<div style='text-align: right; font-size: 11px; font-weight: 900; color: {color_txt}; padding-top: 6px;'>{estado_txt}</div>", unsafe_allow_html=True)
 
-                            info_popup = st.session_state.popups_nuevos.get(producto)
-                            html_incremento = ""
-                            if info_popup and not es_completado and not es_infinito:
-                                inc = info_popup["incremento"]
-                                html_incremento = f'<span class="txt-incremento">+{inc}</span>'
+                    st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            st.info("No hay tickets disponibles para mostrar en este periodo.")
 
-                            html_badge_colab = f'<div class="colab-asignado-txt">{colab_asignado}</div>' if colab_asignado else ''
+    # ==========================================
+    # VISTA 2: TABLA DE PRODUCCIÓN PRINCIPAL
+    # ==========================================
+    else:
+        if conteo_productos and piezas_pendientes == 0 and not estado_global["descartar_celebracion"]:
+            if not st.session_state.reproducido_modal_audio:
+                reproducir_sonido_celebracion()
+                st.session_state.reproducido_modal_audio = True
 
-                            # TARJETA PRINCIPAL
-                            st.markdown(f"""
-                                <div class="card-master-container {clase_css}">
-                                    <div class="card-content-top">
-                                        <div class="card-master-title">{html_flama}{producto} {html_incremento}</div>
-                                        <div class="card-master-num">{valor_mostrar}</div>
-                                    </div>
-                                    {html_badge_colab}
-                                </div>
-                            """, unsafe_allow_html=True)
+            st.markdown(f"""
+                <div class="full-screen-celebracion">
+                    <img src="{LOGO_URL}" class="img-celebracion-logo" style="height: 75px; width: auto; filter: drop-shadow(0 3px 12px rgba(255, 149, 0, 0.6));" alt="Logo">
+                    <h2 style="color: #ff9500; font-weight: 800; font-size: 22px; text-transform: uppercase; margin-bottom: 6px;">PRODUCCIÓN FINALIZADA</h2>
+                    <p style="color: #9ca3af; font-weight: 700; font-size: 13px; margin-bottom: 12px;">Se han completado todos los pedidos pendientes.</p>
+                </div>
+            """, unsafe_allow_html=True)
 
-                            # SELECCIÓN DIRECTA DE COLABORADOR (UN SOLO TOQUE) Y TERMINAR
-                            col_btn_1, col_btn_2 = st.columns(2)
-                            
-                            with col_btn_1:
-                                lista_colabs = ["NINGUNO"] + estado_global["colaboradores"]
-                                index_actual = 0
-                                if colab_asignado and colab_asignado in lista_colabs:
-                                    index_actual = lista_colabs.index(colab_asignado)
-
-                                colab_seleccionado = st.selectbox(
-                                    f"Asignar {producto}",
-                                    options=lista_colabs,
-                                    index=index_actual,
-                                    key=f"select_asignar_{producto}",
-                                    label_visibility="collapsed"
-                                )
-
-                                # Asignación inmediata al cambiar la selección en el selectbox
-                                if colab_seleccionado != (colab_asignado if colab_asignado else "NINGUNO"):
-                                    asignar_colaborador(producto, colab_seleccionado)
-                                    st.rerun()
-
-                            with col_btn_2:
-                                st.button(
-                                    texto_estado, 
-                                    key=f"tarjeta_btn_{producto}", 
-                                    on_click=alternar_estado, 
-                                    args=(producto, cant_total),
-                                    use_container_width=True
-                                )
-
-            if activos:
-                renderizar_lista_productos(activos)
-
-            if completados:
-                st.markdown("""
-                    <div class="divider-completados">
-                        <span>PRODUCTOS TERMINADOS</span>
-                    </div>
-                """, unsafe_allow_html=True)
-                renderizar_lista_productos(completados)
+            if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_pantalla_completa_cerrar"):
+                estado_global["descartar_celebracion"] = True
+                st.rerun()
 
         else:
-            st.info("No hay pedidos registrados en este periodo.")
+            if conteo_productos:
+                activos = []
+                completados = []
+
+                for prod, cant_total in conteo_productos.items():
+                    if prod in estado_global["completados"]:
+                        completados.append((prod, cant_total))
+                    else:
+                        activos.append((prod, cant_total))
+
+                def clave_ordenamiento(item):
+                    producto, cant_total = item
+                    es_urgente = producto in urgentes_activos
+                    es_infinito = producto in infinitos_activos
+                    ultima_upd = st.session_state.tiempos_actualizacion.get(producto)
+                    es_reciente = bool(ultima_upd and (ahora_utc - ultima_upd).total_seconds() < 120 and not es_infinito)
+                    
+                    if es_urgente:
+                        prioridad = 0
+                    elif es_reciente:
+                        prioridad = 1
+                    else:
+                        prioridad = 2
+                        
+                    return (prioridad, -cant_total)
+
+                activos.sort(key=clave_ordenamiento)
+                completados.sort(key=lambda x: x[1], reverse=True)
+
+                def renderizar_lista_productos(lista):
+                    for i in range(0, len(lista), 4):
+                        grupo = lista[i:i+4]
+                        cols = st.columns(4)
+
+                        for idx, (producto, cant_total) in enumerate(grupo):
+                            with cols[idx]:
+                                es_completado = producto in estado_global["completados"]
+                                es_infinito = producto in infinitos_activos
+                                es_urgente = producto in urgentes_activos
+                                colab_asignado = estado_global["asignaciones_productos"].get(producto)
+
+                                if es_infinito:
+                                    valor_mostrar = "∞"
+                                else:
+                                    cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
+                                    cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
+                                    valor_mostrar = str(cant_mostrar)
+
+                                ultima_upd = st.session_state.tiempos_actualizacion.get(producto)
+                                es_reciente = False
+                                if ultima_upd and (ahora_utc - ultima_upd).total_seconds() < 120 and not es_completado and not es_infinito:
+                                    es_reciente = True
+
+                                # ESTILOS Y COLORES DE TARJETA
+                                if es_urgente and not es_completado:
+                                    clase_css = "card-master-urgente"
+                                    texto_estado = "TERMINAR"
+                                    html_flama = '🔥 '
+                                elif colab_asignado and not es_completado:
+                                    clase_css = "card-master-asignado"
+                                    texto_estado = "TERMINAR"
+                                    html_flama = ''
+                                elif es_reciente:
+                                    clase_css = "card-master-reciente anim-pulso-nuevo"
+                                    texto_estado = "TERMINAR"
+                                    html_flama = ''
+                                elif es_completado:
+                                    clase_css = "card-master-completado"
+                                    texto_estado = "PENDIENTE"
+                                    html_flama = ''
+                                else:
+                                    clase_css = "card-master-pendiente"
+                                    texto_estado = "TERMINAR"
+                                    html_flama = ''
+
+                                info_popup = st.session_state.popups_nuevos.get(producto)
+                                html_incremento = ""
+                                if info_popup and not es_completado and not es_infinito:
+                                    inc = info_popup["incremento"]
+                                    html_incremento = f'<span class="txt-incremento">+{inc}</span>'
+
+                                html_badge_colab = f'<div class="colab-asignado-txt">{colab_asignado}</div>' if colab_asignado else ''
+
+                                # TARJETA PRINCIPAL
+                                st.markdown(f"""
+                                    <div class="card-master-container {clase_css}">
+                                        <div class="card-content-top">
+                                            <div class="card-master-title">{html_flama}{producto} {html_incremento}</div>
+                                            <div class="card-master-num">{valor_mostrar}</div>
+                                        </div>
+                                        {html_badge_colab}
+                                    </div>
+                                """, unsafe_allow_html=True)
+
+                                # SELECCIÓN DIRECTA DE COLABORADOR Y TERMINAR
+                                col_btn_1, col_btn_2 = st.columns(2)
+                                
+                                with col_btn_1:
+                                    lista_colabs = ["NINGUNO"] + estado_global["colaboradores"]
+                                    index_actual = 0
+                                    if colab_asignado and colab_asignado in lista_colabs:
+                                        index_actual = lista_colabs.index(colab_asignado)
+
+                                    colab_seleccionado = st.selectbox(
+                                        f"Asignar {producto}",
+                                        options=lista_colabs,
+                                        index=index_actual,
+                                        key=f"select_asignar_{producto}",
+                                        label_visibility="collapsed"
+                                    )
+
+                                    if colab_seleccionado != (colab_asignado if colab_asignado else "NINGUNO"):
+                                        asignar_colaborador(producto, colab_seleccionado)
+                                        st.rerun()
+
+                                with col_btn_2:
+                                    st.button(
+                                        texto_estado, 
+                                        key=f"tarjeta_btn_{producto}", 
+                                        on_click=alternar_estado, 
+                                        args=(producto, cant_total),
+                                        use_container_width=True
+                                    )
+
+                if activos:
+                    renderizar_lista_productos(activos)
+
+                if completados:
+                    st.markdown("""
+                        <div class="divider-completados">
+                            <span>PRODUCTOS TERMINADOS</span>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    renderizar_lista_productos(completados)
+
+            else:
+                st.info("No hay pedidos registrados en este periodo.")
 
     # FOOTER SUTIL
     st.markdown(f"""
@@ -1100,4 +1217,4 @@ def renderizar_tablero():
         </div>
     """, unsafe_allow_html=True)
 
-renderizar_tablero()
+renderizar_aplicacion()
