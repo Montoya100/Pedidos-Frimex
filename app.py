@@ -144,7 +144,7 @@ def alternar_urgente(producto):
     disparar_sync()
 
 # ==========================================
-# 3. ESTILOS CSS GENERALES Y COMPACTOS
+# 3. ESTILOS CSS (6 COLUMNAS Y BOTONES FORZADOS)
 # ==========================================
 st.markdown("""
     <style>
@@ -171,18 +171,18 @@ st.markdown("""
         max-width: 100% !important;
     }
 
-    /* FORZAR SELECTBOX A NEGRO CON TEXTO BLANCO Y ALTURA COMPACTA */
+    /* FORZAR SELECTBOX A NEGRO CON TEXTO BLANCO */
     div[data-baseweb="select"] > div {
         background-color: #000000 !important;
         color: #ffffff !important;
         border-color: rgba(255, 255, 255, 0.2) !important;
         border-radius: 8px !important;
-        min-height: 30px !important;
-        height: 30px !important;
+        min-height: 28px !important;
+        height: 28px !important;
     }
     div[data-baseweb="select"] span {
         color: #ffffff !important;
-        font-size: 10px !important;
+        font-size: 9px !important;
         font-weight: 800 !important;
     }
     div[data-baseweb="popover"], div[data-baseweb="menu"] {
@@ -201,15 +201,15 @@ st.markdown("""
     .banner-notas-container {
         background: #111827 !important;
         border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 14px;
-        padding: 10px 14px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        border-radius: 12px;
+        padding: 8px 12px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
         display: flex;
         align-items: center;
         width: 100% !important;
         box-sizing: border-box;
-        gap: 12px;
-        min-height: 44px;
+        gap: 10px;
+        min-height: 40px;
         margin-bottom: 6px;
     }
 
@@ -217,10 +217,10 @@ st.markdown("""
         background: #0077ed;
         color: #ffffff;
         font-weight: 900;
-        font-size: 11px !important;
+        font-size: 10px !important;
         letter-spacing: 1px;
-        padding: 5px 12px;
-        border-radius: 10px;
+        padding: 4px 10px;
+        border-radius: 8px;
         text-transform: uppercase;
         white-space: nowrap;
         flex-shrink: 0;
@@ -228,10 +228,10 @@ st.markdown("""
 
     .banner-nota-texto {
         color: #ffffff;
-        font-size: 17px !important;
+        font-size: 15px !important;
         font-weight: 900 !important;
         line-height: 1.2;
-        letter-spacing: 0.6px;
+        letter-spacing: 0.5px;
         text-transform: uppercase !important;
         flex: 1 !important;
         word-break: break-word;
@@ -240,11 +240,11 @@ st.markdown("""
     .full-screen-celebracion {
         background: linear-gradient(180deg, #1e1b18 0%, #0b0f19 100%);
         border: 1px solid rgba(255, 149, 0, 0.3);
-        border-radius: 20px;
-        box-shadow: 0 0 30px rgba(255, 149, 0, 0.25);
-        padding: 24px 16px 16px 16px;
+        border-radius: 16px;
+        box-shadow: 0 0 25px rgba(255, 149, 0, 0.25);
+        padding: 20px 14px 14px 14px;
         text-align: center;
-        margin: 6px 0 12px 0;
+        margin: 6px 0 10px 0;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -256,92 +256,93 @@ st.markdown("""
         margin-bottom: 4px; width: 100%; padding: 0 2px; flex-wrap: nowrap; gap: 6px;
     }
     
-    .header-left-group { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }
-    .header-logo-img { height: 38px !important; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); display: block !important; }
+    .header-left-group { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+    .header-logo-img { height: 34px !important; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); display: block !important; }
 
     .header-title {
         color: #ffffff !important; 
         font-weight: 900 !important; 
-        font-size: 19px !important;
+        font-size: 17px !important;
         line-height: 1.1; 
-        letter-spacing: 0.8px; 
+        letter-spacing: 0.6px; 
         margin: 0; 
         padding: 0; 
         white-space: nowrap;
         text-transform: uppercase;
-        text-shadow: 0 2px 10px rgba(255, 255, 255, 0.25);
+        text-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
     }
 
-    .sub-brand-line { display: flex; align-items: center; gap: 6px; font-size: 9px; color: #9ca3af; font-weight: 700; letter-spacing: 0.8px; }
+    .sub-brand-line { display: flex; align-items: center; gap: 6px; font-size: 8.5px; color: #9ca3af; font-weight: 700; letter-spacing: 0.6px; }
     .sync-text-inline { color: #38bdf8; font-weight: 700; }
 
     .header-clock-large {
-        background: #151c2c; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 8px 16px;
-        color: #ffffff !important; font-size: 18px !important; font-weight: 900 !important;
-        letter-spacing: 1px; display: flex; align-items: center; gap: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.35); white-space: nowrap;
+        background: #151c2c; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 6px 12px;
+        color: #ffffff !important; font-size: 16px !important; font-weight: 900 !important;
+        letter-spacing: 0.8px; display: flex; align-items: center; gap: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3); white-space: nowrap;
     }
 
     .status-dot {
-        height: 9px; width: 9px; background-color: #34c759; border-radius: 50%; display: inline-block;
-        box-shadow: 0 0 8px #34c759; animation: pulseDot 2s infinite;
+        height: 8px; width: 8px; background-color: #34c759; border-radius: 50%; display: inline-block;
+        box-shadow: 0 0 6px #34c759; animation: pulseDot 2s infinite;
     }
 
     @keyframes pulseDot { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
 
     @keyframes pulseBlue {
-        0% { box-shadow: 0 0 5px rgba(0, 119, 237, 0.5); border-color: #0077ed; }
-        50% { box-shadow: 0 0 18px rgba(0, 119, 237, 0.9); border-color: #60a5fa; }
-        100% { box-shadow: 0 0 5px rgba(0, 119, 237, 0.5); border-color: #0077ed; }
+        0% { box-shadow: 0 0 4px rgba(0, 119, 237, 0.5); border-color: #0077ed; }
+        50% { box-shadow: 0 0 14px rgba(0, 119, 237, 0.9); border-color: #60a5fa; }
+        100% { box-shadow: 0 0 4px rgba(0, 119, 237, 0.5); border-color: #0077ed; }
     }
 
     .anim-azul-nuevo { animation: pulseBlue 1.2s infinite ease-in-out !important; }
 
     .metrics-row {
         display: flex; justify-content: space-around; align-items: center;
-        background: #111827; border-radius: 14px; padding: 8px 12px 10px 12px;
-        margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.06); position: relative; overflow: hidden;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        background: #111827; border-radius: 12px; padding: 6px 10px 8px 10px;
+        margin-bottom: 6px; border: 1px solid rgba(255,255,255,0.06); position: relative; overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
     }
 
-    .progress-bar-bg { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: #1f2937; }
+    .progress-bar-bg { position: absolute; bottom: 0; left: 0; right: 0; height: 2.5px; background: #1f2937; }
     .progress-bar-fill {
         height: 100%; background: linear-gradient(90deg, #ff9500 0%, #ffcc00 100%);
-        box-shadow: 0 0 6px rgba(255, 149, 0, 0.6); transition: width 0.5s ease-in-out;
+        box-shadow: 0 0 5px rgba(255, 149, 0, 0.5); transition: width 0.5s ease-in-out;
         border-radius: 0 2px 2px 0;
     }
 
     .metric-inline {
-        display: flex; align-items: center; gap: 6px; font-size: 11px !important;
-        font-weight: 700 !important; color: #9ca3af; letter-spacing: 0.4px; text-transform: uppercase;
+        display: flex; align-items: center; gap: 5px; font-size: 10px !important;
+        font-weight: 700 !important; color: #9ca3af; letter-spacing: 0.3px; text-transform: uppercase;
     }
 
-    .metric-inline .val { font-size: 14px !important; font-weight: 800 !important; color: #f87171; }
-    .pct-avance { font-size: 10px !important; font-weight: 800 !important; color: #9ca3af !important; letter-spacing: 0.6px; text-transform: uppercase; }
+    .metric-inline .val { font-size: 13px !important; font-weight: 800 !important; color: #f87171; }
+    .pct-avance { font-size: 9.5px !important; font-weight: 800 !important; color: #9ca3af !important; letter-spacing: 0.5px; text-transform: uppercase; }
 
     .divider-completados {
         display: flex; align-items: center; text-align: center; color: #34c759;
-        font-size: 9px; font-weight: 800; letter-spacing: 1.5px; margin: 12px 0 8px 0;
+        font-size: 8.5px; font-weight: 800; letter-spacing: 1.2px; margin: 10px 0 6px 0;
     }
 
     .divider-completados::before, .divider-completados::after { content: ''; flex: 1; border-bottom: 1px solid #34c759; opacity: 0.25; }
-    .divider-completados span { padding: 0 8px; background-color: #0b0f19; }
+    .divider-completados span { padding: 0 6px; background-color: #0b0f19; }
 
     .footer-sutil {
-        position: fixed; bottom: 0; left: 0; right: 0; background: #070a10; border-top: 1px solid rgba(255,255,255,0.06); padding: 3px 10px; text-align: center; font-size: 9px !important; font-weight: 800 !important; color: #6b7280 !important; z-index: 999;
+        position: fixed; bottom: 0; left: 0; right: 0; background: #070a10; border-top: 1px solid rgba(255,255,255,0.06); padding: 2px 8px; text-align: center; font-size: 8.5px !important; font-weight: 800 !important; color: #6b7280 !important; z-index: 999;
     }
 
     .footer-sutil span { color: #34c759 !important; font-weight: 900 !important; }
 
+    /* TARJETA OPTIMIZADA PARA 6 COLUMNAS */
     .card-master-container {
-        border-radius: 14px;
-        padding: 10px 12px;
-        margin-bottom: 6px;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+        border-radius: 10px;
+        padding: 6px 8px;
+        margin-bottom: 4px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.3);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        min-height: 70px;
+        min-height: 54px;
         backdrop-filter: blur(10px);
     }
 
@@ -350,12 +351,13 @@ st.markdown("""
         align-items: center;
         justify-content: space-between;
         width: 100%;
+        gap: 4px;
     }
 
     .card-master-pendiente { background: #dc2626 !important; border: 1px solid rgba(239, 68, 68, 0.4) !important; color: #ffffff !important; }
-    .card-master-asignado { background: #ea580c !important; border: 1px solid rgba(251, 146, 60, 0.8) !important; color: #ffffff !important; box-shadow: 0 0 16px rgba(234, 88, 12, 0.5) !important; }
-    .card-master-urgente { background: #b91c1c !important; border: 2px solid #fbbf24 !important; color: #ffffff !important; box-shadow: 0 0 16px rgba(251, 191, 36, 0.4) !important; }
-    .card-master-nuevo-azul { background: #1d4ed8 !important; border: 2px solid #60a5fa !important; color: #ffffff !important; box-shadow: 0 0 16px rgba(96, 165, 250, 0.6) !important; }
+    .card-master-asignado { background: #ea580c !important; border: 1px solid rgba(251, 146, 60, 0.8) !important; color: #ffffff !important; box-shadow: 0 0 12px rgba(234, 88, 12, 0.4) !important; }
+    .card-master-urgente { background: #b91c1c !important; border: 2px solid #fbbf24 !important; color: #ffffff !important; box-shadow: 0 0 12px rgba(251, 191, 36, 0.35) !important; }
+    .card-master-nuevo-azul { background: #1d4ed8 !important; border: 2px solid #60a5fa !important; color: #ffffff !important; box-shadow: 0 0 12px rgba(96, 165, 250, 0.5) !important; }
     
     .card-master-completado { background: #047857 !important; border: 1px solid rgba(16, 185, 129, 0.4) !important; color: #ffffff !important; opacity: 0.75; }
     .card-master-completado .card-master-title,
@@ -366,32 +368,36 @@ st.markdown("""
     }
 
     .card-master-title {
-        font-size: 15px !important;
+        font-size: 11px !important;
         font-weight: 800 !important;
         text-transform: uppercase !important;
-        line-height: 1.15 !important;
+        line-height: 1.1 !important;
         flex: 1;
-        padding-right: 6px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
     }
 
     .card-master-num {
         font-family: 'JetBrains Mono', monospace !important;
-        font-size: 38px !important;
+        font-size: 26px !important;
         font-weight: 900 !important;
         line-height: 1 !important;
-        text-align: center;
-        min-width: 56px;
+        text-align: right;
+        min-width: 38px;
     }
 
     .colab-asignado-txt {
-        font-size: 11px !important;
+        font-size: 9px !important;
         font-weight: 900 !important;
         color: #ffffff !important;
-        margin-top: 4px;
-        letter-spacing: 0.8px;
+        margin-top: 2px;
+        letter-spacing: 0.5px;
         text-transform: uppercase;
-        border-top: 1px solid rgba(255, 255, 255, 0.25);
-        padding-top: 3px;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        padding-top: 2px;
     }
 
     button:focus, button:active, button:focus-visible {
@@ -399,28 +405,29 @@ st.markdown("""
         box-shadow: none !important;
     }
 
-    /* BOTONES MÁS COMPACTOS Y ESTILIZADOS */
+    /* FORZAR BOTÓN AZUL SÓLIDO */
     div[data-testid="stButton"] button {
-        background-color: #151c2c !important;
-        background: #151c2c !important;
+        background-color: #0077ed !important;
+        background: #0077ed !important;
         color: #ffffff !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        border-radius: 8px !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 6px !important;
         font-weight: 800 !important;
-        font-size: 9px !important;
-        letter-spacing: 0.6px !important;
+        font-size: 8.5px !important;
+        letter-spacing: 0.5px !important;
         text-transform: uppercase !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-        height: 30px !important;
-        min-height: 30px !important;
-        padding: 0px 6px !important;
+        height: 28px !important;
+        min-height: 28px !important;
+        padding: 0px 4px !important;
+        width: 100% !important;
     }
 
     div[data-testid="stButton"] button:hover {
-        background-color: #1e293b !important;
-        background: #1e293b !important;
-        color: #60a5fa !important;
-        border-color: #3b82f6 !important;
+        background-color: #1d4ed8 !important;
+        background: #1d4ed8 !important;
+        color: #ffffff !important;
+        border-color: #60a5fa !important;
     }
 
     @media (max-width: 768px) {
@@ -428,11 +435,11 @@ st.markdown("""
         .block-container { padding-left: 2px !important; padding-right: 2px !important; }
         div[data-testid="column"] { width: 100% !important; flex: 1 1 100% !important; margin-bottom: 2px !important; }
         .header-logo-container { flex-direction: row !important; justify-content: space-between !important; align-items: center !important; padding: 0 2px !important; }
-        .header-logo-img { height: 34px !important; display: block !important; }
-        .header-title { font-size: 14px !important; }
-        .card-master-title { font-size: 14px !important; }
-        .card-master-num { font-size: 34px !important; }
-        .card-master-container { min-height: 60px !important; padding: 8px 10px !important; border-radius: 12px !important; }
+        .header-logo-img { height: 30px !important; display: block !important; }
+        .header-title { font-size: 13px !important; }
+        .card-master-title { font-size: 11px !important; }
+        .card-master-num { font-size: 24px !important; }
+        .card-master-container { min-height: 50px !important; padding: 6px 8px !important; border-radius: 10px !important; }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -662,11 +669,11 @@ def renderizar_aplicacion():
     """, unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN 1: GESTIÓN DE TICKETS INDEPENDIENTES (ALINEADOS A LA IZQUIERDA)
+    # SECCIÓN 1: GESTIÓN DE TICKETS INDEPENDIENTES
     # ==========================================
     if st.session_state.vista_local == "TICKETS":
         st.markdown("### GESTIÓN DE TICKETS INDIVIDUALES")
-        st.markdown("<p style='color: #9ca3af; font-size: 12px;'>Visualiza los tickets con sus productos y variantes exactas tal cual se registran en Loyverse.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Visualiza los tickets con sus productos y variantes exactas tal cual se registran en Loyverse.</p>", unsafe_allow_html=True)
         
         if recibos:
             tickets_pendientes_lista = []
@@ -717,19 +724,19 @@ def renderizar_aplicacion():
                 
                 with st.container():
                     st.markdown(f"""
-                        <div style="background: {bg_color}; border: 1px solid {border_color}; border-radius: 12px; padding: 14px; margin-bottom: 12px; opacity: {'0.85' if completado else '1'};">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+                        <div style="background: {bg_color}; border: 1px solid {border_color}; border-radius: 10px; padding: 12px; margin-bottom: 10px; opacity: {'0.85' if completado else '1'};">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">
                                 <div>
-                                    <div style="font-weight: 900; color: {'#34c759' if completado else '#ffffff'}; font-size: 17px; letter-spacing: 0.5px; text-transform: uppercase;">{titulo_principal}</div>
-                                    <div style="font-weight: 700; color: #38bdf8; font-size: 11px; margin-top: 2px;">{sub_detalle}</div>
+                                    <div style="font-weight: 900; color: {'#34c759' if completado else '#ffffff'}; font-size: 15px; letter-spacing: 0.5px; text-transform: uppercase;">{titulo_principal}</div>
+                                    <div style="font-weight: 700; color: #38bdf8; font-size: 10px; margin-top: 2px;">{sub_detalle}</div>
                                 </div>
-                                <span style="font-size: 11px; color: #9ca3af; font-weight: 700; background: #151c2c; padding: 3px 8px; border-radius: 6px;">{hora_ticket}</span>
+                                <span style="font-size: 10px; color: #9ca3af; font-weight: 700; background: #151c2c; padding: 2px 6px; border-radius: 6px;">{hora_ticket}</span>
                             </div>
                         </div>
                     """, unsafe_allow_html=True)
 
                     if note_recibo:
-                        st.markdown(f"<div style='font-style: italic; color: #fbbf24; font-size: 12px; margin-bottom: 10px;'>💬 Nota: {note_recibo}</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='font-style: italic; color: #fbbf24; font-size: 11px; margin-bottom: 8px;'>💬 Nota: {note_recibo}</div>", unsafe_allow_html=True)
 
                     with st.expander(f"Editar nombre del ticket #{receipt_number}"):
                         with st.form(key=f"form_title_{ticket_id}"):
@@ -776,7 +783,7 @@ def renderizar_aplicacion():
                                 alternar_urgente(nombre_completo)
                                 st.rerun()
 
-                    st.markdown("<hr style='border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 14px 0;'>", unsafe_allow_html=True)
+                    st.markdown("<hr style='border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10px 0;'>", unsafe_allow_html=True)
 
             if tickets_pendientes_lista:
                 st.markdown("#### ⏳ Tickets Pendientes de Producción")
@@ -785,7 +792,7 @@ def renderizar_aplicacion():
 
             if tickets_completados_lista:
                 st.markdown("""
-                    <div class="divider-completados" style="margin: 24px 0 12px 0;">
+                    <div class="divider-completados" style="margin: 20px 0 10px 0;">
                         <span>TICKETS COMPLETADOS Y CONCRETADOS</span>
                     </div>
                 """, unsafe_allow_html=True)
@@ -824,7 +831,7 @@ def renderizar_aplicacion():
         ranking_ordenado = sorted(conteo_colab.items(), key=lambda x: x[1], reverse=True)
         for pos, (nombre_colab, total_piezas) in enumerate(ranking_ordenado):
             medalla = "🥇" if pos == 0 else ("🥈" if pos == 1 else ("🥉" if pos == 2 else f"#{pos+1}"))
-            st.markdown(f"<div style='font-size: 13px; font-weight: 800; padding: 6px 10px; background: #111827; border-radius: 8px; margin-bottom: 6px; color: #e2e8f0; display: flex; justify-content: space-between;'><span>{medalla} {nombre_colab}</span><span style='color: #38bdf8;'>{total_piezas} pzas</span></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size: 12px; font-weight: 800; padding: 5px 8px; background: #111827; border-radius: 6px; margin-bottom: 4px; color: #e2e8f0; display: flex; justify-content: space-between;'><span>{medalla} {nombre_colab}</span><span style='color: #38bdf8;'>{total_piezas} pzas</span></div>", unsafe_allow_html=True)
 
         st.markdown("---")
 
@@ -841,7 +848,7 @@ def renderizar_aplicacion():
                 st.rerun()
 
         if estado_global["notas_tablero"]:
-            st.markdown("<p style='font-size: 12px; color: #9ca3af;'>Notas actuales en rotación:</p>", unsafe_allow_html=True)
+            st.markdown("<p style='font-size: 11px; color: #9ca3af;'>Notas actuales en rotación:</p>", unsafe_allow_html=True)
             for idx_n, nota_act in enumerate(estado_global["notas_tablero"]):
                 with st.expander(f"Nota {idx_n + 1}: {nota_act[:30]}..."):
                     with st.form(key=f"form_edit_nota_{idx_n}"):
@@ -978,15 +985,15 @@ def renderizar_aplicacion():
                 st.rerun()
 
     # ==========================================
-    # SECCIÓN 3: TABLA DE PRODUCCIÓN PRINCIPAL
+    # SECCIÓN 3: TABLA DE PRODUCCIÓN PRINCIPAL (6 COLUMNAS)
     # ==========================================
     else:
         if conteo_productos and piezas_pendientes == 0 and not estado_global["descartar_celebracion"]:
             st.markdown(f"""
                 <div class="full-screen-celebracion">
-                    <img src="{LOGO_URL}" class="img-celebracion-logo" style="height: 75px; width: auto; filter: drop-shadow(0 3px 12px rgba(255, 149, 0, 0.6));" alt="Logo">
-                    <h2 style="color: #ff9500; font-weight: 800; font-size: 22px; text-transform: uppercase; margin-bottom: 6px;">PRODUCCIÓN FINALIZADA</h2>
-                    <p style="color: #9ca3af; font-weight: 700; font-size: 13px; margin-bottom: 12px;">Se han completado todos los pedidos pendientes.</p>
+                    <img src="{LOGO_URL}" class="img-celebracion-logo" style="height: 65px; width: auto; filter: drop-shadow(0 3px 10px rgba(255, 149, 0, 0.6));" alt="Logo">
+                    <h2 style="color: #ff9500; font-weight: 800; font-size: 20px; text-transform: uppercase; margin-bottom: 4px;">PRODUCCIÓN FINALIZADA</h2>
+                    <p style="color: #9ca3af; font-weight: 700; font-size: 12px; margin-bottom: 10px;">Se han completado todos los pedidos pendientes.</p>
                 </div>
             """, unsafe_allow_html=True)
 
@@ -1017,9 +1024,10 @@ def renderizar_aplicacion():
                 completados.sort(key=lambda x: x[0])
 
                 def renderizar_lista_productos(lista):
-                    for i in range(0, len(lista), 4):
-                        grupo = lista[i:i+4]
-                        cols = st.columns(4)
+                    # 6 COLUMNAS POR FILA PARA MOSTRAR MÁS DE 12 PIEZAS EN PANTALLAS DE 32"
+                    for i in range(0, len(lista), 6):
+                        grupo = lista[i:i+6]
+                        cols = st.columns(6)
 
                         for idx, (producto, cant_total) in enumerate(grupo):
                             with cols[idx]:
@@ -1066,7 +1074,7 @@ def renderizar_aplicacion():
                                 st.markdown(f"""
                                     <div class="card-master-container {clase_css}">
                                         <div class="card-content-top">
-                                            <div class="card-master-title">{html_flama}{producto}</div>
+                                            <div class="card-master-title" title="{producto}">{html_flama}{producto}</div>
                                             <div class="card-master-num">{valor_mostrar}</div>
                                         </div>
                                         {html_badge_colab}
