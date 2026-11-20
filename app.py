@@ -144,7 +144,7 @@ def alternar_urgente(producto):
     disparar_sync()
 
 # ==========================================
-# 3. ESTILOS CSS (FORZAR #121827 EN BOTONES Y SELECTORES)
+# 3. ESTILOS CSS
 # ==========================================
 st.markdown("""
     <style>
@@ -171,7 +171,7 @@ st.markdown("""
         max-width: 100% !important;
     }
 
-    /* FORZAR SELECTBOX A #121827 CON TEXTO BLANCO */
+    /* SELECTBOX DE ASIGNACIÓN A #121827 CON TEXTO BLANCO */
     div[data-baseweb="select"] > div {
         background-color: #121827 !important;
         color: #ffffff !important;
@@ -214,9 +214,10 @@ st.markdown("""
         margin-bottom: 6px;
     }
 
+    /* ÚNICO BOTÓN / ETIQUETA CON EL AZUL BONITO (#0077ed) */
     .banner-notas-tag {
-        background: #121827;
-        color: #ffffff;
+        background: #0077ed !important;
+        color: #ffffff !important;
         font-weight: 900;
         font-size: 10px !important;
         letter-spacing: 1px;
@@ -225,7 +226,7 @@ st.markdown("""
         text-transform: uppercase;
         white-space: nowrap;
         flex-shrink: 0;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.25);
     }
 
     .banner-nota-texto {
@@ -406,7 +407,7 @@ st.markdown("""
         box-shadow: none !important;
     }
 
-    /* FORZAR TODOS LOS BOTONES A #121827 CON TEXTO BLANCO */
+    /* FORZAR TODOS LOS DEMÁS BOTONES A #121827 CON TEXTO BLANCO */
     div[data-testid="stButton"] button {
         background-color: #121827 !important;
         background: #121827 !important;
