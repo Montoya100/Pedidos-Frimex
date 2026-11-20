@@ -144,7 +144,7 @@ def alternar_urgente(producto):
     disparar_sync()
 
 # ==========================================
-# 3. ESTILOS CSS SIMÉTRICOS Y SIN HUECOS
+# 3. ESTILOS CSS CON TAMAÑO ESPECÍFICO PARA TERMINAR
 # ==========================================
 st.markdown("""
     <style>
@@ -171,7 +171,6 @@ st.markdown("""
         max-width: 100% !important;
     }
 
-    /* REDUCIR HUECO ENTRE SUBCOLUMNAS DE BOTÓN Y SELECTOR */
     div[data-testid="stHorizontalBlock"] {
         gap: 0.35rem !important;
     }
@@ -180,7 +179,7 @@ st.markdown("""
         align-items: center !important;
     }
 
-    /* SELECTBOX SIMÉTRICO EN #121827 (30PX DE ALTO EXACTO) */
+    /* SELECTBOX CON TAMAÑO NORMAL Y LEGIBLE */
     div[data-testid="stSelectbox"] {
         margin: 0 !important;
         padding: 0 !important;
@@ -192,7 +191,7 @@ st.markdown("""
         border-radius: 7px !important;
         min-height: 30px !important;
         height: 30px !important;
-        padding-left: 4px !important;
+        padding-left: 6px !important;
         padding-right: 2px !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.25) !important;
         display: flex !important;
@@ -205,9 +204,9 @@ st.markdown("""
     div[data-baseweb="select"] span,
     div[data-baseweb="select"] div[value] {
         color: #ffffff !important;
-        font-size: 8px !important;
+        font-size: 11px !important;
         font-weight: 800 !important;
-        letter-spacing: 0.1px !important;
+        letter-spacing: 0.2px !important;
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
@@ -215,9 +214,9 @@ st.markdown("""
     div[data-baseweb="select"] svg {
         color: #ffffff !important;
         fill: #ffffff !important;
-        width: 12px !important;
-        height: 12px !important;
-        margin-left: 1px !important;
+        width: 14px !important;
+        height: 14px !important;
+        margin-left: 2px !important;
         flex-shrink: 0 !important;
     }
     div[data-baseweb="popover"], div[data-baseweb="menu"] {
@@ -227,7 +226,7 @@ st.markdown("""
     li[role="option"] {
         background-color: #121827 !important;
         color: #ffffff !important;
-        font-size: 10px !important;
+        font-size: 11px !important;
         font-weight: 700 !important;
     }
     li[role="option"]:hover {
@@ -250,7 +249,6 @@ st.markdown("""
         margin-bottom: 6px;
     }
 
-    /* ETIQUETA DE NOTAS CON EL AZUL BONITO (#0077ed) */
     .banner-notas-tag {
         background: #0077ed !important;
         color: #ffffff !important;
@@ -443,7 +441,7 @@ st.markdown("""
         box-shadow: none !important;
     }
 
-    /* BOTONES SIMÉTRICOS EN #121827 (30PX DE ALTO EXACTO, SIN CORTES) */
+    /* BOTONES GENERALES EN TAMAÑO NORMAL Y LEGIBLE */
     div[data-testid="stButton"] {
         margin: 0 !important;
         padding: 0 !important;
@@ -455,28 +453,31 @@ st.markdown("""
         border: 1px solid rgba(255, 255, 255, 0.25) !important;
         border-radius: 7px !important;
         font-weight: 800 !important;
-        font-size: 8px !important;
-        letter-spacing: 0.1px !important;
+        font-size: 11px !important;
+        letter-spacing: 0.3px !important;
         text-transform: uppercase !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.25) !important;
         height: 30px !important;
         min-height: 30px !important;
-        padding: 0px 2px !important;
+        padding: 0px 4px !important;
         width: 100% !important;
         white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: clip !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
     }
     div[data-testid="stButton"] button p {
-        font-size: 8px !important;
+        font-size: 11px !important;
         font-weight: 800 !important;
         margin: 0 !important;
         padding: 0 !important;
         line-height: 1 !important;
         white-space: nowrap !important;
+    }
+
+    /* AUMENTAR LIGERAMENTE EL TAMAÑO EXCLUSIVAMENTE AL BOTÓN DE TERMINAR / PENDIENTE */
+    div[data-testid="stButton"] button[kind="secondary"] {
+        font-size: 11.5px !important;
     }
 
     div[data-testid="stButton"] button:hover {
@@ -1103,7 +1104,7 @@ def renderizar_aplicacion():
                                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
                                     valor_mostrar = str(cant_mostrar)
 
-                                # SELECCIÓN DE ESTILO DE TARJETA
+                                # SELECCIÓN DE ESTILO DE TARJETA Y TEXTO DEL BOTÓN
                                 if es_nuevo_azul:
                                     clase_css = "card-master-nuevo-azul anim-azul-nuevo"
                                     texto_estado = "TERMINAR"
@@ -1138,7 +1139,7 @@ def renderizar_aplicacion():
                                     </div>
                                 """, unsafe_allow_html=True)
 
-                                # FILA 2: BOTÓN Y SELECTOR EN LA MISMA FILA, SIMÉTRICOS Y SIN HUECO
+                                # FILA 2: BOTÓN Y SELECTOR EN LA MISMA FILA
                                 col_f1, col_f2 = st.columns([0.46, 0.54], gap="small")
                                 with col_f1:
                                     if st.button(texto_estado, key=f"tarjeta_btn_{producto}", use_container_width=True):
