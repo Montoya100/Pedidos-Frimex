@@ -1,5 +1,6 @@
 import base64
 import os
+import time
 import requests
 import streamlit as st
 import streamlit.components.v1 as components
@@ -60,13 +61,20 @@ def obtener_estado_global():
         "urgentes_activos": set(),    # Productos marcados como urgentes
         "tickets_completados_items": set(), # IDs únicos de items de tickets marcados como listos
         "titulos_personalizados_tickets": {}, # {ticket_id: custom_name}
-        "vista_actual": "TABLERO",    # "TABLERO", "TICKETS" o "AJUSTES"
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
-        "descartar_celebracion": False
+        "descartar_celebracion": False,
+        "version_estado": 0
     }
 
 estado_global = obtener_estado_global()
+
+# Vista individual por dispositivo para que un celular en Ajustes no cambie la pantalla de la TV
+if "vista_local" not in st.session_state:
+    st.session_state.vista_local = "TABLERO"
+
+def marcar_cambio_global():
+    estado_global["version_estado"] += 1
 
 def borrar_todo():
     estado_global["respaldo"] = {
@@ -91,6 +99,7 @@ def borrar_todo():
     estado_global["titulos_personalizados_tickets"].clear()
     estado_global["notas_tablero"].clear()
     estado_global["descartar_celebracion"] = False
+    marcar_cambio_global()
     st.toast("Tablero limpiado y barrera de corte establecida")
 
 def restaurar_estado():
@@ -107,6 +116,7 @@ def restaurar_estado():
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
         estado_global["descartar_celebracion"] = False
+        marcar_cambio_global()
         st.toast("Tablero restaurado correctamente")
     else:
         st.toast("Sin respaldo previo disponible")
@@ -120,6 +130,7 @@ def alternar_estado(producto, cantidad_actual):
         estado_global["cantidades_al_completar"][producto] = cantidad_actual
 
     estado_global["descartar_celebracion"] = False
+    marcar_cambio_global()
 
 def asignar_colaborador(producto, colaborador):
     if colaborador and colaborador != "NINGUNO":
@@ -128,6 +139,7 @@ def asignar_colaborador(producto, colaborador):
     else:
         estado_global["asignaciones_productos"].pop(producto, None)
         st.toast("Asignación retirada")
+    marcar_cambio_global()
 
 def alternar_urgente(producto):
     if producto in estado_global["urgentes_activos"]:
@@ -136,6 +148,7 @@ def alternar_urgente(producto):
     else:
         estado_global["urgentes_activos"].add(producto)
         st.toast(f"¡{producto} marcado como URGENTE!", icon="🔥")
+    marcar_cambio_global()
 
 # ==========================================
 # SONIDOS DE NOTIFICACIÓN
@@ -144,37 +157,34 @@ def reproducir_sonido_notificacion():
     sound_js = """
     <script>
     (function() {
-        function sonar() {
-            try {
-                var AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (!AudioContext) return;
-                var ctx = new AudioContext();
-                if (ctx.state === 'suspended') { ctx.resume(); }
-                
-                var osc1 = ctx.createOscillator();
-                var gain1 = ctx.createGain();
-                osc1.type = 'sine';
-                osc1.frequency.setValueAtTime(587.33, ctx.currentTime);
-                gain1.gain.setValueAtTime(0.3, ctx.currentTime);
-                gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-                osc1.connect(gain1);
-                gain1.connect(ctx.destination);
-                osc1.start(ctx.currentTime);
-                osc1.stop(ctx.currentTime + 0.25);
+        try {
+            var AudioContext = window.parent.AudioContext || window.parent.webkitAudioContext || window.AudioContext;
+            if (!AudioContext) return;
+            var ctx = new AudioContext();
+            if (ctx.state === 'suspended') { ctx.resume(); }
+            
+            var osc1 = ctx.createOscillator();
+            var gain1 = ctx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(587.33, ctx.currentTime);
+            gain1.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+            osc1.connect(gain1);
+            gain1.connect(ctx.destination);
+            osc1.start(ctx.currentTime);
+            osc1.stop(ctx.currentTime + 0.25);
 
-                var osc2 = ctx.createOscillator();
-                var gain2 = ctx.createGain();
-                osc2.type = 'sine';
-                osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
-                gain2.gain.setValueAtTime(0.35, ctx.currentTime + 0.15);
-                gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
-                osc2.connect(gain2);
-                gain2.connect(ctx.destination);
-                osc2.start(ctx.currentTime + 0.15);
-                osc2.stop(ctx.currentTime + 0.45);
-            } catch(e) {}
-        }
-        sonar();
+            var osc2 = ctx.createOscillator();
+            var gain2 = ctx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
+            gain2.gain.setValueAtTime(0.35, ctx.currentTime + 0.15);
+            gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+            osc2.connect(gain2);
+            gain2.connect(ctx.destination);
+            osc2.start(ctx.currentTime + 0.15);
+            osc2.stop(ctx.currentTime + 0.45);
+        } catch(e) {}
     })();
     </script>
     """
@@ -184,31 +194,28 @@ def reproducir_sonido_nota():
     sound_js = """
     <script>
     (function() {
-        function sonarNota() {
-            try {
-                var AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (!AudioContext) return;
-                var ctx = new AudioContext();
-                if (ctx.state === 'suspended') { ctx.resume(); }
+        try {
+            var AudioContext = window.parent.AudioContext || window.parent.webkitAudioContext || window.AudioContext;
+            if (!AudioContext) return;
+            var ctx = new AudioContext();
+            if (ctx.state === 'suspended') { ctx.resume(); }
 
-                var frecuencias = [440, 659.25, 987.77];
-                frecuencias.forEach(function(freq, i) {
-                    var osc = ctx.createOscillator();
-                    var gain = ctx.createGain();
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(freq, ctx.currentTime + (i * 0.1));
-                    
-                    gain.gain.setValueAtTime(0.2, ctx.currentTime + (i * 0.1));
-                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (i * 0.1) + 0.2);
-                    
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start(ctx.currentTime + (i * 0.1));
-                    osc.stop(ctx.currentTime + (i * 0.1) + 0.2);
-                });
-            } catch(e) {}
-        }
-        sonarNota();
+            var frecuencias = [440, 659.25, 987.77];
+            frecuencias.forEach(function(freq, i) {
+                var osc = ctx.createOscillator();
+                var gain = ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(freq, ctx.currentTime + (i * 0.1));
+                
+                gain.gain.setValueAtTime(0.2, ctx.currentTime + (i * 0.1));
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (i * 0.1) + 0.2);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(ctx.currentTime + (i * 0.1));
+                osc.stop(ctx.currentTime + (i * 0.1) + 0.2);
+            });
+        } catch(e) {}
     })();
     </script>
     """
@@ -218,40 +225,37 @@ def reproducir_sonido_celebracion():
     sound_js = """
     <script>
     (function() {
-        function celebrar() {
-            try {
-                var AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (!AudioContext) return;
-                var ctx = new AudioContext();
-                if (ctx.state === 'suspended') { ctx.resume(); }
+        try {
+            var AudioContext = window.parent.AudioContext || window.parent.webkitAudioContext || window.AudioContext;
+            if (!AudioContext) return;
+            var ctx = new AudioContext();
+            if (ctx.state === 'suspended') { ctx.resume(); }
 
-                var notas = [523.25, 659.25, 783.99, 1046.50];
-                var tiempoInicio = ctx.currentTime;
+            var notas = [523.25, 659.25, 783.99, 1046.50];
+            var tiempoInicio = ctx.currentTime;
 
-                notas.forEach(function(freq, index) {
-                    var osc = ctx.createOscillator();
-                    var gain = ctx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, tiempoInicio + (index * 0.12));
-                    
-                    gain.gain.setValueAtTime(0.4, tiempoInicio + (index * 0.12));
-                    gain.gain.exponentialRampToValueAtTime(0.001, tiempoInicio + (index * 0.12) + 0.35);
-                    
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start(tiempoInicio + (index * 0.12));
-                    osc.stop(tiempoInicio + (index * 0.12) + 0.35);
-                });
-            } catch(e) {}
-        }
-        celebrar();
+            notas.forEach(function(freq, index) {
+                var osc = ctx.createOscillator();
+                var gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, tiempoInicio + (index * 0.12));
+                
+                gain.gain.setValueAtTime(0.4, tiempoInicio + (index * 0.12));
+                gain.gain.exponentialRampToValueAtTime(0.001, tiempoInicio + (index * 0.12) + 0.35);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(tiempoInicio + (index * 0.12));
+                osc.stop(tiempoInicio + (index * 0.12) + 0.35);
+            });
+        } catch(e) {}
     })();
     </script>
     """
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS, BANNER LIMPIO Y AUTO-REFRESH SUTIL
+# 3. ESTILOS CSS
 # ==========================================
 st.markdown(f"""
     <style>
@@ -288,7 +292,7 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    /* BANNER DE NOTAS (FONDO SÓLIDO SIN DEGRADADO AZUL) */
+    /* BANNER DE NOTAS SÓLIDO (SIN DEGRADADO) */
     .banner-notas-container {{
         background: #111827 !important;
         border: 1px solid rgba(255, 255, 255, 0.12);
@@ -299,7 +303,7 @@ st.markdown(f"""
         align-items: center;
         width: 100% !important;
         box-sizing: border-box;
-        gap: 10px;
+        gap: 12px;
         min-height: 44px;
         margin-bottom: 6px;
     }}
@@ -308,16 +312,16 @@ st.markdown(f"""
         background: #0077ed;
         color: #ffffff;
         font-weight: 900;
-        font-size: 10px !important;
-        letter-spacing: 1.2px;
-        padding: 4px 10px;
+        font-size: 11px !important;
+        letter-spacing: 1px;
+        padding: 5px 12px;
         border-radius: 10px;
         text-transform: uppercase;
         white-space: nowrap;
+        flex-shrink: 0;
     }}
 
-    .banner-nota-item {{
-        display: none;
+    .banner-nota-texto {{
         color: #ffffff;
         font-size: 17px !important;
         font-weight: 900 !important;
@@ -325,12 +329,7 @@ st.markdown(f"""
         letter-spacing: 0.6px;
         text-transform: uppercase !important;
         flex: 1 !important;
-        width: 100% !important;
         word-break: break-word;
-    }}
-
-    .banner-nota-item.activo {{
-        display: block !important;
     }}
 
     .full-screen-celebracion {{
@@ -539,61 +538,36 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SCRIPT JS: AUTO-REFRESH DE SINCRONIZACIÓN AUTOMÁTICA Y CARRUSEL DE NOTAS
+# SCRIPT JS: WAKE LOCK Y LIMPIEZA EN VENTANA PRINCIPAL (window.parent)
 # ==========================================
 utilidades_js = """
 <script>
 async function iniciarUtilidades() {
-    if ('wakeLock' in navigator) {
+    const win = window.parent || window;
+    const doc = win.document;
+
+    if ('wakeLock' in win.navigator) {
         try {
-            let wakeLock = await navigator.wakeLock.request('screen');
-            document.addEventListener('visibilitychange', async () => {
-                if (wakeLock !== null && document.visibilityState === 'visible') {
-                    wakeLock = await navigator.wakeLock.request('screen');
+            let wakeLock = await win.navigator.wakeLock.request('screen');
+            doc.addEventListener('visibilitychange', async () => {
+                if (wakeLock !== null && doc.visibilityState === 'visible') {
+                    wakeLock = await win.navigator.wakeLock.request('screen');
                 }
             });
         } catch (err) {}
     }
 
-    document.documentElement.style.colorScheme = 'dark';
+    doc.documentElement.style.colorScheme = 'dark';
 
     function limpiarUI() {
-        const elementosAEliminar = document.querySelectorAll('footer, #MainMenu, header, [data-testid="stDecoration"], [data-testid="stStatusWidget"], .stAppDeployButton');
+        const elementosAEliminar = doc.querySelectorAll('footer, #MainMenu, header, [data-testid="stDecoration"], [data-testid="stStatusWidget"], .stAppDeployButton');
         elementosAEliminar.forEach(el => el.remove());
     }
     
     setInterval(limpiarUI, 1000);
     limpiarUI();
-
-    // Rotación del carrusel de notas cada 10 segundos
-    let notaIndex = 0;
-    function rotarNotas() {
-        const notas = document.querySelectorAll('.banner-nota-item');
-        if (notas.length > 1) {
-            notas[notaIndex].classList.remove('activo');
-            notaIndex = (notaIndex + 1) % notas.length;
-            notas[notaIndex].classList.add('activo');
-        }
-    }
-
-    const notasIniciales = document.querySelectorAll('.banner-nota-item');
-    if (notasIniciales.length > 0) {
-        notasIniciales[0].classList.add('activo');
-        if (notasIniciales.length > 1) {
-            setInterval(rotarNotas, 10000);
-        }
-    }
 }
 iniciarUtilidades();
-
-// Sincronización automática de datos en segundo plano cada 5 segundos sin parpadeos molestos
-setTimeout(function() {
-    setInterval(function() {
-        if (typeof window !== 'undefined' && !window.location.hash.includes('nosync')) {
-            window.location.reload();
-        }
-    }, 5000);
-}, 5000);
 </script>
 """
 components.html(utilidades_js, height=0, width=0)
@@ -631,8 +605,9 @@ def obtener_recibos_hoy():
     return obtener_recibos_hoy_cached(created_at_min)
 
 # ==========================================
-# 5. APLICACIÓN PRINCIPAL
+# 5. FRAGMENTO DE SINCRONIZACIÓN EN TIEMPO REAL (CADA 3 SEGUNDOS)
 # ==========================================
+@st.fragment(run_every=3)
 def renderizar_aplicacion():
     recibos = obtener_recibos_hoy()
     conteo_productos = {}
@@ -786,31 +761,33 @@ def renderizar_aplicacion():
     with col_hdr_right:
         c_nav1, c_nav2, c_nav3 = st.columns(3)
         with c_nav1:
-            if st.button("TABLERO", use_container_width=True, type="primary" if estado_global["vista_actual"] == "TABLERO" else "secondary"):
-                estado_global["vista_actual"] = "TABLERO"
+            if st.button("TABLERO", use_container_width=True, type="primary" if st.session_state.vista_local == "TABLERO" else "secondary"):
+                st.session_state.vista_local = "TABLERO"
                 st.rerun()
         with c_nav2:
-            if st.button("TICKETS", use_container_width=True, type="primary" if estado_global["vista_actual"] == "TICKETS" else "secondary"):
-                estado_global["vista_actual"] = "TICKETS"
+            if st.button("TICKETS", use_container_width=True, type="primary" if st.session_state.vista_local == "TICKETS" else "secondary"):
+                st.session_state.vista_local = "TICKETS"
                 st.rerun()
         with c_nav3:
-            if st.button("AJUSTES", use_container_width=True, type="primary" if estado_global["vista_actual"] == "AJUSTES" else "secondary"):
-                estado_global["vista_actual"] = "AJUSTES"
+            if st.button("AJUSTES", use_container_width=True, type="primary" if st.session_state.vista_local == "AJUSTES" else "secondary"):
+                st.session_state.vista_local = "AJUSTES"
                 st.rerun()
 
-    # BANNER DE NOTAS CON FORMATO "NOTA 1 DE 3", "NOTA 2 DE 3" Y SIN DEGRADADO
+    # ==========================================
+    # BANNER DE NOTAS EN CARRUSEL (CADA 10 SEGUNDOS)
+    # ==========================================
     notas_filtradas = [txt for txt in estado_global["notas_tablero"] if txt.strip()]
     if notas_filtradas:
         total_notas = len(notas_filtradas)
-        html_notas_items = ""
-        for idx_n, nota_txt in enumerate(notas_filtradas):
-            clase_activo = "activo" if idx_n == 0 else ""
-            html_notas_items += f'<div class="banner-nota-item {clase_activo}">NOTA {idx_n + 1} DE {total_notas}: {nota_txt.upper()}</div>'
+        # Rotación sincronizada cada 10 segundos exactos en todos los dispositivos
+        indice_nota_actual = int(time.time() // 10) % total_notas
+        texto_nota_actual = notas_filtradas[indice_nota_actual].upper()
+        etiqueta_azul = f"NOTA {indice_nota_actual + 1} DE {total_notas}"
 
         st.markdown(f"""
             <div class="banner-notas-container">
-                <div class="banner-notas-tag">AVISOS</div>
-                {html_notas_items}
+                <div class="banner-notas-tag">{etiqueta_azul}</div>
+                <div class="banner-nota-texto">{texto_nota_actual}</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -842,7 +819,7 @@ def renderizar_aplicacion():
     # ==========================================
     # SECCIÓN 1: GESTIÓN DE TICKETS INDEPENDIENTES
     # ==========================================
-    if estado_global["vista_actual"] == "TICKETS":
+    if st.session_state.vista_local == "TICKETS":
         st.markdown("### GESTIÓN DE TICKETS INDIVIDUALES")
         st.markdown("<p style='color: #9ca3af; font-size: 12px;'>Visualiza los tickets con sus productos y variantes exactas tal cual se registran en Loyverse.</p>", unsafe_allow_html=True)
         
@@ -919,6 +896,7 @@ def renderizar_aplicacion():
                                     estado_global["titulos_personalizados_tickets"][ticket_id] = nuevo_nombre_ticket.strip().upper()
                                 else:
                                     estado_global["titulos_personalizados_tickets"].pop(ticket_id, None)
+                                marcar_cambio_global()
                                 st.toast("Nombre de ticket actualizado")
                                 st.rerun()
 
@@ -944,6 +922,7 @@ def renderizar_aplicacion():
                                     estado_global["tickets_completados_items"].discard(item_key_uid)
                                 else:
                                     estado_global["tickets_completados_items"].add(item_key_uid)
+                                marcar_cambio_global()
                                 st.rerun()
 
                         with col_t2:
@@ -975,6 +954,7 @@ def renderizar_aplicacion():
 
                 if btn_enviar_nota_ticket and nueva_nota_txt.strip():
                     estado_global["notas_tablero"].append(nueva_nota_txt.strip().upper())
+                    marcar_cambio_global()
                     reproducir_sonido_nota()
                     st.toast("¡Nota publicada en el tablero con éxito!")
                     st.rerun()
@@ -985,7 +965,7 @@ def renderizar_aplicacion():
     # ==========================================
     # SECCIÓN 2: PANEL DE AJUSTES
     # ==========================================
-    elif estado_global["vista_actual"] == "AJUSTES":
+    elif st.session_state.vista_local == "AJUSTES":
         st.markdown("### PANEL DE AJUSTES Y CONFIGURACIÓN")
         st.markdown("---")
 
@@ -1012,6 +992,7 @@ def renderizar_aplicacion():
 
             if btn_add_nota and nueva_nota_ajustes.strip():
                 estado_global["notas_tablero"].append(nueva_nota_ajustes.strip().upper())
+                marcar_cambio_global()
                 reproducir_sonido_nota()
                 st.toast("Nota agregada")
                 st.rerun()
@@ -1025,6 +1006,7 @@ def renderizar_aplicacion():
                 with col_n2:
                     if st.button("Borrar", key=f"del_nota_{idx_n}", use_container_width=True):
                         estado_global["notas_tablero"].pop(idx_n)
+                        marcar_cambio_global()
                         st.toast("Nota eliminada")
                         st.rerun()
 
@@ -1051,6 +1033,7 @@ def renderizar_aplicacion():
                 }
                 if es_urgente_nuevo:
                     estado_global["urgentes_activos"].add(prod_key)
+                marcar_cambio_global()
                 st.toast(f"Agregado: {prod_key}")
                 st.rerun()
 
@@ -1083,6 +1066,7 @@ def renderizar_aplicacion():
                                 estado_global["urgentes_activos"].add(p_nombre)
                             else:
                                 estado_global["urgentes_activos"].discard(p_nombre)
+                            marcar_cambio_global()
                             st.toast(f"Actualizado: {p_nombre}")
                             st.rerun()
 
@@ -1092,6 +1076,7 @@ def renderizar_aplicacion():
                             estado_global["cantidades_al_completar"].pop(p_nombre, None)
                             estado_global["asignaciones_productos"].pop(p_nombre, None)
                             estado_global["urgentes_activos"].discard(p_nombre)
+                            marcar_cambio_global()
                             st.toast(f"Borrado: {p_nombre}")
                             st.rerun()
 
@@ -1135,6 +1120,7 @@ def renderizar_aplicacion():
 
             if btn_guardar_colabs:
                 estado_global["colaboradores"] = [c.strip().upper() for c in colab_inputs if c.strip()]
+                marcar_cambio_global()
                 st.toast("Colaboradores actualizados")
                 st.rerun()
 
@@ -1170,6 +1156,7 @@ def renderizar_aplicacion():
 
             if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_pantalla_completa_cerrar"):
                 estado_global["descartar_celebracion"] = True
+                marcar_cambio_global()
                 st.rerun()
 
         else:
