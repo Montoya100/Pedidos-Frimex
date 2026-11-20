@@ -144,7 +144,7 @@ def alternar_urgente(producto):
     disparar_sync()
 
 # ==========================================
-# 3. ESTILOS CSS
+# 3. ESTILOS CSS SIMÉTRICOS Y SIN HUECOS
 # ==========================================
 st.markdown("""
     <style>
@@ -164,35 +164,71 @@ st.markdown("""
     }
     
     .block-container {
-        padding-top: 0.1rem !important; 
+        padding-top: 0.15rem !important; 
         padding-bottom: 3.5rem !important;
-        padding-left: 0.3rem !important; 
-        padding-right: 0.3rem !important;
+        padding-left: 0.4rem !important; 
+        padding-right: 0.4rem !important;
         max-width: 100% !important;
     }
 
-    /* SELECTBOX DE ASIGNACIÓN A #121827 CON TEXTO BLANCO */
+    /* REDUCIR HUECO ENTRE SUBCOLUMNAS DE BOTÓN Y SELECTOR */
+    div[data-testid="stHorizontalBlock"] {
+        gap: 0.35rem !important;
+    }
+    div[data-testid="column"] div[data-testid="stHorizontalBlock"] {
+        gap: 0.25rem !important;
+        align-items: center !important;
+    }
+
+    /* SELECTBOX SIMÉTRICO EN #121827 (30PX DE ALTO EXACTO) */
+    div[data-testid="stSelectbox"] {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
     div[data-baseweb="select"] > div {
         background-color: #121827 !important;
         color: #ffffff !important;
-        border-color: rgba(255, 255, 255, 0.25) !important;
-        border-radius: 8px !important;
-        min-height: 32px !important;
-        height: 32px !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        border-radius: 7px !important;
+        min-height: 30px !important;
+        height: 30px !important;
+        padding-left: 4px !important;
+        padding-right: 2px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.25) !important;
+        display: flex !important;
+        align-items: center !important;
     }
-    div[data-baseweb="select"] span {
+    div[data-baseweb="select"] > div > div:first-child {
+        padding: 0 !important;
+        overflow: hidden !important;
+    }
+    div[data-baseweb="select"] span,
+    div[data-baseweb="select"] div[value] {
         color: #ffffff !important;
-        font-size: 9.5px !important;
+        font-size: 8px !important;
         font-weight: 800 !important;
+        letter-spacing: 0.1px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    div[data-baseweb="select"] svg {
+        color: #ffffff !important;
+        fill: #ffffff !important;
+        width: 12px !important;
+        height: 12px !important;
+        margin-left: 1px !important;
+        flex-shrink: 0 !important;
     }
     div[data-baseweb="popover"], div[data-baseweb="menu"] {
-        background-color: #111827 !important;
+        background-color: #121827 !important;
         color: #ffffff !important;
     }
     li[role="option"] {
-        background-color: #111827 !important;
+        background-color: #121827 !important;
         color: #ffffff !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
     }
     li[role="option"]:hover {
         background-color: #1e293b !important;
@@ -214,7 +250,7 @@ st.markdown("""
         margin-bottom: 6px;
     }
 
-    /* ÚNICO BOTÓN / ETIQUETA CON EL AZUL BONITO (#0077ed) */
+    /* ETIQUETA DE NOTAS CON EL AZUL BONITO (#0077ed) */
     .banner-notas-tag {
         background: #0077ed !important;
         color: #ffffff !important;
@@ -337,14 +373,14 @@ st.markdown("""
     .footer-sutil span { color: #34c759 !important; font-weight: 900 !important; }
 
     .card-master-container {
-        border-radius: 12px;
+        border-radius: 10px;
         padding: 8px 10px;
-        margin-bottom: 5px;
+        margin-bottom: 4px;
         box-shadow: 0 3px 12px rgba(0,0,0,0.35);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        min-height: 62px;
+        min-height: 58px;
         backdrop-filter: blur(10px);
     }
 
@@ -370,7 +406,7 @@ st.markdown("""
     }
 
     .card-master-title {
-        font-size: 13px !important;
+        font-size: 12px !important;
         font-weight: 800 !important;
         text-transform: uppercase !important;
         line-height: 1.15 !important;
@@ -384,19 +420,19 @@ st.markdown("""
 
     .card-master-num {
         font-family: 'JetBrains Mono', monospace !important;
-        font-size: 32px !important;
+        font-size: 28px !important;
         font-weight: 900 !important;
         line-height: 1 !important;
         text-align: right;
-        min-width: 44px;
+        min-width: 40px;
     }
 
     .colab-asignado-txt {
-        font-size: 10px !important;
+        font-size: 9.5px !important;
         font-weight: 900 !important;
         color: #ffffff !important;
-        margin-top: 3px;
-        letter-spacing: 0.6px;
+        margin-top: 2px;
+        letter-spacing: 0.5px;
         text-transform: uppercase;
         border-top: 1px solid rgba(255, 255, 255, 0.25);
         padding-top: 2px;
@@ -407,7 +443,11 @@ st.markdown("""
         box-shadow: none !important;
     }
 
-    /* FORZAR TODOS LOS DEMÁS BOTONES A #121827 CON TEXTO BLANCO */
+    /* BOTONES SIMÉTRICOS EN #121827 (30PX DE ALTO EXACTO, SIN CORTES) */
+    div[data-testid="stButton"] {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
     div[data-testid="stButton"] button {
         background-color: #121827 !important;
         background: #121827 !important;
@@ -415,14 +455,28 @@ st.markdown("""
         border: 1px solid rgba(255, 255, 255, 0.25) !important;
         border-radius: 7px !important;
         font-weight: 800 !important;
-        font-size: 9px !important;
-        letter-spacing: 0.6px !important;
+        font-size: 8px !important;
+        letter-spacing: 0.1px !important;
         text-transform: uppercase !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.25) !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.25) !important;
         height: 30px !important;
         min-height: 30px !important;
-        padding: 0px 6px !important;
+        padding: 0px 2px !important;
         width: 100% !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: clip !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    div[data-testid="stButton"] button p {
+        font-size: 8px !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
     }
 
     div[data-testid="stButton"] button:hover {
@@ -439,9 +493,9 @@ st.markdown("""
         .header-logo-container { flex-direction: row !important; justify-content: space-between !important; align-items: center !important; padding: 0 2px !important; }
         .header-logo-img { height: 30px !important; display: block !important; }
         .header-title { font-size: 13px !important; }
-        .card-master-title { font-size: 12px !important; }
-        .card-master-num { font-size: 28px !important; }
-        .card-master-container { min-height: 56px !important; padding: 7px 9px !important; border-radius: 10px !important; }
+        .card-master-title { font-size: 11px !important; }
+        .card-master-num { font-size: 24px !important; }
+        .card-master-container { min-height: 50px !important; padding: 6px 8px !important; border-radius: 10px !important; }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -1026,7 +1080,7 @@ def renderizar_aplicacion():
                 completados.sort(key=lambda x: x[0])
 
                 def renderizar_lista_productos(lista):
-                    # 5 COLUMNAS POR FILA PARA UN TAMAÑO ÓPTIMO Y CÓMODO
+                    # 5 COLUMNAS POR FILA
                     for i in range(0, len(lista), 5):
                         grupo = lista[i:i+5]
                         cols = st.columns(5)
@@ -1073,6 +1127,7 @@ def renderizar_aplicacion():
 
                                 html_badge_colab = f'<div class="colab-asignado-txt">{colab_asignado}</div>' if colab_asignado else ''
 
+                                # FILA 1: TARJETA DE PRODUCTO
                                 st.markdown(f"""
                                     <div class="card-master-container {clase_css}">
                                         <div class="card-content-top">
@@ -1083,7 +1138,8 @@ def renderizar_aplicacion():
                                     </div>
                                 """, unsafe_allow_html=True)
 
-                                col_f1, col_f2 = st.columns([0.48, 0.52])
+                                # FILA 2: BOTÓN Y SELECTOR EN LA MISMA FILA, SIMÉTRICOS Y SIN HUECO
+                                col_f1, col_f2 = st.columns([0.46, 0.54], gap="small")
                                 with col_f1:
                                     if st.button(texto_estado, key=f"tarjeta_btn_{producto}", use_container_width=True):
                                         alternar_estado(producto, cant_total)
