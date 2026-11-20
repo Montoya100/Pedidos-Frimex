@@ -251,7 +251,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS
+# 3. ESTILOS CSS Y OPTIMIZACIÓN TÁCTIL
 # ==========================================
 st.markdown(f"""
     <style>
@@ -503,11 +503,15 @@ st.markdown(f"""
         box-shadow: none !important;
     }}
 
-    div[data-testid="stHorizontalBlock"]:has(button[key^="btn_urg_"]) button {{
-        height: 32px !important;
-        min-height: 32px !important;
-        font-size: 10px !important;
-        padding: 0px 8px !important;
+    /* OPTIMIZACIÓN TÁCTIL PARA MÓVILES */
+    input[type="checkbox"] {{
+        transform: scale(1.4);
+        margin-right: 8px;
+        cursor: pointer;
+    }}
+
+    div[data-testid="stHorizontalBlock"] {{
+        align-items: center !important;
     }}
 
     div[data-testid="stButton"] button {{
@@ -546,7 +550,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SCRIPT JS: WAKE LOCK + LIMPIEZA UI
+# SCRIPT JS: WAKE LOCK + AUTO-REFRESH DE SINCRONIZACIÓN
 # ==========================================
 utilidades_js = """
 <script>
@@ -580,7 +584,7 @@ components.html(utilidades_js, height=0, width=0)
 # ==========================================
 # 4. CONSULTA A LA API DE LOYVERSE
 # ==========================================
-@st.cache_data(ttl=5, show_spinner=False)
+@st.cache_data(ttl=3, show_spinner=False)
 def obtener_recibos_hoy_cached(created_at_min_str):
     url = "https://api.loyverse.com/v1.0/receipts"
     params = {"created_at_min": created_at_min_str, "limit": 250}
@@ -818,7 +822,7 @@ def renderizar_aplicacion():
     # ==========================================
     if estado_global["vista_actual"] == "TICKETS":
         st.markdown("### GESTIÓN DE TICKETS INDIVIDUALES")
-        st.markdown("<p style='color: #9ca3af; font-size: 12px;'>Marca los productos terminados o actívalos como urgentes (🔥). Al pulsar urgente te mantienes en esta misma sección.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #9ca3af; font-size: 12px;'>Marca los productos terminados o actívalos como urgentes (🔥). Te mantendrás en esta sección al pulsar cualquier botón.</p>", unsafe_allow_html=True)
         
         if recibos:
             tickets_pendientes_lista = []
@@ -902,11 +906,10 @@ def renderizar_aplicacion():
                         esta_listo = item_key_uid in estado_global["tickets_completados_items"]
                         es_urgente_prod = nombre_completo in estado_global["urgentes_activos"]
 
-                        col_t1, col_t2, col_t3 = st.columns([0.60, 0.25, 0.15])
+                        col_t1, col_t2, col_t3 = st.columns([0.55, 0.30, 0.15])
                         
                         with col_t1:
-                            label_chk = f"~~{cant_num}x {nombre_completo}~~" if esta_listo else f"{cant_num}x **{nombre_completo}**"
-                            chk_val = st.checkbox(label_chk, value=esta_listo, key=f"chk_ticket_{item_key_uid}")
+                            chk_val = st.checkbox(f"{cant_num}x {nombre_completo}", value=esta_listo, key=f"chk_ticket_{item_key_uid}")
                             if chk_val != esta_listo:
                                 if chk_val:
                                     estado_global["tickets_completados_items"].add(item_key_uid)
@@ -959,7 +962,7 @@ def renderizar_aplicacion():
             st.info("No hay tickets disponibles para mostrar en este periodo.")
 
     # ==========================================
-    # SECCIÓN 2: PANEL DE AJUSTES (CON ORDEN REQUERIDO Y EDICIÓN DE ASIGNACIONES)
+    # SECCIÓN 2: PANEL DE AJUSTES
     # ==========================================
     elif estado_global["vista_actual"] == "AJUSTES":
         st.markdown("### PANEL DE AJUSTES Y CONFIGURACIÓN")
@@ -1008,7 +1011,7 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # 3. AGREGAR PRODUCTOS MANUALES Y GESTIÓN DE ASIGNACIONES ACTIVAS
+        # 3. AGREGAR PRODUCTOS MANUALES
         st.markdown("#### Agregar Productos Manuales")
         with st.form("form_agregar_manual", clear_on_submit=True):
             nombre_manual = st.text_input("Nombre del producto")
@@ -1075,7 +1078,7 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # EDICIÓN DE ASIGNACIONES DE COLABORADORES DESDE AJUSTES
+        # EDICIÓN DE ASIGNACIONES
         st.markdown("#### 👥 Edición y Asignación de Colaboradores por Producto")
         if conteo_productos:
             lista_colabs = ["NINGUNO"] + estado_global["colaboradores"]
@@ -1118,7 +1121,7 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # 5. HASTA EL FONDO: BOTÓN DE LIMPIAR TABLERO
+        # 5. BOTÓN DE LIMPIAR TABLERO
         col_res1, col_res2 = st.columns(2)
         with col_res1:
             if st.button("Limpiar tablero", use_container_width=True):
@@ -1245,31 +1248,34 @@ def renderizar_aplicacion():
                                     </div>
                                 """, unsafe_allow_html=True)
 
-                                # BOTÓN DE TERMINAR + SELECTOR DE ASIGNACIÓN DIRECTO EN CADA TARJETA
-                                st.button(
-                                    texto_estado, 
-                                    key=f"tarjeta_btn_{producto}", 
-                                    on_click=alternar_estado, 
-                                    args=(producto, cant_total),
-                                    use_container_width=True
-                                )
+                                # BOTÓN DE TERMINAR + SELECTOR DE ASIGNACIÓN EN LA MISMA FILA
+                                col_f1, col_f2 = st.columns([0.45, 0.55])
+                                with col_f1:
+                                    st.button(
+                                        texto_estado, 
+                                        key=f"tarjeta_btn_{producto}", 
+                                        on_click=alternar_estado, 
+                                        args=(producto, cant_total),
+                                        use_container_width=True
+                                    )
 
-                                lista_colabs = ["NINGUNO"] + estado_global["colaboradores"]
-                                index_actual = 0
-                                if colab_asignado and colab_asignado in lista_colabs:
-                                    index_actual = lista_colabs.index(colab_asignado)
+                                with col_f2:
+                                    lista_colabs = ["NINGUNO"] + estado_global["colaboradores"]
+                                    index_actual = 0
+                                    if colab_asignado and colab_asignado in lista_colabs:
+                                        index_actual = lista_colabs.index(colab_asignado)
 
-                                colab_seleccionado = st.selectbox(
-                                    f"Asignar {producto}",
-                                    options=lista_colabs,
-                                    index=index_actual,
-                                    key=f"select_asignar_{producto}",
-                                    label_visibility="collapsed"
-                                )
+                                    colab_seleccionado = st.selectbox(
+                                        f"Asignar {producto}",
+                                        options=lista_colabs,
+                                        index=index_actual,
+                                        key=f"select_asignar_{producto}",
+                                        label_visibility="collapsed"
+                                    )
 
-                                if colab_seleccionado != (colab_asignado if colab_asignado else "NINGUNO"):
-                                    asignar_colaborador(producto, colab_seleccionado)
-                                    st.rerun()
+                                    if colab_seleccionado != (colab_asignado if colab_asignado else "NINGUNO"):
+                                        asignar_colaborador(producto, colab_seleccionado)
+                                        st.rerun()
 
                 if activos:
                     renderizar_lista_productos(activos)
