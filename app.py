@@ -144,7 +144,7 @@ def alternar_urgente(producto):
     disparar_sync()
 
 # ==========================================
-# 3. ESTILOS CSS CON TEXTOS MÁS GRANDES Y CENTRADOS
+# 3. ESTILOS CSS
 # ==========================================
 st.markdown("""
     <style>
@@ -326,13 +326,13 @@ st.markdown("""
 
     @keyframes pulseDot { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
 
-    @keyframes pulseBlue {
-        0% { box-shadow: 0 0 4px rgba(18, 24, 39, 0.5); border-color: #121827; }
-        50% { box-shadow: 0 0 14px rgba(18, 24, 39, 0.9); border-color: #60a5fa; }
-        100% { box-shadow: 0 0 4px rgba(18, 24, 39, 0.5); border-color: #121827; }
+    @keyframes pulseBlueSolid {
+        0% { box-shadow: 0 0 4px rgba(0, 119, 237, 0.5); border-color: #0077ed; }
+        50% { box-shadow: 0 0 16px rgba(0, 119, 237, 0.9); border-color: #60a5fa; }
+        100% { box-shadow: 0 0 4px rgba(0, 119, 237, 0.5); border-color: #0077ed; }
     }
 
-    .anim-azul-nuevo { animation: pulseBlue 1.2s infinite ease-in-out !important; }
+    .anim-azul-nuevo { animation: pulseBlueSolid 1.2s infinite ease-in-out !important; }
 
     .metrics-row {
         display: flex; justify-content: space-around; align-items: center;
@@ -393,7 +393,9 @@ st.markdown("""
     .card-master-pendiente { background: #dc2626 !important; border: 1px solid rgba(239, 68, 68, 0.4) !important; color: #ffffff !important; }
     .card-master-asignado { background: #ea580c !important; border: 1px solid rgba(251, 146, 60, 0.8) !important; color: #ffffff !important; box-shadow: 0 0 14px rgba(234, 88, 12, 0.45) !important; }
     .card-master-urgente { background: #b91c1c !important; border: 2px solid #fbbf24 !important; color: #ffffff !important; box-shadow: 0 0 14px rgba(251, 191, 36, 0.4) !important; }
-    .card-master-nuevo-azul { background: #121827 !important; border: 2px solid #60a5fa !important; color: #ffffff !important; box-shadow: 0 0 14px rgba(96, 165, 250, 0.6) !important; }
+    
+    /* TARJETA NUEVO CON EL MISMO AZUL SÓLIDO DE LA ETIQUETA DE NOTA (#0077ed) */
+    .card-master-nuevo-azul { background: #0077ed !important; border: 2px solid #ffffff !important; color: #ffffff !important; box-shadow: 0 0 14px rgba(0, 119, 237, 0.7) !important; }
     
     .card-master-completado { background: #047857 !important; border: 1px solid rgba(16, 185, 129, 0.4) !important; color: #ffffff !important; opacity: 0.75; }
     .card-master-completado .card-master-title,
@@ -441,7 +443,7 @@ st.markdown("""
         box-shadow: none !important;
     }
 
-    /* BOTONES CON TEXTO MÁS GRANDE Y PERFECTAMENTE CENTRADO VERTICALMENTE */
+    /* BOTONES */
     div[data-testid="stButton"] {
         margin: 0 !important;
         padding: 0 !important;
@@ -485,6 +487,7 @@ st.markdown("""
         border-color: #60a5fa !important;
     }
 
+    /* ADAPTACIÓN MÓVIL: TEXTOS MÁS GRANDES ÚNICAMENTE EN TELÉFONOS */
     @media (max-width: 768px) {
         .ocultar-en-movil { display: none !important; }
         .block-container { padding-left: 2px !important; padding-right: 2px !important; }
@@ -492,9 +495,11 @@ st.markdown("""
         .header-logo-container { flex-direction: row !important; justify-content: space-between !important; align-items: center !important; padding: 0 2px !important; }
         .header-logo-img { height: 30px !important; display: block !important; }
         .header-title { font-size: 13px !important; }
-        .card-master-title { font-size: 11px !important; }
-        .card-master-num { font-size: 24px !important; }
-        .card-master-container { min-height: 50px !important; padding: 6px 8px !important; border-radius: 10px !important; }
+        
+        /* Aumentar textos en versión móvil */
+        .card-master-title { font-size: 14px !important; }
+        .card-master-num { font-size: 32px !important; }
+        .card-master-container { min-height: 60px !important; padding: 8px 10px !important; border-radius: 10px !important; }
     }
     </style>
 """, unsafe_allow_html=True)
