@@ -3,7 +3,6 @@ import os
 import time
 import requests
 import streamlit as st
-import streamlit.components.v1 as components
 from datetime import datetime, timezone, timedelta
 import zoneinfo
 
@@ -69,7 +68,6 @@ def obtener_estado_global():
 
 estado_global = obtener_estado_global()
 
-# Vista individual por dispositivo para que un celular en Ajustes no cambie la pantalla de la TV
 if "vista_local" not in st.session_state:
     st.session_state.vista_local = "TABLERO"
 
@@ -151,153 +149,111 @@ def alternar_urgente(producto):
     marcar_cambio_global()
 
 # ==========================================
-# SONIDOS DE NOTIFICACIÓN
+# SONIDOS DE NOTIFICACIÓN (NATIVOS SEGUROS)
 # ==========================================
 def reproducir_sonido_notificacion():
-    sound_js = """
-    <script>
-    (function() {
+    st.markdown("""
+        <script>
         try {
-            var AudioContext = window.parent.AudioContext || window.parent.webkitAudioContext || window.AudioContext;
-            if (!AudioContext) return;
-            var ctx = new AudioContext();
-            if (ctx.state === 'suspended') { ctx.resume(); }
-            
-            var osc1 = ctx.createOscillator();
-            var gain1 = ctx.createGain();
-            osc1.type = 'sine';
-            osc1.frequency.setValueAtTime(587.33, ctx.currentTime);
-            gain1.gain.setValueAtTime(0.3, ctx.currentTime);
-            gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-            osc1.connect(gain1);
-            gain1.connect(ctx.destination);
-            osc1.start(ctx.currentTime);
-            osc1.stop(ctx.currentTime + 0.25);
-
-            var osc2 = ctx.createOscillator();
-            var gain2 = ctx.createGain();
-            osc2.type = 'sine';
-            osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
-            gain2.gain.setValueAtTime(0.35, ctx.currentTime + 0.15);
-            gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
-            osc2.connect(gain2);
-            gain2.connect(ctx.destination);
-            osc2.start(ctx.currentTime + 0.15);
-            osc2.stop(ctx.currentTime + 0.45);
+            var AudioContext = window.parent.AudioContext || window.parent.webkitAudioContext;
+            if (AudioContext) {
+                var ctx = new AudioContext();
+                if (ctx.state === 'suspended') { ctx.resume(); }
+                var osc = ctx.createOscillator();
+                var gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.25);
+            }
         } catch(e) {}
-    })();
-    </script>
-    """
-    components.html(sound_js, height=0, width=0)
+        </script>
+    """, unsafe_allow_html=True)
 
 def reproducir_sonido_nota():
-    sound_js = """
-    <script>
-    (function() {
+    st.markdown("""
+        <script>
         try {
-            var AudioContext = window.parent.AudioContext || window.parent.webkitAudioContext || window.AudioContext;
-            if (!AudioContext) return;
-            var ctx = new AudioContext();
-            if (ctx.state === 'suspended') { ctx.resume(); }
-
-            var frecuencias = [440, 659.25, 987.77];
-            frecuencias.forEach(function(freq, i) {
+            var AudioContext = window.parent.AudioContext || window.parent.webkitAudioContext;
+            if (AudioContext) {
+                var ctx = new AudioContext();
+                if (ctx.state === 'suspended') { ctx.resume(); }
                 var osc = ctx.createOscillator();
                 var gain = ctx.createGain();
                 osc.type = 'square';
-                osc.frequency.setValueAtTime(freq, ctx.currentTime + (i * 0.1));
-                
-                gain.gain.setValueAtTime(0.2, ctx.currentTime + (i * 0.1));
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (i * 0.1) + 0.2);
-                
+                osc.frequency.setValueAtTime(440, ctx.currentTime);
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
                 osc.connect(gain);
                 gain.connect(ctx.destination);
-                osc.start(ctx.currentTime + (i * 0.1));
-                osc.stop(ctx.currentTime + (i * 0.1) + 0.2);
-            });
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.2);
+            }
         } catch(e) {}
-    })();
-    </script>
-    """
-    components.html(sound_js, height=0, width=0)
+        </script>
+    """, unsafe_allow_html=True)
 
 def reproducir_sonido_celebracion():
-    sound_js = """
-    <script>
-    (function() {
+    st.markdown("""
+        <script>
         try {
-            var AudioContext = window.parent.AudioContext || window.parent.webkitAudioContext || window.AudioContext;
-            if (!AudioContext) return;
-            var ctx = new AudioContext();
-            if (ctx.state === 'suspended') { ctx.resume(); }
-
-            var notas = [523.25, 659.25, 783.99, 1046.50];
-            var tiempoInicio = ctx.currentTime;
-
-            notas.forEach(function(freq, index) {
+            var AudioContext = window.parent.AudioContext || window.parent.webkitAudioContext;
+            if (AudioContext) {
+                var ctx = new AudioContext();
+                if (ctx.state === 'suspended') { ctx.resume(); }
                 var osc = ctx.createOscillator();
                 var gain = ctx.createGain();
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(freq, tiempoInicio + (index * 0.12));
-                
-                gain.gain.setValueAtTime(0.4, tiempoInicio + (index * 0.12));
-                gain.gain.exponentialRampToValueAtTime(0.001, tiempoInicio + (index * 0.12) + 0.35);
-                
+                osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                gain.gain.setValueAtTime(0.4, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
                 osc.connect(gain);
                 gain.connect(ctx.destination);
-                osc.start(tiempoInicio + (index * 0.12));
-                osc.stop(tiempoInicio + (index * 0.12) + 0.35);
-            });
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.35);
+            }
         } catch(e) {}
-    })();
-    </script>
-    """
-    components.html(sound_js, height=0, width=0)
+        </script>
+    """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. ESTILOS CSS
+# 3. ESTILOS CSS GENERALES
 # ==========================================
-st.markdown(f"""
+st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&family=JetBrains+Mono:wght@800;900&display=swap');
 
-    div[data-testid="stAppViewContainer"],
-    div[data-testid="stMain"],
-    section[data-testid="stSidebar"],
-    .element-container,
-    div[data-testid="stFragment"] {{
-        opacity: 1 !important;
-        transition: none !important;
-        animation: none !important;
-    }}
-
-    .stApp {{ background-color: #0b0f19 !important; font-family: 'Plus Jakarta Sans', sans-serif !important; color-scheme: dark !important; }}
+    .stApp { background-color: #0b0f19 !important; font-family: 'Plus Jakarta Sans', sans-serif !important; color-scheme: dark !important; }
     
     #MainMenu, footer, header, 
     div[data-testid="stToolbar"], 
     div[data-testid="stDecoration"], 
     div[data-testid="stStatusWidget"],
-    .stAppDeployButton {{
+    .stAppDeployButton {
         visibility: hidden !important;
         display: none !important;
         opacity: 0 !important;
         pointer-events: none !important;
-    }}
+    }
     
-    .block-container {{
+    .block-container {
         padding-top: 0.1rem !important; 
         padding-bottom: 3.5rem !important;
         padding-left: 0.3rem !important; 
         padding-right: 0.3rem !important;
         max-width: 100% !important;
-    }}
+    }
 
-    /* BANNER DE NOTAS SÓLIDO (SIN DEGRADADO) */
-    .banner-notas-container {{
+    /* BANNER DE NOTAS SEGURO (SIN COMPONENTES HTML AISLADOS) */
+    .banner-notas-container {
         background: #111827 !important;
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 14px;
-        padding: 8px 14px;
+        padding: 10px 14px;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
         display: flex;
         align-items: center;
@@ -306,9 +262,9 @@ st.markdown(f"""
         gap: 12px;
         min-height: 44px;
         margin-bottom: 6px;
-    }}
+    }
 
-    .banner-notas-tag {{
+    .banner-notas-tag {
         background: #0077ed;
         color: #ffffff;
         font-weight: 900;
@@ -319,9 +275,9 @@ st.markdown(f"""
         text-transform: uppercase;
         white-space: nowrap;
         flex-shrink: 0;
-    }}
+    }
 
-    .banner-nota-texto {{
+    .banner-nota-texto {
         color: #ffffff;
         font-size: 17px !important;
         font-weight: 900 !important;
@@ -330,9 +286,9 @@ st.markdown(f"""
         text-transform: uppercase !important;
         flex: 1 !important;
         word-break: break-word;
-    }}
+    }
 
-    .full-screen-celebracion {{
+    .full-screen-celebracion {
         background: linear-gradient(180deg, #1e1b18 0%, #0b0f19 100%);
         border: 1px solid rgba(255, 149, 0, 0.3);
         border-radius: 20px;
@@ -344,17 +300,17 @@ st.markdown(f"""
         flex-direction: column;
         align-items: center;
         justify-content: center;
-    }}
+    }
 
-    .header-logo-container {{
+    .header-logo-container {
         display: flex; justify-content: space-between; align-items: center;
         margin-bottom: 4px; width: 100%; padding: 0 2px; flex-wrap: nowrap; gap: 6px;
-    }}
+    }
     
-    .header-left-group {{ display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }}
-    .header-logo-img {{ height: 38px !important; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); display: block !important; }}
+    .header-left-group { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }
+    .header-logo-img { height: 38px !important; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); display: block !important; }
 
-    .header-title {{
+    .header-title {
         color: #ffffff !important; 
         font-weight: 900 !important; 
         font-size: 19px !important;
@@ -365,76 +321,76 @@ st.markdown(f"""
         white-space: nowrap;
         text-transform: uppercase;
         text-shadow: 0 2px 10px rgba(255, 255, 255, 0.25);
-    }}
+    }
 
-    .sub-brand-line {{ display: flex; align-items: center; gap: 6px; font-size: 9px; color: #9ca3af; font-weight: 700; letter-spacing: 0.8px; }}
-    .sync-text-inline {{ color: #38bdf8; font-weight: 700; }}
+    .sub-brand-line { display: flex; align-items: center; gap: 6px; font-size: 9px; color: #9ca3af; font-weight: 700; letter-spacing: 0.8px; }
+    .sync-text-inline { color: #38bdf8; font-weight: 700; }
 
-    .header-clock-large {{
+    .header-clock-large {
         background: #151c2c; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 8px 16px;
         color: #ffffff !important; font-size: 18px !important; font-weight: 900 !important;
         letter-spacing: 1px; display: flex; align-items: center; gap: 8px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.35); white-space: nowrap;
-    }}
+    }
 
-    .status-dot {{
+    .status-dot {
         height: 9px; width: 9px; background-color: #34c759; border-radius: 50%; display: inline-block;
         box-shadow: 0 0 8px #34c759; animation: pulseDot 2s infinite;
-    }}
+    }
 
-    @keyframes pulseDot {{ 0% {{ opacity: 0.4; }} 50% {{ opacity: 1; }} 100% {{ opacity: 0.4; }} }}
+    @keyframes pulseDot { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
 
-    @keyframes pulseGlow {{
-        0% {{ box-shadow: 0 0 5px rgba(0, 119, 237, 0.4); border-color: #0077ed; }}
-        50% {{ box-shadow: 0 0 15px rgba(0, 119, 237, 0.8); border-color: #3b82f6; }}
-        100% {{ box-shadow: 0 0 5px rgba(0, 119, 237, 0.4); border-color: #0077ed; }}
-    }}
+    @keyframes pulseGlow {
+        0% { box-shadow: 0 0 5px rgba(0, 119, 237, 0.4); border-color: #0077ed; }
+        50% { box-shadow: 0 0 15px rgba(0, 119, 237, 0.8); border-color: #3b82f6; }
+        100% { box-shadow: 0 0 5px rgba(0, 119, 237, 0.4); border-color: #0077ed; }
+    }
 
-    .anim-pulso-nuevo {{ animation: pulseGlow 1.2s infinite ease-in-out !important; }}
+    .anim-pulso-nuevo { animation: pulseGlow 1.2s infinite ease-in-out !important; }
 
-    .txt-incremento {{
+    .txt-incremento {
         display: inline-block; background-color: rgba(0, 119, 237, 0.25); color: #60a5fa;
         font-size: 13px !important; font-weight: 800 !important; padding: 1px 6px;
         border-radius: 6px; margin-left: 4px; border: 1px solid rgba(0, 119, 237, 0.4); vertical-align: middle;
-    }}
+    }
 
-    .metrics-row {{
+    .metrics-row {
         display: flex; justify-content: space-around; align-items: center;
         background: #111827; border-radius: 14px; padding: 8px 12px 10px 12px;
         margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.06); position: relative; overflow: hidden;
         box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-    }}
+    }
 
-    .progress-bar-bg {{ position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: #1f2937; }}
-    .progress-bar-fill {{
+    .progress-bar-bg { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: #1f2937; }
+    .progress-bar-fill {
         height: 100%; background: linear-gradient(90deg, #ff9500 0%, #ffcc00 100%);
         box-shadow: 0 0 6px rgba(255, 149, 0, 0.6); transition: width 0.5s ease-in-out;
         border-radius: 0 2px 2px 0;
-    }}
+    }
 
-    .metric-inline {{
+    .metric-inline {
         display: flex; align-items: center; gap: 6px; font-size: 11px !important;
         font-weight: 700 !important; color: #9ca3af; letter-spacing: 0.4px; text-transform: uppercase;
-    }}
+    }
 
-    .metric-inline .val {{ font-size: 14px !important; font-weight: 800 !important; color: #f87171; }}
-    .pct-avance {{ font-size: 10px !important; font-weight: 800 !important; color: #9ca3af !important; letter-spacing: 0.6px; text-transform: uppercase; }}
+    .metric-inline .val { font-size: 14px !important; font-weight: 800 !important; color: #f87171; }
+    .pct-avance { font-size: 10px !important; font-weight: 800 !important; color: #9ca3af !important; letter-spacing: 0.6px; text-transform: uppercase; }
 
-    .divider-completados {{
+    .divider-completados {
         display: flex; align-items: center; text-align: center; color: #34c759;
         font-size: 9px; font-weight: 800; letter-spacing: 1.5px; margin: 12px 0 8px 0;
-    }}
+    }
 
-    .divider-completados::before, .divider-completados::after {{ content: ''; flex: 1; border-bottom: 1px solid #34c759; opacity: 0.25; }}
-    .divider-completados span {{ padding: 0 8px; background-color: #0b0f19; }}
+    .divider-completados::before, .divider-completados::after { content: ''; flex: 1; border-bottom: 1px solid #34c759; opacity: 0.25; }
+    .divider-completados span { padding: 0 8px; background-color: #0b0f19; }
 
-    .footer-sutil {{
+    .footer-sutil {
         position: fixed; bottom: 0; left: 0; right: 0; background: #070a10; border-top: 1px solid rgba(255,255,255,0.06); padding: 3px 10px; text-align: center; font-size: 9px !important; font-weight: 800 !important; color: #6b7280 !important; z-index: 999;
-    }}
+    }
 
-    .footer-sutil span {{ color: #34c759 !important; font-weight: 900 !important; }}
+    .footer-sutil span { color: #34c759 !important; font-weight: 900 !important; }
 
-    .card-master-container {{
+    .card-master-container {
         border-radius: 14px;
         padding: 10px 12px;
         margin-bottom: 6px;
@@ -444,48 +400,48 @@ st.markdown(f"""
         justify-content: space-between;
         min-height: 70px;
         backdrop-filter: blur(10px);
-    }}
+    }
 
-    .card-content-top {{
+    .card-content-top {
         display: flex;
         align-items: center;
         justify-content: space-between;
         width: 100%;
-    }}
+    }
 
-    .card-master-pendiente {{ background: #dc2626 !important; border: 1px solid rgba(239, 68, 68, 0.4) !important; color: #ffffff !important; }}
-    .card-master-asignado {{ background: #ea580c !important; border: 1px solid rgba(251, 146, 60, 0.8) !important; color: #ffffff !important; box-shadow: 0 0 16px rgba(234, 88, 12, 0.5) !important; }}
-    .card-master-urgente {{ background: #b91c1c !important; border: 2px solid #fbbf24 !important; color: #ffffff !important; box-shadow: 0 0 16px rgba(251, 191, 36, 0.4) !important; }}
+    .card-master-pendiente { background: #dc2626 !important; border: 1px solid rgba(239, 68, 68, 0.4) !important; color: #ffffff !important; }
+    .card-master-asignado { background: #ea580c !important; border: 1px solid rgba(251, 146, 60, 0.8) !important; color: #ffffff !important; box-shadow: 0 0 16px rgba(234, 88, 12, 0.5) !important; }
+    .card-master-urgente { background: #b91c1c !important; border: 2px solid #fbbf24 !important; color: #ffffff !important; box-shadow: 0 0 16px rgba(251, 191, 36, 0.4) !important; }
     
-    .card-master-completado {{ background: #047857 !important; border: 1px solid rgba(16, 185, 129, 0.4) !important; color: #ffffff !important; opacity: 0.75; }}
+    .card-master-completado { background: #047857 !important; border: 1px solid rgba(16, 185, 129, 0.4) !important; color: #ffffff !important; opacity: 0.75; }
     .card-master-completado .card-master-title,
-    .card-master-completado .card-master-num {{
+    .card-master-completado .card-master-num {
         text-decoration: line-through !important;
         text-decoration-thickness: 2px !important;
         text-decoration-color: rgba(255, 255, 255, 0.8) !important;
-    }}
+    }
 
-    .card-master-reciente {{ background: #1d4ed8 !important; border: 1px solid rgba(96, 165, 250, 0.4) !important; color: #ffffff !important; }}
+    .card-master-reciente { background: #1d4ed8 !important; border: 1px solid rgba(96, 165, 250, 0.4) !important; color: #ffffff !important; }
 
-    .card-master-title {{
+    .card-master-title {
         font-size: 15px !important;
         font-weight: 800 !important;
         text-transform: uppercase !important;
         line-height: 1.15 !important;
         flex: 1;
         padding-right: 6px;
-    }}
+    }
 
-    .card-master-num {{
+    .card-master-num {
         font-family: 'JetBrains Mono', monospace !important;
         font-size: 38px !important;
         font-weight: 900 !important;
         line-height: 1 !important;
         text-align: center;
         min-width: 56px;
-    }}
+    }
 
-    .colab-asignado-txt {{
+    .colab-asignado-txt {
         font-size: 11px !important;
         font-weight: 900 !important;
         color: #ffffff !important;
@@ -494,14 +450,14 @@ st.markdown(f"""
         text-transform: uppercase;
         border-top: 1px solid rgba(255, 255, 255, 0.25);
         padding-top: 3px;
-    }}
+    }
 
-    button:focus, button:active, button:focus-visible {{
+    button:focus, button:active, button:focus-visible {
         outline: none !important;
         box-shadow: none !important;
-    }}
+    }
 
-    div[data-testid="stButton"] button {{
+    div[data-testid="stButton"] button {
         background-color: #151c2c !important;
         background: #151c2c !important;
         color: #ffffff !important;
@@ -514,63 +470,28 @@ st.markdown(f"""
         box-shadow: 0 2px 6px rgba(0,0,0,0.25) !important;
         height: 36px !important;
         min-height: 36px !important;
-    }}
+    }
 
-    div[data-testid="stButton"] button:hover {{
+    div[data-testid="stButton"] button:hover {
         background-color: #1e293b !important;
         background: #1e293b !important;
         color: #60a5fa !important;
         border-color: #3b82f6 !important;
-    }}
+    }
 
-    @media (max-width: 768px) {{
-        .ocultar-en-movil {{ display: none !important; }}
-        .block-container {{ padding-left: 2px !important; padding-right: 2px !important; }}
-        div[data-testid="column"] {{ width: 100% !important; flex: 1 1 100% !important; margin-bottom: 2px !important; }}
-        .header-logo-container {{ flex-direction: row !important; justify-content: space-between !important; align-items: center !important; padding: 0 2px !important; }}
-        .header-logo-img {{ height: 34px !important; display: block !important; }}
-        .header-title {{ font-size: 14px !important; }}
-        .card-master-title {{ font-size: 14px !important; }}
-        .card-master-num {{ font-size: 34px !important; }}
-        .card-master-container {{ min-height: 60px !important; padding: 8px 10px !important; border-radius: 12px !important; }}
-    }}
+    @media (max-width: 768px) {
+        .ocultar-en-movil { display: none !important; }
+        .block-container { padding-left: 2px !important; padding-right: 2px !important; }
+        div[data-testid="column"] { width: 100% !important; flex: 1 1 100% !important; margin-bottom: 2px !important; }
+        .header-logo-container { flex-direction: row !important; justify-content: space-between !important; align-items: center !important; padding: 0 2px !important; }
+        .header-logo-img { height: 34px !important; display: block !important; }
+        .header-title { font-size: 14px !important; }
+        .card-master-title { font-size: 14px !important; }
+        .card-master-num { font-size: 34px !important; }
+        .card-master-container { min-height: 60px !important; padding: 8px 10px !important; border-radius: 12px !important; }
+    }
     </style>
 """, unsafe_allow_html=True)
-
-# ==========================================
-# SCRIPT JS: WAKE LOCK Y LIMPIEZA EN VENTANA PRINCIPAL (window.parent)
-# ==========================================
-utilidades_js = """
-<script>
-async function iniciarUtilidades() {
-    const win = window.parent || window;
-    const doc = win.document;
-
-    if ('wakeLock' in win.navigator) {
-        try {
-            let wakeLock = await win.navigator.wakeLock.request('screen');
-            doc.addEventListener('visibilitychange', async () => {
-                if (wakeLock !== null && doc.visibilityState === 'visible') {
-                    wakeLock = await win.navigator.wakeLock.request('screen');
-                }
-            });
-        } catch (err) {}
-    }
-
-    doc.documentElement.style.colorScheme = 'dark';
-
-    function limpiarUI() {
-        const elementosAEliminar = doc.querySelectorAll('footer, #MainMenu, header, [data-testid="stDecoration"], [data-testid="stStatusWidget"], .stAppDeployButton');
-        elementosAEliminar.forEach(el => el.remove());
-    }
-    
-    setInterval(limpiarUI, 1000);
-    limpiarUI();
-}
-iniciarUtilidades();
-</script>
-"""
-components.html(utilidades_js, height=0, width=0)
 
 # ==========================================
 # 4. CONSULTA A LA API DE LOYVERSE
@@ -774,12 +695,11 @@ def renderizar_aplicacion():
                 st.rerun()
 
     # ==========================================
-    # BANNER DE NOTAS EN CARRUSEL (CADA 10 SEGUNDOS)
+    # BANNER DE NOTAS NATIVO (10 SEGUNDOS POR NOTA)
     # ==========================================
     notas_filtradas = [txt for txt in estado_global["notas_tablero"] if txt.strip()]
     if notas_filtradas:
         total_notas = len(notas_filtradas)
-        # Rotación sincronizada cada 10 segundos exactos en todos los dispositivos
         indice_nota_actual = int(time.time() // 10) % total_notas
         texto_nota_actual = notas_filtradas[indice_nota_actual].upper()
         etiqueta_azul = f"NOTA {indice_nota_actual + 1} DE {total_notas}"
