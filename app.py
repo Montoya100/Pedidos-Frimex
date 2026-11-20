@@ -541,7 +541,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SCRIPT JS: WAKE LOCK + LIMPIEZA UI + AUTO-REFRESH DE SINCRONIZACIÓN CADA 4 SEGUNDOS
+# SCRIPT JS: WAKE LOCK + LIMPIEZA UI + AUTO-REFRESH LIGERO CADA 4 SEGUNDOS
 # ==========================================
 utilidades_js = """
 <script>
@@ -568,13 +568,6 @@ async function iniciarUtilidades() {
     limpiarUI();
 }
 iniciarUtilidades();
-
-// Recarga automática cada 4 segundos para sincronización en tiempo real en todos los dispositivos
-setTimeout(function(){
-    if (!window.location.hash.includes('nocache')) {
-        // Recarga sutil sin perder estado general
-    }
-}, 4000);
 </script>
 """
 components.html(utilidades_js, height=0, width=0)
@@ -582,7 +575,7 @@ components.html(utilidades_js, height=0, width=0)
 # ==========================================
 # 4. CONSULTA A LA API DE LOYVERSE
 # ==========================================
-@st.cache_data(ttl=3, show_spinner=False)
+@st.cache_data(ttl=2, show_spinner=False)
 def obtener_recibos_hoy_cached(created_at_min_str):
     url = "https://api.loyverse.com/v1.0/receipts"
     params = {"created_at_min": created_at_min_str, "limit": 250}
@@ -637,6 +630,7 @@ def renderizar_aplicacion():
                 cantidad = item.get("quantity", 0)
                 variante = item.get("variant_name")
                 
+                # EN EL TABLERO AGRUPAMOS CON VARIANTES PARA MANTENER ORDEN
                 if variante and variante != "Default":
                     nombre_completo = f"{nombre} ({variante})"
                 else:
@@ -735,9 +729,9 @@ def renderizar_aplicacion():
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
     # ==========================================
-    # ENCABEZADO PRINCIPAL (CON RELOJ OCULTO EN MÓVIL Y BOTÓN DE SINCRONIZACIÓN)
+    # ENCABEZADO PRINCIPAL
     # ==========================================
-    col_hdr_left, col_hdr_mid, col_hdr_right = st.columns([0.40, 0.22, 0.38])
+    col_hdr_left, col_hdr_mid, col_hdr_right = st.columns([0.42, 0.18, 0.40])
     
     with col_hdr_left:
         st.markdown(f"""
@@ -756,7 +750,6 @@ def renderizar_aplicacion():
         """, unsafe_allow_html=True)
 
     with col_hdr_mid:
-        # Reloj oculto automáticamente en dispositivos móviles
         st.markdown(f"""
             <div class="ocultar-en-movil" style="display: flex; align-items: center; justify-content: center; height: 100%;">
                 <div class="header-clock-large" title="Hora local de México">
@@ -766,21 +759,18 @@ def renderizar_aplicacion():
         """, unsafe_allow_html=True)
 
     with col_hdr_right:
-        c_nav1, c_nav2, c_nav3, c_sync = st.columns([0.28, 0.28, 0.28, 0.16])
+        c_nav1, c_nav2, c_nav3 = st.columns(3)
         with c_nav1:
-            if st.button("TAB", use_container_width=True, type="primary" if estado_global["vista_actual"] == "TABLERO" else "secondary"):
+            if st.button("TABLERO", use_container_width=True, type="primary" if estado_global["vista_actual"] == "TABLERO" else "secondary"):
                 estado_global["vista_actual"] = "TABLERO"
                 st.rerun()
         with c_nav2:
-            if st.button("TICK", use_container_width=True, type="primary" if estado_global["vista_actual"] == "TICKETS" else "secondary"):
+            if st.button("TICKETS", use_container_width=True, type="primary" if estado_global["vista_actual"] == "TICKETS" else "secondary"):
                 estado_global["vista_actual"] = "TICKETS"
                 st.rerun()
         with c_nav3:
-            if st.button("AJUST", use_container_width=True, type="primary" if estado_global["vista_actual"] == "AJUSTES" else "secondary"):
+            if st.button("AJUSTES", use_container_width=True, type="primary" if estado_global["vista_actual"] == "AJUSTES" else "secondary"):
                 estado_global["vista_actual"] = "AJUSTES"
-                st.rerun()
-        with c_sync:
-            if st.button("🔄", help="Sincronizar ahora", use_container_width=True):
                 st.rerun()
 
     # NOTAS ACTIVAS EN BANNER
@@ -820,11 +810,11 @@ def renderizar_aplicacion():
     """, unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN 1: GESTIÓN DE TICKETS INDEPENDIENTES (BOTONES TÁCTILES ANTI-TABLET)
+    # SECCIÓN 1: GESTIÓN DE TICKETS INDEPENDIENTES (CON VARIANTES DESGLOSADAS)
     # ==========================================
     if estado_global["vista_actual"] == "TICKETS":
         st.markdown("### GESTIÓN DE TICKETS INDIVIDUALES")
-        st.markdown("<p style='color: #9ca3af; font-size: 12px;'>Usa los botones táctiles para marcar productos terminados o activarlos como urgentes sin fallos en tablet.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #9ca3af; font-size: 12px;'>Visualiza los tickets con sus productos y variantes exactas tal cual se registran en Loyverse.</p>", unsafe_allow_html=True)
         
         if recibos:
             tickets_pendientes_lista = []
@@ -839,8 +829,8 @@ def renderizar_aplicacion():
                     for idx_item, item in enumerate(line_items):
                         nombre = item.get("item_name", "Producto")
                         variante = item.get("variant_name")
-                        nombre_completo = f"{nombre} ({variante})" if variante and variante != "Default" else nombre
-                        item_key_uid = f"{ticket_id}_{idx_item}_{nombre_completo}"
+                        var_str = f" ({variante})" if variante and variante != "Default" else ""
+                        item_key_uid = f"{ticket_id}_{idx_item}_{nombre}{var_str}"
                         if item_key_uid not in estado_global["tickets_completados_items"]:
                             todos_listos = False
                             break
@@ -873,18 +863,22 @@ def renderizar_aplicacion():
                 bg_color = "#0f172a" if completado else "#111827"
                 border_color = "rgba(52, 199, 89, 0.4)" if completado else "rgba(255,255,255,0.08)"
                 
+                # CONTENEDOR SEGURO CONTRA TEXTO PLANO
                 with st.container():
                     st.markdown(f"""
                         <div style="background: {bg_color}; border: 1px solid {border_color}; border-radius: 12px; padding: 14px; margin-bottom: 12px; opacity: {'0.85' if completado else '1'};">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
                                 <div>
                                     <div style="font-weight: 900; color: {'#34c759' if completado else '#ffffff'}; font-size: 17px; letter-spacing: 0.5px; text-transform: uppercase;">{titulo_principal}</div>
-                                    <div style="font-weight: 700; color: #38bdf8; font-size: 11px; margin-top: 2px;">{sub_detalle} {f'({receipt_number})' if customer_name or titulo_custom else ''}</div>
-                                    {f'<div style="font-style: italic; color: #fbbf24; font-size: 11px; margin-top: 4px;">💬 Nota: {note_recibo}</div>' if note_recibo else ''}
+                                    <div style="font-weight: 700; color: #38bdf8; font-size: 11px; margin-top: 2px;">{sub_detalle}</div>
                                 </div>
                                 <span style="font-size: 11px; color: #9ca3af; font-weight: 700; background: #151c2c; padding: 3px 8px; border-radius: 6px;">{hora_ticket}</span>
                             </div>
+                        </div>
                     """, unsafe_allow_html=True)
+
+                    if note_recibo:
+                        st.markdown(f"<div style='font-style: italic; color: #fbbf24; font-size: 12px; margin-bottom: 10px;'>💬 Nota: {note_recibo}</div>", unsafe_allow_html=True)
 
                     with st.expander(f"Editar nombre del ticket #{receipt_number}"):
                         nuevo_nombre_ticket = st.text_input("Nombre o alias personalizado:", value=titulo_custom if titulo_custom else (customer_name if customer_name else ""), key=f"edit_title_{ticket_id}")
@@ -900,7 +894,8 @@ def renderizar_aplicacion():
                         nombre = item.get("item_name", "Producto")
                         cantidad = item.get("quantity", 0)
                         variante = item.get("variant_name")
-                        nombre_completo = f"{nombre} ({variante})" if variante and variante != "Default" else nombre
+                        var_str = f" ({variante})" if variante and variante != "Default" else ""
+                        nombre_completo = f"{nombre}{var_str}"
 
                         cant_num = int(cantidad) if float(cantidad).is_integer() else cantidad
                         item_key_uid = f"{ticket_id}_{idx_item}_{nombre_completo}"
@@ -908,11 +903,11 @@ def renderizar_aplicacion():
                         esta_listo = item_key_uid in estado_global["tickets_completados_items"]
                         es_urgente_prod = nombre_completo in estado_global["urgentes_activos"]
 
-                        col_t1, col_t2 = st.columns([0.70, 0.30])
+                        col_t1, col_t2 = st.columns([0.76, 0.24])
                         
                         with col_t1:
-                            # Botón táctil robusto que reemplaza la casilla para evitar fallos en tablets
-                            btn_text = f"✅ [LISTO] {cant_num}x {nombre_completo}" if esta_listo else f"⬜ [PENDIENTE] {cant_num}x {nombre_completo}"
+                            # EMOJIS EN NEGRITA Y MÁS GRANDES (SIN TEXTO PLANO)
+                            btn_text = f"✅ **{cant_num}x {nombre_completo}**" if esta_listo else f"⬜ **{cant_num}x {nombre_completo}**"
                             if st.button(btn_text, key=f"btn_toggle_item_{item_key_uid}", use_container_width=True):
                                 if esta_listo:
                                     estado_global["tickets_completados_items"].discard(item_key_uid)
@@ -926,8 +921,7 @@ def renderizar_aplicacion():
                                 alternar_urgente(nombre_completo)
                                 st.rerun()
 
-                    st.markdown("</div>", unsafe_allow_html=True)
-                    st.markdown("<hr style='border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 16px 0;'>", unsafe_allow_html=True)
+                    st.markdown("<hr style='border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 14px 0;'>", unsafe_allow_html=True)
 
             if tickets_pendientes_lista:
                 st.markdown("#### ⏳ Tickets Pendientes de Producción")
@@ -1093,7 +1087,7 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # 4. CONFIGURACIÓN DE COLABORADORES (AL FINAL)
+        # 4. CONFIGURACIÓN DE COLABORADORES
         st.markdown("#### Configuración de Colaboradores")
         with st.form("form_colaboradores", clear_on_submit=False):
             colab_inputs = []
