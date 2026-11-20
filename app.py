@@ -3,7 +3,7 @@ import os
 import time
 import requests
 import streamlit as st
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 import zoneinfo
 
 # ==========================================
@@ -52,13 +52,17 @@ def obtener_estado_global():
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False,
-        "tiempos_creacion_manual": {} # {producto: timestamp_creacion}
+        "tiempos_creacion_manual": {},
+        "version_sync": 0  # <--- CONTADOR MAESTRO PARA FORZAR SINCRONIZACIÓN AUTOMÁTICA
     }
 
 estado_global = obtener_estado_global()
 
 if "vista_local" not in st.session_state:
     st.session_state.vista_local = "TABLERO"
+
+def disparar_sync():
+    estado_global["version_sync"] += 1
 
 def borrar_todo():
     estado_global["respaldo"] = {
@@ -85,6 +89,7 @@ def borrar_todo():
     estado_global["notas_tablero"].clear()
     estado_global["tiempos_creacion_manual"].clear()
     estado_global["descartar_celebracion"] = False
+    disparar_sync()
     st.toast("Tablero limpiado y barrera de corte establecida")
 
 def restaurar_estado():
@@ -102,6 +107,7 @@ def restaurar_estado():
         estado_global["tiempos_creacion_manual"] = estado_global["respaldo"]["tiempos_creacion_manual"].copy()
         estado_global["respaldo"] = None
         estado_global["descartar_celebracion"] = False
+        disparar_sync()
         st.toast("Tablero restaurado correctamente")
     else:
         st.toast("Sin respaldo previo disponible")
@@ -114,6 +120,7 @@ def alternar_estado(producto, cantidad_actual):
         estado_global["completados"].add(producto)
         estado_global["cantidades_al_completar"][producto] = cantidad_actual
     estado_global["descartar_celebracion"] = False
+    disparar_sync()
 
 def asignar_colaborador_callback(producto):
     colab_elegido = st.session_state.get(f"select_asignar_{producto}", "NINGUNO")
@@ -121,6 +128,7 @@ def asignar_colaborador_callback(producto):
         estado_global["asignaciones_productos"][producto] = colab_elegido
     else:
         estado_global["asignaciones_productos"].pop(producto, None)
+    disparar_sync()
 
 def alternar_urgente(producto):
     if producto in estado_global["urgentes_activos"]:
@@ -129,9 +137,10 @@ def alternar_urgente(producto):
     else:
         estado_global["urgentes_activos"].add(producto)
         st.toast(f"¡{producto} marcado como URGENTE!", icon="🔥")
+    disparar_sync()
 
 # ==========================================
-# 3. ESTILOS CSS GENERALES Y LIMPIOS DE PARPADEO
+# 3. ESTILOS CSS GENERALES
 # ==========================================
 st.markdown("""
     <style>
@@ -398,7 +407,7 @@ st.markdown("""
 # ==========================================
 # 4. CONSULTA A LA API DE LOYVERSE
 # ==========================================
-@st.cache_data(ttl=6, show_spinner=False)
+@st.cache_data(ttl=5, show_spinner=False)
 def obtener_recibos_hoy_cached(created_at_min_str):
     url = "https://api.loyverse.com/v1.0/receipts"
     params = {"created_at_min": created_at_min_str, "limit": 250}
@@ -428,9 +437,13 @@ def obtener_recibos_hoy():
     return obtener_recibos_hoy_cached(created_at_min)
 
 # ==========================================
-# 5. RENDERIZADO PRINCIPAL SIN PARPADEO
+# 5. RENDERIZADO PRINCIPAL CON FRAGMENTO Y VERSION_SYNC
 # ==========================================
+@st.fragment(run_every=3)
 def renderizar_aplicacion():
+    # Leer contador de versión para forzar sincronización instantánea en todas las pantallas
+    _ = estado_global["version_sync"]
+
     recibos = obtener_recibos_hoy()
     conteo_productos = {}
     infinitos_activos = set()
@@ -461,7 +474,7 @@ def renderizar_aplicacion():
                 cant_num = int(cantidad) if float(cantidad).is_integer() else cantidad
                 conteo_productos[nombre_completo] = conteo_productos.get(nombre_completo, 0) + cant_num
 
-    # FUSIONAR PRODUCTOS MANUALES Y REGISTRAR TIEMPO DE CREACIÓN (AZUL POR 30s)
+    # FUSIONAR PRODUCTOS MANUALES
     ahora_epoch = time.time()
     for prod_manual, datos in estado_global["productos_manuales_global"].items():
         if isinstance(datos, dict):
@@ -683,6 +696,7 @@ def renderizar_aplicacion():
                                     estado_global["titulos_personalizados_tickets"][ticket_id] = nuevo_nombre_ticket.strip().upper()
                                 else:
                                     estado_global["titulos_personalizados_tickets"].pop(ticket_id, None)
+                                disparar_sync()
                                 st.toast("Nombre de ticket actualizado")
                                 st.rerun()
 
@@ -708,6 +722,7 @@ def renderizar_aplicacion():
                                     estado_global["tickets_completados_items"].discard(item_key_uid)
                                 else:
                                     estado_global["tickets_completados_items"].add(item_key_uid)
+                                disparar_sync()
                                 st.rerun()
 
                         with col_t2:
@@ -739,6 +754,7 @@ def renderizar_aplicacion():
 
                 if btn_enviar_nota_ticket and nueva_nota_txt.strip():
                     estado_global["notas_tablero"].append(nueva_nota_txt.strip().upper())
+                    disparar_sync()
                     st.toast("¡Nota publicada en el tablero con éxito!")
                     st.rerun()
 
@@ -775,6 +791,7 @@ def renderizar_aplicacion():
 
             if btn_add_nota and nueva_nota_ajustes.strip():
                 estado_global["notas_tablero"].append(nueva_nota_ajustes.strip().upper())
+                disparar_sync()
                 st.toast("Nota agregada")
                 st.rerun()
 
@@ -793,10 +810,12 @@ def renderizar_aplicacion():
                         if btn_guardar_nota:
                             if nota_editada_txt.strip():
                                 estado_global["notas_tablero"][idx_n] = nota_editada_txt.strip().upper()
+                                disparar_sync()
                                 st.toast("Nota actualizada")
                                 st.rerun()
                         if btn_borrar_nota:
                             estado_global["notas_tablero"].pop(idx_n)
+                            disparar_sync()
                             st.toast("Nota eliminada")
                             st.rerun()
 
@@ -824,6 +843,7 @@ def renderizar_aplicacion():
                 estado_global["tiempos_creacion_manual"][prod_key] = time.time()
                 if es_urgente_nuevo:
                     estado_global["urgentes_activos"].add(prod_key)
+                disparar_sync()
                 st.toast(f"Agregado: {prod_key}")
                 st.rerun()
 
@@ -856,6 +876,7 @@ def renderizar_aplicacion():
                                 estado_global["urgentes_activos"].add(p_nombre)
                             else:
                                 estado_global["urgentes_activos"].discard(p_nombre)
+                            disparar_sync()
                             st.toast(f"Actualizado: {p_nombre}")
                             st.rerun()
 
@@ -866,6 +887,7 @@ def renderizar_aplicacion():
                             estado_global["cantidades_al_completar"].pop(p_nombre, None)
                             estado_global["asignaciones_productos"].pop(p_nombre, None)
                             estado_global["urgentes_activos"].discard(p_nombre)
+                            disparar_sync()
                             st.toast(f"Borrado: {p_nombre}")
                             st.rerun()
 
@@ -913,6 +935,7 @@ def renderizar_aplicacion():
 
             if btn_guardar_colabs:
                 estado_global["colaboradores"] = [c.strip().upper() for c in colab_inputs if c.strip()]
+                disparar_sync()
                 st.toast("Colaboradores actualizados")
                 st.rerun()
 
@@ -944,6 +967,7 @@ def renderizar_aplicacion():
 
             if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_pantalla_completa_cerrar"):
                 estado_global["descartar_celebracion"] = True
+                disparar_sync()
                 st.rerun()
 
         else:
@@ -961,12 +985,11 @@ def renderizar_aplicacion():
                 def clave_ordenamiento(item):
                     producto, _ = item
                     es_urgente = producto in urgentes_activos
-                    # Prioridad 0 para urgentes, Prioridad 1 para normales. Luego orden alfabético estricto (producto)
                     prioridad = 0 if es_urgente else 1
                     return (prioridad, producto)
 
                 activos.sort(key=clave_ordenamiento)
-                completados.sort(key=lambda x: x[0]) # Completados también en orden alfabético
+                completados.sort(key=lambda x: x[0])
 
                 def renderizar_lista_productos(lista):
                     for i in range(0, len(lista), 4):
@@ -987,7 +1010,7 @@ def renderizar_aplicacion():
                                 if es_infinito:
                                     valor_mostrar = "∞"
                                 else:
-                                    cant_base = estado_global["cantidades_al_completار"].get(producto, 0) if "cantidades_al_completار" in estado_global else estado_global["cantidades_al_completar"].get(producto, 0)
+                                    cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
                                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
                                     valor_mostrar = str(cant_mostrar)
 
