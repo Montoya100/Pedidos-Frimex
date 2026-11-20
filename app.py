@@ -247,7 +247,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS (FAB A LA IZQUIERDA + SIN BORDE AZUL)
+# 3. ESTILOS CSS (FAB IZQUIERDO COMPACTO + BOTONES TICKETS)
 # ==========================================
 st.markdown(f"""
     <style>
@@ -494,7 +494,7 @@ st.markdown(f"""
         padding-top: 4px;
     }}
 
-    /* FAB FLOTANTE A LA IZQUIERDA, CORTO Y NARANJA */
+    /* FAB FLOTANTE A LA IZQUIERDA */
     .st-key-btn_fab_ajustes {{
         position: fixed !important;
         bottom: 24px !important;
@@ -523,10 +523,18 @@ st.markdown(f"""
         border-color: #f97316 !important;
     }}
 
-    /* ELIMINAR ANILLO DE FOCO AZUL EN TODOS LOS BOTONES */
+    /* ELIMINAR ANILLO DE FOCO AZUL */
     button:focus, button:active, button:focus-visible {{
         outline: none !important;
         box-shadow: none !important;
+    }}
+
+    /* BOTONES COMPACTOS EN GESTIÓN DE TICKETS */
+    div[data-testid="stHorizontalBlock"]:has(button[key^="btn_urg_"]) button {{
+        height: 28px !important;
+        min-height: 28px !important;
+        font-size: 9px !important;
+        padding: 0px 6px !important;
     }}
 
     /* BOTONERAS DE ACCIÓN EN TARJETAS */
@@ -573,41 +581,41 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SCRIPT JS: WAKE LOCK + LIMPIEZA UI + CONTROL SIDEBAR
+# SCRIPT JS: WAKE LOCK + LIMPIEZA UI + TOGGLE SIDEBAR HÍBRIDO (WEB/MÓVIL)
 # ==========================================
-ocultar_marca_js = f"""
+ocultar_marca_js = """
 <script>
-async function iniciarUtilidades() {{
-    if ('wakeLock' in navigator) {{
-        try {{
+async function iniciarUtilidades() {
+    if ('wakeLock' in navigator) {
+        try {
             let wakeLock = await navigator.wakeLock.request('screen');
-            document.addEventListener('visibilitychange', async () => {{
-                if (wakeLock !== null && document.visibilityState === 'visible') {{
+            document.addEventListener('visibilitychange', async () => {
+                if (wakeLock !== null && document.visibilityState === 'visible') {
                     wakeLock = await navigator.wakeLock.request('screen');
-                }}
-            }});
-        }} catch (err) {{}}
-    }}
+                }
+            });
+        } catch (err) {}
+    }
 
     document.documentElement.style.colorScheme = 'dark';
 
-    function limpiarUI() {{
+    function limpiarUI() {
         const elementosAEliminar = document.querySelectorAll('footer, #MainMenu, header, [data-testid="stDecoration"], [data-testid="stStatusWidget"], .stAppDeployButton');
         elementosAEliminar.forEach(el => el.remove());
         
-        document.querySelectorAll('*').forEach(el => {{
+        document.querySelectorAll('*').forEach(el => {
             const txt = el.innerText || "";
-            if (txt.includes("Made with Streamlit") || txt.includes("Streamlit")) {{
-                if (el.tagName === 'FOOTER' || el.tagName === 'DIV' && el.style.position === 'fixed') {{
+            if (txt.includes("Made with Streamlit") || txt.includes("Streamlit")) {
+                if (el.tagName === 'FOOTER' || el.tagName === 'DIV' && el.style.position === 'fixed') {
                     el.remove();
-                }}
-            }}
-        }});
-    }}
+                }
+            }
+        });
+    }
     
     setInterval(limpiarUI, 1000);
     limpiarUI();
-}}
+}
 iniciarUtilidades();
 </script>
 """
@@ -778,165 +786,196 @@ def renderizar_aplicacion():
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
     # ==========================================
-    # BOTÓN FAB FLOTANTE A LA IZQUIERDA
+    # BOTÓN FAB FLOTANTE A LA IZQUIERDA (DISPARADOR SIDEBAR WEB/MÓVIL)
     # ==========================================
     if st.button("AJUSTES", key="btn_fab_ajustes"):
         st.session_state.drawer_abierto = not st.session_state.drawer_abierto
         st.rerun()
 
-    # ==========================================
-    # MANEJO DEL DRAWER (SIDEBAR) SEGÚN ESTADO
-    # ==========================================
+    # Script JS específico para forzar la apertura/cierre del sidebar nativo de Streamlit en web
     if st.session_state.drawer_abierto:
-        with st.sidebar:
-            st.markdown("### PANEL DE AJUSTES")
-            st.markdown("---")
-            
-            if st.button("CERRAR PANEL", use_container_width=True):
+        components.html("""
+        <script>
+        const doc = window.parent.document;
+        const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
+        if (sidebar && sidebar.getAttribute('aria-expanded') !== 'true') {
+            const collapseBtn = doc.querySelector('button[data-testid="baseButton-header"]');
+            if (collapseBtn) collapseBtn.click();
+        }
+        </script>
+        """, height=0, width=0)
+
+    # ==========================================
+    # BARRA LATERAL (DRAWER) CON REPORTE DE COLABORADORES
+    # ==========================================
+    with st.sidebar:
+        st.markdown("### PANEL DE AJUSTES")
+        st.markdown("---")
+        
+        if st.button("CERRAR PANEL", use_container_width=True):
+            st.session_state.drawer_abierto = False
+            st.rerun()
+
+        st.markdown("---")
+        
+        # Botón para la gestión independiente de tickets
+        if estado_global["vista_actual"] == "TABLERO":
+            if st.button("GESTIÓN DE TICKETS", use_container_width=True, type="primary"):
+                estado_global["vista_actual"] = "TICKETS"
+                st.session_state.drawer_abierto = False
+                st.rerun()
+        else:
+            if st.button("VOLVER AL TABLERO", use_container_width=True, type="primary"):
+                estado_global["vista_actual"] = "TABLERO"
                 st.session_state.drawer_abierto = False
                 st.rerun()
 
-            st.markdown("---")
+        st.markdown("---")
+        st.markdown("#### Notas del Tablero")
+        with st.form("form_notas_tablero", clear_on_submit=False):
+            n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. ETIQUETAR CHURRITOS")
+            n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD FRIMEX")
+            n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="EJ. LIMPIAR ÁREA")
             
-            # Botón para la gestión independiente de tickets
-            if estado_global["vista_actual"] == "TABLERO":
-                if st.button("GESTIÓN DE TICKETS", use_container_width=True, type="primary"):
-                    estado_global["vista_actual"] = "TICKETS"
-                    st.session_state.drawer_abierto = False
-                    st.rerun()
-            else:
-                if st.button("VOLVER AL TABLERO", use_container_width=True, type="primary"):
-                    estado_global["vista_actual"] = "TABLERO"
-                    st.session_state.drawer_abierto = False
-                    st.rerun()
+            col_n1, col_n2 = st.columns(2)
+            with col_n1:
+                btn_guardar_notas = st.form_submit_button("Guardar", use_container_width=True)
+            with col_n2:
+                btn_limpiar_notas = st.form_submit_button("Limpiar", use_container_width=True)
 
+            if btn_guardar_notas:
+                nuevas_notas = [n1.strip().upper(), n2.strip().upper(), n3.strip().upper()]
+                estado_global["notas_tablero"] = nuevas_notas
+                st.session_state.indice_nota_carrusel = 0
+                reproducir_sonido_nota()
+                st.toast("Notas actualizadas")
+                st.rerun()
+
+            if btn_limpiar_notas:
+                estado_global["notas_tablero"] = ["", "", ""]
+                st.session_state.indice_nota_carrusel = 0
+                reproducir_sonido_nota()
+                st.toast("Notas eliminadas")
+                st.rerun()
+
+        st.markdown("---")
+        st.markdown("#### Colaboradores")
+        with st.form("form_colaboradores", clear_on_submit=False):
+            colab_inputs = []
+            for idx_c in range(st.session_state.num_campos_colab):
+                nombre_actual = estado_global["colaboradores"][idx_c] if idx_c < len(estado_global["colaboradores"]) else ""
+                c_in = st.text_input(f"Colaborador {idx_c + 1}", value=nombre_actual, key=f"input_colab_{idx_c}")
+                colab_inputs.append(c_in)
+            
+            col_cf1, col_cf2 = st.columns(2)
+            with col_cf1:
+                btn_guardar_colabs = st.form_submit_button("Guardar", use_container_width=True)
+            with col_cf2:
+                btn_mas_colab = st.form_submit_button("Agregar más", use_container_width=True)
+
+            if btn_mas_colab:
+                st.session_state.num_campos_colab += 2
+                st.rerun()
+
+            if btn_guardar_colabs:
+                estado_global["colaboradores"] = [c.strip().upper() for c in colab_inputs if c.strip()]
+                st.toast("Colaboradores actualizados")
+                st.rerun()
+
+        st.markdown("---")
+        st.markdown("#### Agregar Productos Manuales")
+        with st.form("form_agregar_manual", clear_on_submit=True):
+            nombre_manual = st.text_input("Nombre del producto")
+            col_chk1, col_chk2 = st.columns(2)
+            with col_chk1:
+                es_infinito_nuevo = st.checkbox("Infinito (Inf)")
+            with col_chk2:
+                es_urgente_nuevo = st.checkbox("Urgente")
+            cantidad_manual = st.number_input("Cantidad", min_value=1, value=1, step=1)
+            submit_manual = st.form_submit_button("Agregar producto")
+            
+            if submit_manual and nombre_manual.strip():
+                prod_key = nombre_manual.strip().upper()
+                estado_global["productos_manuales_global"][prod_key] = {
+                    "cantidad": int(cantidad_manual),
+                    "infinito": es_infinito_nuevo,
+                    "urgente": es_urgente_nuevo
+                }
+                if es_urgente_nuevo:
+                    estado_global["urgentes_activos"].add(prod_key)
+                st.toast(f"Agregado: {prod_key}")
+                st.rerun()
+
+        if estado_global["productos_manuales_global"]:
             st.markdown("---")
-            st.markdown("#### Notas del Tablero")
-            with st.form("form_notas_tablero", clear_on_submit=False):
-                n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. ETIQUETAR CHURRITOS")
-                n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD FRIMEX")
-                n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="EJ. LIMPIAR ÁREA")
+            st.markdown("#### Modificar Manuales")
+            for p_nombre, p_datos in list(estado_global["productos_manuales_global"].items()):
+                p_cant = p_datos.get("cantidad", 1) if isinstance(p_datos, dict) else p_datos
+                p_inf = p_datos.get("infinito", False) if isinstance(p_datos, dict) else False
+                p_urg = p_nombre in estado_global["urgentes_activos"]
                 
-                col_n1, col_n2 = st.columns(2)
-                with col_n1:
-                    btn_guardar_notas = st.form_submit_button("Guardar", use_container_width=True)
-                with col_n2:
-                    btn_limpiar_notas = st.form_submit_button("Limpiar", use_container_width=True)
-
-                if btn_guardar_notas:
-                    nuevas_notas = [n1.strip().upper(), n2.strip().upper(), n3.strip().upper()]
-                    estado_global["notas_tablero"] = nuevas_notas
-                    st.session_state.indice_nota_carrusel = 0
-                    reproducir_sonido_nota()
-                    st.toast("Notas actualizadas")
-                    st.rerun()
-
-                if btn_limpiar_notas:
-                    estado_global["notas_tablero"] = ["", "", ""]
-                    st.session_state.indice_nota_carrusel = 0
-                    reproducir_sonido_nota()
-                    st.toast("Notas eliminadas")
-                    st.rerun()
-
-            st.markdown("---")
-            st.markdown("#### Colaboradores")
-            with st.form("form_colaboradores", clear_on_submit=False):
-                colab_inputs = []
-                for idx_c in range(st.session_state.num_campos_colab):
-                    nombre_actual = estado_global["colaboradores"][idx_c] if idx_c < len(estado_global["colaboradores"]) else ""
-                    c_in = st.text_input(f"Colaborador {idx_c + 1}", value=nombre_actual, key=f"input_colab_{idx_c}")
-                    colab_inputs.append(c_in)
+                st.markdown(f"**{p_nombre}** ({'Urgente | ' if p_urg else ''}{'Inf' if p_inf else p_cant})")
                 
-                col_cf1, col_cf2 = st.columns(2)
-                with col_cf1:
-                    btn_guardar_colabs = st.form_submit_button("Guardar", use_container_width=True)
-                with col_cf2:
-                    btn_mas_colab = st.form_submit_button("Agregar más", use_container_width=True)
+                with st.expander(f"Editar {p_nombre}"):
+                    with st.form(key=f"form_edit_{p_nombre}"):
+                        nuevo_urg_val = st.checkbox("Urgente", value=p_urg, key=f"urg_{p_nombre}")
+                        nuevo_inf_val = st.checkbox("Infinito (Inf)", value=p_inf, key=f"inf_{p_nombre}")
+                        nueva_cant_val = st.number_input("Cantidad", min_value=1, value=p_cant, step=1, key=f"cant_{p_nombre}")
+                        
+                        col_e1, col_e2 = st.columns(2)
+                        with col_e1:
+                            btn_aceptar_edit = st.form_submit_button("Guardar")
+                        with col_e2:
+                            btn_borrar_item = st.form_submit_button("Borrar")
 
-                if btn_mas_colab:
-                    st.session_state.num_campos_colab += 2
-                    st.rerun()
-
-                if btn_guardar_colabs:
-                    estado_global["colaboradores"] = [c.strip().upper() for c in colab_inputs if c.strip()]
-                    st.toast("Colaboradores actualizados")
-                    st.rerun()
-
-            st.markdown("---")
-            st.markdown("#### Agregar Productos Manuales")
-            with st.form("form_agregar_manual", clear_on_submit=True):
-                nombre_manual = st.text_input("Nombre del producto")
-                col_chk1, col_chk2 = st.columns(2)
-                with col_chk1:
-                    es_infinito_nuevo = st.checkbox("Infinito (Inf)")
-                with col_chk2:
-                    es_urgente_nuevo = st.checkbox("Urgente")
-                cantidad_manual = st.number_input("Cantidad", min_value=1, value=1, step=1)
-                submit_manual = st.form_submit_button("Agregar producto")
-                
-                if submit_manual and nombre_manual.strip():
-                    prod_key = nombre_manual.strip().upper()
-                    estado_global["productos_manuales_global"][prod_key] = {
-                        "cantidad": int(cantidad_manual),
-                        "infinito": es_infinito_nuevo,
-                        "urgente": es_urgente_nuevo
-                    }
-                    if es_urgente_nuevo:
-                        estado_global["urgentes_activos"].add(prod_key)
-                    st.toast(f"Agregado: {prod_key}")
-                    st.rerun()
-
-            if estado_global["productos_manuales_global"]:
-                st.markdown("---")
-                st.markdown("#### Modificar Manuales")
-                for p_nombre, p_datos in list(estado_global["productos_manuales_global"].items()):
-                    p_cant = p_datos.get("cantidad", 1) if isinstance(p_datos, dict) else p_datos
-                    p_inf = p_datos.get("infinito", False) if isinstance(p_datos, dict) else False
-                    p_urg = p_nombre in estado_global["urgentes_activos"]
-                    
-                    st.markdown(f"**{p_nombre}** ({'Urgente | ' if p_urg else ''}{'Inf' if p_inf else p_cant})")
-                    
-                    with st.expander(f"Editar {p_nombre}"):
-                        with st.form(key=f"form_edit_{p_nombre}"):
-                            nuevo_urg_val = st.checkbox("Urgente", value=p_urg, key=f"urg_{p_nombre}")
-                            nuevo_inf_val = st.checkbox("Infinito (Inf)", value=p_inf, key=f"inf_{p_nombre}")
-                            nueva_cant_val = st.number_input("Cantidad", min_value=1, value=p_cant, step=1, key=f"cant_{p_nombre}")
-                            
-                            col_e1, col_e2 = st.columns(2)
-                            with col_e1:
-                                btn_aceptar_edit = st.form_submit_button("Guardar")
-                            with col_e2:
-                                btn_borrar_item = st.form_submit_button("Borrar")
-
-                            if btn_aceptar_edit:
-                                estado_global["productos_manuales_global"][p_nombre] = {
-                                    "cantidad": int(nueva_cant_val),
-                                    "infinito": nuevo_inf_val,
-                                    "urgente": nuevo_urg_val
-                                }
-                                if nuevo_urg_val:
-                                    estado_global["urgentes_activos"].add(p_nombre)
-                                else:
-                                    estado_global["urgentes_activos"].discard(p_nombre)
-                                st.toast(f"Actualizado: {p_nombre}")
-                                st.rerun()
-
-                            if btn_borrar_item:
-                                estado_global["productos_manuales_global"].pop(p_nombre, None)
-                                estado_global["completados"].discard(p_nombre)
-                                estado_global["cantidades_al_completar"].pop(p_nombre, None)
-                                estado_global["asignaciones_productos"].pop(p_nombre, None)
+                        if btn_aceptar_edit:
+                            estado_global["productos_manuales_global"][p_nombre] = {
+                                "cantidad": int(nueva_cant_val),
+                                "infinito": nuevo_inf_val,
+                                "urgente": nuevo_urg_val
+                            }
+                            if nuevo_urg_val:
+                                estado_global["urgentes_activos"].add(p_nombre)
+                            else:
                                 estado_global["urgentes_activos"].discard(p_nombre)
-                                st.toast(f"Borrado: {p_nombre}")
-                                st.rerun()
+                            st.toast(f"Actualizado: {p_nombre}")
+                            st.rerun()
 
-            st.markdown("---")
-            if st.button("Limpiar Tablero (Barrera)", use_container_width=True):
-                borrar_todo()
-                st.rerun()
-            if st.button("Restaurar Respaldo", use_container_width=True):
-                restaurar_estado()
-                st.rerun()
+                        if btn_borrar_item:
+                            estado_global["productos_manuales_global"].pop(p_nombre, None)
+                            estado_global["completados"].discard(p_nombre)
+                            estado_global["cantidades_al_completar"].pop(p_nombre, None)
+                            estado_global["asignaciones_productos"].pop(p_nombre, None)
+                            estado_global["urgentes_activos"].discard(p_nombre)
+                            st.toast(f"Borrado: {p_nombre}")
+                            st.rerun()
+
+        # ==========================================
+        # REPORTE DE PRODUCTIVIDAD DE COLABORADORES
+        # ==========================================
+        st.markdown("---")
+        st.markdown("#### 🏆 Ranking de Colaboradores")
+        conteo_colab = {}
+        for colab in estado_global["colaboradores"]:
+            conteo_colab[colab] = 0
+
+        for prod, colab_asig in estado_global["asignaciones_productos"].items():
+            if colab_asig in conteo_colab:
+                cant_prod = conteo_productos.get(prod, 1)
+                conteo_colab[colab_asig] += (1 if prod in infinitos_activos else cant_prod)
+
+        ranking_ordenado = sorted(conteo_colab.items(), key=lambda x: x[1], reverse=True)
+        for pos, (nombre_colab, total_piezas) in enumerate(ranking_ordenado):
+            medalla = "🥇" if pos == 0 else ("🥈" if pos == 1 else ("🥉" if pos == 2 else f"#{pos+1}"))
+            st.markdown(f"<div style='font-size: 12px; font-weight: 800; padding: 4px 0; color: #e2e8f0; display: flex; justify-content: space-between;'><span>{medalla} {nombre_colab}</span><span style='color: #38bdf8;'>{total_piezas} pzas</span></div>", unsafe_allow_html=True)
+
+        st.markdown("---")
+        if st.button("Limpiar Tablero (Barrera)", use_container_width=True):
+            borrar_todo()
+            st.rerun()
+        if st.button("Restaurar Respaldo", use_container_width=True):
+            restaurar_estado()
+            st.rerun()
 
     # ==========================================
     # ENCABEZADO PRINCIPAL (CON RELOJ EN TIEMPO REAL)
@@ -1039,6 +1078,9 @@ def renderizar_aplicacion():
                 receipt_number = recibo.get("receipt_number", f"#{idx_recibo + 1}")
                 created_at_str = recibo.get("receipt_date") or recibo.get("created_at", "")
                 
+                # Obtener nombre del cliente si está disponible en el recibo de Loyverse
+                customer_name = recibo.get("customer_name") or recibo.get("customer", {}).get("name")
+                
                 try:
                     dt_ticket = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
                     hora_ticket = dt_ticket.astimezone(tz_mexico).strftime("%I:%M:%S %p")
@@ -1048,11 +1090,18 @@ def renderizar_aplicacion():
                 line_items = recibo.get("line_items", [])
                 
                 with st.container():
+                    # TÍTULO DEL TICKET / CLIENTE EN LETRAS GRANDES
+                    titulo_principal = customer_name.upper() if customer_name else f"TICKET {receipt_number}"
+                    sub_detalle = f"TICKET {receipt_number}" if customer_name else f"HORA: {hora_ticket}"
+
                     st.markdown(f"""
-                        <div style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px; margin-bottom: 10px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <span style="font-weight: 900; color: #38bdf8; font-size: 14px;">TICKET {receipt_number}</span>
-                                <span style="font-size: 11px; color: #9ca3af; font-weight: 700;">HORA: {hora_ticket}</span>
+                        <div style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+                                <div>
+                                    <div style="font-weight: 900; color: #ffffff; font-size: 17px; letter-spacing: 0.5px; text-transform: uppercase;">{titulo_principal}</div>
+                                    <div style="font-weight: 700; color: #38bdf8; font-size: 11px; margin-top: 2px;">{sub_detalle}</div>
+                                </div>
+                                <span style="font-size: 11px; color: #9ca3af; font-weight: 700; background: #151c2c; padding: 3px 8px; border-radius: 6px;">{hora_ticket}</span>
                             </div>
                     """, unsafe_allow_html=True)
 
@@ -1072,7 +1121,7 @@ def renderizar_aplicacion():
                         esta_listo = item_key_uid in estado_global["tickets_completados_items"]
                         es_urgente_prod = nombre_completo in estado_global["urgentes_activos"]
 
-                        col_t1, col_t2, col_t3 = st.columns([0.65, 0.20, 0.15])
+                        col_t1, col_t2, col_t3 = st.columns([0.60, 0.25, 0.15])
                         
                         with col_t1:
                             chk_val = st.checkbox(f"{cant_num}x **{nombre_completo}**", value=esta_listo, key=f"chk_ticket_{item_key_uid}")
@@ -1095,6 +1144,26 @@ def renderizar_aplicacion():
                             st.markdown(f"<div style='text-align: right; font-size: 11px; font-weight: 900; color: {color_txt}; padding-top: 6px;'>{estado_txt}</div>", unsafe_allow_html=True)
 
                     st.markdown("</div>", unsafe_allow_html=True)
+                    
+                    # DIVISOR VISIBLE ENTRE TICKET Y TICKET
+                    st.markdown("<hr style='border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 16px 0;'>", unsafe_allow_html=True)
+
+            # SECCIÓN PARA AGREGAR NOTAS RÁPIDAS DESDE GESTIÓN DE TICKETS
+            st.markdown("#### Agregar Nota al Tablero Principal")
+            with st.form("form_nota_rapida_tickets", clear_on_submit=True):
+                nueva_nota_txt = st.text_input("Escribe una nota rápida para el banner superior:")
+                btn_enviar_nota_ticket = st.form_submit_button("Publicar Nota en Tablero", use_container_width=True)
+
+                if btn_enviar_nota_ticket and nueva_nota_txt.strip():
+                    # Desplazar notas existentes y colocar la nueva en la primera posición
+                    notas_actuales = estado_global["notas_tablero"]
+                    nuevas_notas = [nueva_nota_txt.strip().upper(), notas_actuales[0], notas_actuales[1]]
+                    estado_global["notas_tablero"] = nuevas_notas
+                    st.session_state.indice_nota_carrusel = 0
+                    reproducir_sonido_nota()
+                    st.toast("¡Nota publicada en el tablero con éxito!")
+                    st.rerun()
+
         else:
             st.info("No hay tickets disponibles para mostrar en este periodo.")
 
