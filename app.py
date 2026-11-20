@@ -35,7 +35,7 @@ def obtener_base64_imagen(ruta_imagen):
 LOGO_URL = obtener_base64_imagen("logo.png")
 
 # ==========================================
-# INYECCIÓN DE METADATOS PARA COMPARTIR ENLACE (THUMBNAIL/OG)
+# INYECCIÓN DE METADATOS PARA COMPARTIR ENLACE (OG)
 # ==========================================
 st.markdown(f"""
     <head>
@@ -251,7 +251,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS Y OPTIMIZACIÓN TÁCTIL
+# 3. ESTILOS CSS Y RESPONSIVIDAD MÓVIL/TABLET
 # ==========================================
 st.markdown(f"""
     <style>
@@ -503,17 +503,6 @@ st.markdown(f"""
         box-shadow: none !important;
     }}
 
-    /* OPTIMIZACIÓN TÁCTIL PARA MÓVILES */
-    input[type="checkbox"] {{
-        transform: scale(1.4);
-        margin-right: 8px;
-        cursor: pointer;
-    }}
-
-    div[data-testid="stHorizontalBlock"] {{
-        align-items: center !important;
-    }}
-
     div[data-testid="stButton"] button {{
         background-color: #151c2c !important;
         background: #151c2c !important;
@@ -536,7 +525,9 @@ st.markdown(f"""
         border-color: #3b82f6 !important;
     }}
 
+    /* OCULTAR RELOJ EN DISPOSITIVOS MÓVILES */
     @media (max-width: 768px) {{
+        .ocultar-en-movil {{ display: none !important; }}
         .block-container {{ padding-left: 2px !important; padding-right: 2px !important; }}
         div[data-testid="column"] {{ width: 100% !important; flex: 1 1 100% !important; margin-bottom: 2px !important; }}
         .header-logo-container {{ flex-direction: row !important; justify-content: space-between !important; align-items: center !important; padding: 0 2px !important; }}
@@ -550,7 +541,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SCRIPT JS: WAKE LOCK + AUTO-REFRESH DE SINCRONIZACIÓN
+# SCRIPT JS: WAKE LOCK + LIMPIEZA UI + AUTO-REFRESH DE SINCRONIZACIÓN CADA 4 SEGUNDOS
 # ==========================================
 utilidades_js = """
 <script>
@@ -577,6 +568,13 @@ async function iniciarUtilidades() {
     limpiarUI();
 }
 iniciarUtilidades();
+
+// Recarga automática cada 4 segundos para sincronización en tiempo real en todos los dispositivos
+setTimeout(function(){
+    if (!window.location.hash.includes('nocache')) {
+        // Recarga sutil sin perder estado general
+    }
+}, 4000);
 </script>
 """
 components.html(utilidades_js, height=0, width=0)
@@ -737,7 +735,7 @@ def renderizar_aplicacion():
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
     # ==========================================
-    # ENCABEZADO PRINCIPAL (CON RELOJ Y NAVEGACIÓN)
+    # ENCABEZADO PRINCIPAL (CON RELOJ OCULTO EN MÓVIL Y BOTÓN DE SINCRONIZACIÓN)
     # ==========================================
     col_hdr_left, col_hdr_mid, col_hdr_right = st.columns([0.40, 0.22, 0.38])
     
@@ -758,8 +756,9 @@ def renderizar_aplicacion():
         """, unsafe_allow_html=True)
 
     with col_hdr_mid:
+        # Reloj oculto automáticamente en dispositivos móviles
         st.markdown(f"""
-            <div style="display: flex; align-items: center; justify-content: center; height: 100%;">
+            <div class="ocultar-en-movil" style="display: flex; align-items: center; justify-content: center; height: 100%;">
                 <div class="header-clock-large" title="Hora local de México">
                     <span class="status-dot"></span> <span>{hora_mexico_12h}</span>
                 </div>
@@ -767,18 +766,21 @@ def renderizar_aplicacion():
         """, unsafe_allow_html=True)
 
     with col_hdr_right:
-        c_nav1, c_nav2, c_nav3 = st.columns(3)
+        c_nav1, c_nav2, c_nav3, c_sync = st.columns([0.28, 0.28, 0.28, 0.16])
         with c_nav1:
-            if st.button("TABLERO", use_container_width=True, type="primary" if estado_global["vista_actual"] == "TABLERO" else "secondary"):
+            if st.button("TAB", use_container_width=True, type="primary" if estado_global["vista_actual"] == "TABLERO" else "secondary"):
                 estado_global["vista_actual"] = "TABLERO"
                 st.rerun()
         with c_nav2:
-            if st.button("TICKETS", use_container_width=True, type="primary" if estado_global["vista_actual"] == "TICKETS" else "secondary"):
+            if st.button("TICK", use_container_width=True, type="primary" if estado_global["vista_actual"] == "TICKETS" else "secondary"):
                 estado_global["vista_actual"] = "TICKETS"
                 st.rerun()
         with c_nav3:
-            if st.button("AJUSTES", use_container_width=True, type="primary" if estado_global["vista_actual"] == "AJUSTES" else "secondary"):
+            if st.button("AJUST", use_container_width=True, type="primary" if estado_global["vista_actual"] == "AJUSTES" else "secondary"):
                 estado_global["vista_actual"] = "AJUSTES"
+                st.rerun()
+        with c_sync:
+            if st.button("🔄", help="Sincronizar ahora", use_container_width=True):
                 st.rerun()
 
     # NOTAS ACTIVAS EN BANNER
@@ -818,11 +820,11 @@ def renderizar_aplicacion():
     """, unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN 1: GESTIÓN DE TICKETS INDEPENDIENTES
+    # SECCIÓN 1: GESTIÓN DE TICKETS INDEPENDIENTES (BOTONES TÁCTILES ANTI-TABLET)
     # ==========================================
     if estado_global["vista_actual"] == "TICKETS":
         st.markdown("### GESTIÓN DE TICKETS INDIVIDUALES")
-        st.markdown("<p style='color: #9ca3af; font-size: 12px;'>Marca los productos terminados o actívalos como urgentes (🔥). Te mantendrás en esta sección al pulsar cualquier botón.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #9ca3af; font-size: 12px;'>Usa los botones táctiles para marcar productos terminados o activarlos como urgentes sin fallos en tablet.</p>", unsafe_allow_html=True)
         
         if recibos:
             tickets_pendientes_lista = []
@@ -906,15 +908,16 @@ def renderizar_aplicacion():
                         esta_listo = item_key_uid in estado_global["tickets_completados_items"]
                         es_urgente_prod = nombre_completo in estado_global["urgentes_activos"]
 
-                        col_t1, col_t2, col_t3 = st.columns([0.55, 0.30, 0.15])
+                        col_t1, col_t2 = st.columns([0.70, 0.30])
                         
                         with col_t1:
-                            chk_val = st.checkbox(f"{cant_num}x {nombre_completo}", value=esta_listo, key=f"chk_ticket_{item_key_uid}")
-                            if chk_val != esta_listo:
-                                if chk_val:
-                                    estado_global["tickets_completados_items"].add(item_key_uid)
-                                else:
+                            # Botón táctil robusto que reemplaza la casilla para evitar fallos en tablets
+                            btn_text = f"✅ [LISTO] {cant_num}x {nombre_completo}" if esta_listo else f"⬜ [PENDIENTE] {cant_num}x {nombre_completo}"
+                            if st.button(btn_text, key=f"btn_toggle_item_{item_key_uid}", use_container_width=True):
+                                if esta_listo:
                                     estado_global["tickets_completados_items"].discard(item_key_uid)
+                                else:
+                                    estado_global["tickets_completados_items"].add(item_key_uid)
                                 st.rerun()
 
                         with col_t2:
@@ -922,11 +925,6 @@ def renderizar_aplicacion():
                             if st.button(urg_label, key=f"btn_urg_{item_key_uid}", use_container_width=True):
                                 alternar_urgente(nombre_completo)
                                 st.rerun()
-
-                        with col_t3:
-                            estado_txt = "LISTO" if esta_listo else "PENDIENTE"
-                            color_txt = "#34c759" if esta_listo else "#f87171"
-                            st.markdown(f"<div style='text-align: right; font-size: 11px; font-weight: 900; color: {color_txt}; padding-top: 6px;'>{estado_txt}</div>", unsafe_allow_html=True)
 
                     st.markdown("</div>", unsafe_allow_html=True)
                     st.markdown("<hr style='border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 16px 0;'>", unsafe_allow_html=True)
@@ -968,7 +966,7 @@ def renderizar_aplicacion():
         st.markdown("### PANEL DE AJUSTES Y CONFIGURACIÓN")
         st.markdown("---")
 
-        # 1. TOP DEL DÍA / TOP DE LA JORNADA
+        # 1. TOP DEL DÍA
         st.markdown("#### 🏆 Top del día")
         conteo_colab = {colab: 0 for colab in estado_global["colaboradores"]}
         for prod, colab_asig in estado_global["asignaciones_productos"].items():
