@@ -144,7 +144,7 @@ def alternar_urgente(producto):
     disparar_sync()
 
 # ==========================================
-# 3. ESTILOS CSS
+# 3. ESTILOS CSS CON TEXTOS MÁS GRANDES Y CENTRADOS
 # ==========================================
 st.markdown("""
     <style>
@@ -441,7 +441,7 @@ st.markdown("""
         box-shadow: none !important;
     }
 
-    /* BOTONES GENERALES EN TAMAÑO NORMAL, UNIFORME Y LEGIBLE */
+    /* BOTONES CON TEXTO MÁS GRANDE Y PERFECTAMENTE CENTRADO VERTICALMENTE */
     div[data-testid="stButton"] {
         margin: 0 !important;
         padding: 0 !important;
@@ -452,9 +452,9 @@ st.markdown("""
         color: #ffffff !important;
         border: 1px solid rgba(255, 255, 255, 0.25) !important;
         border-radius: 7px !important;
-        font-weight: 800 !important;
-        font-size: 11px !important;
-        letter-spacing: 0.3px !important;
+        font-weight: 900 !important;
+        font-size: 12.5px !important;
+        letter-spacing: 0.4px !important;
         text-transform: uppercase !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.25) !important;
         height: 30px !important;
@@ -467,12 +467,15 @@ st.markdown("""
         justify-content: center !important;
     }
     div[data-testid="stButton"] button p {
-        font-size: 11px !important;
-        font-weight: 800 !important;
+        font-size: 12.5px !important;
+        font-weight: 900 !important;
         margin: 0 !important;
         padding: 0 !important;
         line-height: 1 !important;
         white-space: nowrap !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 
     div[data-testid="stButton"] button:hover {
