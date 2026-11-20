@@ -10,7 +10,7 @@ import zoneinfo
 # 1. CONFIGURACIÓN DE PÁGINA Y FAVICON
 # ==========================================
 st.set_page_config(
-    page_title="TABLERO MOSTACHO", 
+    page_title="Tablero Mostacho", 
     page_icon="logo.png" if os.path.exists("logo.png") else "⚡",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -39,7 +39,7 @@ LOGO_URL = obtener_base64_imagen("logo.png")
 # ==========================================
 st.markdown(f"""
     <head>
-        <meta property="og:title" content="MOSTACHO BOTANAS - TABLA DE PRODUCCIÓN">
+        <meta property="og:title" content="Tablero Mostacho - Producción en Vivo">
         <meta property="og:description" content="Sistema de control y producción en tiempo real.">
         <meta property="og:image" content="{LOGO_URL}">
     </head>
@@ -439,12 +439,12 @@ st.markdown(f"""
     .card-master-container {{
         border-radius: 14px;
         padding: 10px 12px;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
         box-shadow: 0 4px 14px rgba(0,0,0,0.35);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        min-height: 76px;
+        min-height: 70px;
         backdrop-filter: blur(10px);
     }}
 
@@ -488,37 +488,28 @@ st.markdown(f"""
     }}
 
     .colab-asignado-txt {{
-        font-size: 12px !important;
+        font-size: 11px !important;
         font-weight: 900 !important;
         color: #ffffff !important;
-        margin-top: 5px;
+        margin-top: 4px;
         letter-spacing: 0.8px;
         text-transform: uppercase;
         border-top: 1px solid rgba(255, 255, 255, 0.25);
-        padding-top: 4px;
+        padding-top: 3px;
     }}
 
-    /* ELIMINAR ANILLO DE FOCO AZUL */
     button:focus, button:active, button:focus-visible {{
         outline: none !important;
         box-shadow: none !important;
     }}
 
-    /* BOTONES COMPACTOS EN GESTIÓN DE TICKETS */
     div[data-testid="stHorizontalBlock"]:has(button[key^="btn_urg_"]) button {{
-        height: 28px !important;
-        min-height: 28px !important;
-        font-size: 9px !important;
-        padding: 0px 6px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        font-size: 10px !important;
+        padding: 0px 8px !important;
     }}
 
-    /* BOTONERAS DE ACCIÓN EN TARJETAS */
-    div[data-testid="stHorizontalBlock"]:has(button[key^="tarjeta_btn_"]) {{
-        gap: 4px !important;
-        margin-bottom: 6px !important;
-    }}
-
-    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button,
     div[data-testid="stButton"] button {{
         background-color: #151c2c !important;
         background: #151c2c !important;
@@ -530,11 +521,10 @@ st.markdown(f"""
         letter-spacing: 0.8px !important;
         text-transform: uppercase !important;
         box-shadow: 0 2px 6px rgba(0,0,0,0.25) !important;
-        height: 34px !important;
-        min-height: 34px !important;
+        height: 36px !important;
+        min-height: 36px !important;
     }}
 
-    div[data-testid="stElementContainer"]:has(button[key^="tarjeta_btn_"]) button:hover,
     div[data-testid="stButton"] button:hover {{
         background-color: #1e293b !important;
         background: #1e293b !important;
@@ -550,7 +540,7 @@ st.markdown(f"""
         .header-title {{ font-size: 14px !important; }}
         .card-master-title {{ font-size: 14px !important; }}
         .card-master-num {{ font-size: 34px !important; }}
-        .card-master-container {{ min-height: 64px !important; padding: 8px 10px !important; border-radius: 12px !important; }}
+        .card-master-container {{ min-height: 60px !important; padding: 8px 10px !important; border-radius: 12px !important; }}
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -558,7 +548,7 @@ st.markdown(f"""
 # ==========================================
 # SCRIPT JS: WAKE LOCK + LIMPIEZA UI
 # ==========================================
-ocultar_marca_js = """
+utilidades_js = """
 <script>
 async function iniciarUtilidades() {
     if ('wakeLock' in navigator) {
@@ -577,15 +567,6 @@ async function iniciarUtilidades() {
     function limpiarUI() {
         const elementosAEliminar = document.querySelectorAll('footer, #MainMenu, header, [data-testid="stDecoration"], [data-testid="stStatusWidget"], .stAppDeployButton');
         elementosAEliminar.forEach(el => el.remove());
-        
-        document.querySelectorAll('*').forEach(el => {
-            const txt = el.innerText || "";
-            if (txt.includes("Made with Streamlit") || txt.includes("Streamlit")) {
-                if (el.tagName === 'FOOTER' || el.tagName === 'DIV' && el.style.position === 'fixed') {
-                    el.remove();
-                }
-            }
-        });
     }
     
     setInterval(limpiarUI, 1000);
@@ -594,12 +575,12 @@ async function iniciarUtilidades() {
 iniciarUtilidades();
 </script>
 """
-components.html(ocultar_marca_js, height=0, width=0)
+components.html(utilidades_js, height=0, width=0)
 
 # ==========================================
 # 4. CONSULTA A LA API DE LOYVERSE
 # ==========================================
-@st.cache_data(ttl=10, show_spinner=False)
+@st.cache_data(ttl=5, show_spinner=False)
 def obtener_recibos_hoy_cached(created_at_min_str):
     url = "https://api.loyverse.com/v1.0/receipts"
     params = {"created_at_min": created_at_min_str, "limit": 250}
@@ -704,12 +685,6 @@ def renderizar_aplicacion():
     if "reproducido_modal_audio" not in st.session_state:
         st.session_state.reproducido_modal_audio = False
 
-    if "indice_nota_carrusel" not in st.session_state:
-        st.session_state.indice_nota_carrusel = 0
-
-    if "desglosar_notas" not in st.session_state:
-        st.session_state.desglosar_notas = False
-
     if "num_campos_colab" not in st.session_state:
         st.session_state.num_campos_colab = max(6, len(estado_global["colaboradores"]))
 
@@ -758,7 +733,7 @@ def renderizar_aplicacion():
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
     # ==========================================
-    # ENCABEZADO PRINCIPAL (CON RELOJ GRANDE Y BOTONES DE NAVEGACIÓN)
+    # ENCABEZADO PRINCIPAL (CON RELOJ Y NAVEGACIÓN)
     # ==========================================
     col_hdr_left, col_hdr_mid, col_hdr_right = st.columns([0.40, 0.22, 0.38])
     
@@ -768,7 +743,7 @@ def renderizar_aplicacion():
                 <div class="header-left-group">
                     <img src="{LOGO_URL}" class="header-logo-img" alt="Logo Mostacho">
                     <div>
-                        <h1 class="header-title">TABLA DE PRODUCCIÓN</h1>
+                        <h1 class="header-title">Tablero Mostacho</h1>
                         <div class="sub-brand-line">
                             <span>MOSTACHO BOTANAS</span>
                             <span class="sync-text-inline">| SYNC: {hora_sync_loyverse}</span>
@@ -779,7 +754,6 @@ def renderizar_aplicacion():
         """, unsafe_allow_html=True)
 
     with col_hdr_mid:
-        # Reloj un poco más grande a la izquierda de los botones de navegación
         st.markdown(f"""
             <div style="display: flex; align-items: center; justify-content: center; height: 100%;">
                 <div class="header-clock-large" title="Hora local de México">
@@ -789,7 +763,6 @@ def renderizar_aplicacion():
         """, unsafe_allow_html=True)
 
     with col_hdr_right:
-        # Botones de secciones (Tablero, Tickets, Ajustes) en la parte superior derecha
         c_nav1, c_nav2, c_nav3 = st.columns(3)
         with c_nav1:
             if st.button("TABLERO", use_container_width=True, type="primary" if estado_global["vista_actual"] == "TABLERO" else "secondary"):
@@ -804,7 +777,7 @@ def renderizar_aplicacion():
                 estado_global["vista_actual"] = "AJUSTES"
                 st.rerun()
 
-    # RENDERIZAR NOTAS ACTIVAS EN CARRUSEL O DESGLOSE SI APLICA
+    # NOTAS ACTIVAS EN BANNER
     notas_filtradas = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
     if notas_filtradas:
         for num_nota, nota_txt in notas_filtradas:
@@ -845,7 +818,7 @@ def renderizar_aplicacion():
     # ==========================================
     if estado_global["vista_actual"] == "TICKETS":
         st.markdown("### GESTIÓN DE TICKETS INDIVIDUALES")
-        st.markdown("<p style='color: #9ca3af; font-size: 12px;'>Marca los productos terminados o actívalos como urgentes (🔥). Los tickets completos se mueven automáticamente al fondo.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #9ca3af; font-size: 12px;'>Marca los productos terminados o actívalos como urgentes (🔥). Al pulsar urgente te mantienes en esta misma sección.</p>", unsafe_allow_html=True)
         
         if recibos:
             tickets_pendientes_lista = []
@@ -881,11 +854,7 @@ def renderizar_aplicacion():
                 note_recibo = recibo.get("note") or recibo.get("comment") or ""
                 
                 titulo_custom = estado_global["titulos_personalizados_tickets"].get(ticket_id)
-                if titulo_custom:
-                    titulo_principal = titulo_custom
-                else:
-                    titulo_principal = customer_name.upper() if customer_name else f"TICKET {receipt_number}"
-
+                titulo_principal = titulo_custom if titulo_custom else (customer_name.upper() if customer_name else f"TICKET {receipt_number}")
                 sub_detalle = f"TICKET {receipt_number}" if customer_name or titulo_custom else ""
                 
                 try:
@@ -895,7 +864,6 @@ def renderizar_aplicacion():
                     hora_ticket = "---"
 
                 line_items = recibo.get("line_items", [])
-                
                 bg_color = "#0f172a" if completado else "#111827"
                 border_color = "rgba(52, 199, 89, 0.4)" if completado else "rgba(255,255,255,0.08)"
                 
@@ -926,11 +894,7 @@ def renderizar_aplicacion():
                         nombre = item.get("item_name", "Producto")
                         cantidad = item.get("quantity", 0)
                         variante = item.get("variant_name")
-                        
-                        if variante and variante != "Default":
-                            nombre_completo = f"{nombre} ({variante})"
-                        else:
-                            nombre_completo = nombre
+                        nombre_completo = f"{nombre} ({variante})" if variante and variante != "Default" else nombre
 
                         cant_num = int(cantidad) if float(cantidad).is_integer() else cantidad
                         item_key_uid = f"{ticket_id}_{idx_item}_{nombre_completo}"
@@ -995,14 +959,14 @@ def renderizar_aplicacion():
             st.info("No hay tickets disponibles para mostrar en este periodo.")
 
     # ==========================================
-    # SECCIÓN 2: PANEL DE AJUSTES (CON RANKING ARRIBA)
+    # SECCIÓN 2: PANEL DE AJUSTES (CON ORDEN REQUERIDO Y EDICIÓN DE ASIGNACIONES)
     # ==========================================
     elif estado_global["vista_actual"] == "AJUSTES":
         st.markdown("### PANEL DE AJUSTES Y CONFIGURACIÓN")
         st.markdown("---")
 
-        # 1. RANKING DE COLABORADORES HASTA ARRIBA
-        st.markdown("#### 🏆 Ranking de Colaboradores")
+        # 1. TOP DEL DÍA / TOP DE LA JORNADA
+        st.markdown("#### 🏆 Top del día")
         conteo_colab = {colab: 0 for colab in estado_global["colaboradores"]}
         for prod, colab_asig in estado_global["asignaciones_productos"].items():
             if colab_asig in conteo_colab:
@@ -1015,6 +979,8 @@ def renderizar_aplicacion():
             st.markdown(f"<div style='font-size: 13px; font-weight: 800; padding: 6px 10px; background: #111827; border-radius: 8px; margin-bottom: 6px; color: #e2e8f0; display: flex; justify-content: space-between;'><span>{medalla} {nombre_colab}</span><span style='color: #38bdf8;'>{total_piezas} pzas</span></div>", unsafe_allow_html=True)
 
         st.markdown("---")
+
+        # 2. NOTAS DEL TABLERO
         st.markdown("#### Notas del Tablero")
         with st.form("form_notas_tablero", clear_on_submit=False):
             n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. ETIQUETAR CHURRITOS")
@@ -1041,30 +1007,8 @@ def renderizar_aplicacion():
                 st.rerun()
 
         st.markdown("---")
-        st.markdown("#### Colaboradores")
-        with st.form("form_colaboradores", clear_on_submit=False):
-            colab_inputs = []
-            for idx_c in range(st.session_state.num_campos_colab):
-                nombre_actual = estado_global["colaboradores"][idx_c] if idx_c < len(estado_global["colaboradores"]) else ""
-                c_in = st.text_input(f"Colaborador {idx_c + 1}", value=nombre_actual, key=f"input_colab_{idx_c}")
-                colab_inputs.append(c_in)
-            
-            col_cf1, col_cf2 = st.columns(2)
-            with col_cf1:
-                btn_guardar_colabs = st.form_submit_button("Guardar Colaboradores", use_container_width=True)
-            with col_cf2:
-                btn_mas_colab = st.form_submit_button("Agregar más", use_container_width=True)
 
-            if btn_mas_colab:
-                st.session_state.num_campos_colab += 2
-                st.rerun()
-
-            if btn_guardar_colabs:
-                estado_global["colaboradores"] = [c.strip().upper() for c in colab_inputs if c.strip()]
-                st.toast("Colaboradores actualizados")
-                st.rerun()
-
-        st.markdown("---")
+        # 3. AGREGAR PRODUCTOS MANUALES Y GESTIÓN DE ASIGNACIONES ACTIVAS
         st.markdown("#### Agregar Productos Manuales")
         with st.form("form_agregar_manual", clear_on_submit=True):
             nombre_manual = st.text_input("Nombre del producto")
@@ -1089,14 +1033,11 @@ def renderizar_aplicacion():
                 st.rerun()
 
         if estado_global["productos_manuales_global"]:
-            st.markdown("---")
             st.markdown("#### Modificar Manuales")
             for p_nombre, p_datos in list(estado_global["productos_manuales_global"].items()):
                 p_cant = p_datos.get("cantidad", 1) if isinstance(p_datos, dict) else p_datos
                 p_inf = p_datos.get("infinito", False) if isinstance(p_datos, dict) else False
                 p_urg = p_nombre in estado_global["urgentes_activos"]
-                
-                st.markdown(f"**{p_nombre}** ({'Urgente | ' if p_urg else ''}{'Inf' if p_inf else p_cant})")
                 
                 with st.expander(f"Editar {p_nombre}"):
                     with st.form(key=f"form_edit_{p_nombre}"):
@@ -1133,9 +1074,54 @@ def renderizar_aplicacion():
                             st.rerun()
 
         st.markdown("---")
+
+        # EDICIÓN DE ASIGNACIONES DE COLABORADORES DESDE AJUSTES
+        st.markdown("#### 👥 Edición y Asignación de Colaboradores por Producto")
+        if conteo_productos:
+            lista_colabs = ["NINGUNO"] + estado_global["colaboradores"]
+            for prod_asignable in sorted(conteo_productos.keys()):
+                colab_actual = estado_global["asignaciones_productos"].get(prod_asignable, "NINGUNO")
+                idx_asig = lista_colabs.index(colab_actual) if colab_actual in lista_colabs else 0
+                
+                nuevo_asig = st.selectbox(f"Asignar a: {prod_asignable}", options=lista_colabs, index=idx_asig, key=f"ajustes_asig_{prod_asignable}")
+                if nuevo_asig != colab_actual:
+                    asignar_colaborador(prod_asignable, nuevo_asig)
+                    st.rerun()
+        else:
+            st.info("No hay productos activos para asignar.")
+
+        st.markdown("---")
+
+        # 4. CONFIGURACIÓN DE COLABORADORES (AL FINAL)
+        st.markdown("#### Configuración de Colaboradores")
+        with st.form("form_colaboradores", clear_on_submit=False):
+            colab_inputs = []
+            for idx_c in range(st.session_state.num_campos_colab):
+                nombre_actual = estado_global["colaboradores"][idx_c] if idx_c < len(estado_global["colaboradores"]) else ""
+                c_in = st.text_input(f"Colaborador {idx_c + 1}", value=nombre_actual, key=f"input_colab_{idx_c}")
+                colab_inputs.append(c_in)
+            
+            col_cf1, col_cf2 = st.columns(2)
+            with col_cf1:
+                btn_guardar_colabs = st.form_submit_button("Guardar Colaboradores", use_container_width=True)
+            with col_cf2:
+                btn_mas_colab = st.form_submit_button("Agregar más", use_container_width=True)
+
+            if btn_mas_colab:
+                st.session_state.num_campos_colab += 2
+                st.rerun()
+
+            if btn_guardar_colabs:
+                estado_global["colaboradores"] = [c.strip().upper() for c in colab_inputs if c.strip()]
+                st.toast("Colaboradores actualizados")
+                st.rerun()
+
+        st.markdown("---")
+
+        # 5. HASTA EL FONDO: BOTÓN DE LIMPIAR TABLERO
         col_res1, col_res2 = st.columns(2)
         with col_res1:
-            if st.button("Limpiar Tablero", use_container_width=True):
+            if st.button("Limpiar tablero", use_container_width=True):
                 borrar_todo()
                 st.rerun()
         with col_res2:
@@ -1259,35 +1245,31 @@ def renderizar_aplicacion():
                                     </div>
                                 """, unsafe_allow_html=True)
 
-                                # SELECCIÓN DIRECTA DE COLABORADOR Y TERMINAR
-                                col_btn_1, col_btn_2 = st.columns(2)
-                                
-                                with col_btn_1:
-                                    lista_colabs = ["NINGUNO"] + estado_global["colaboradores"]
-                                    index_actual = 0
-                                    if colab_asignado and colab_asignado in lista_colabs:
-                                        index_actual = lista_colabs.index(colab_asignado)
+                                # BOTÓN DE TERMINAR + SELECTOR DE ASIGNACIÓN DIRECTO EN CADA TARJETA
+                                st.button(
+                                    texto_estado, 
+                                    key=f"tarjeta_btn_{producto}", 
+                                    on_click=alternar_estado, 
+                                    args=(producto, cant_total),
+                                    use_container_width=True
+                                )
 
-                                    colab_seleccionado = st.selectbox(
-                                        f"Asignar {producto}",
-                                        options=lista_colabs,
-                                        index=index_actual,
-                                        key=f"select_asignar_{producto}",
-                                        label_visibility="collapsed"
-                                    )
+                                lista_colabs = ["NINGUNO"] + estado_global["colaboradores"]
+                                index_actual = 0
+                                if colab_asignado and colab_asignado in lista_colabs:
+                                    index_actual = lista_colabs.index(colab_asignado)
 
-                                    if colab_seleccionado != (colab_asignado if colab_asignado else "NINGUNO"):
-                                        asignar_colaborador(producto, colab_seleccionado)
-                                        st.rerun()
+                                colab_seleccionado = st.selectbox(
+                                    f"Asignar {producto}",
+                                    options=lista_colabs,
+                                    index=index_actual,
+                                    key=f"select_asignar_{producto}",
+                                    label_visibility="collapsed"
+                                )
 
-                                with col_btn_2:
-                                    st.button(
-                                        texto_estado, 
-                                        key=f"tarjeta_btn_{producto}", 
-                                        on_click=alternar_estado, 
-                                        args=(producto, cant_total),
-                                        use_container_width=True
-                                    )
+                                if colab_seleccionado != (colab_asignado if colab_asignado else "NINGUNO"):
+                                    asignar_colaborador(producto, colab_seleccionado)
+                                    st.rerun()
 
                 if activos:
                     renderizar_lista_productos(activos)
