@@ -13,7 +13,7 @@ st.set_page_config(
     page_title="MOSTACHO BOTANAS - ONE UI", 
     page_icon="logo.png" if os.path.exists("logo.png") else "⚡",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 LOYVERSE_TOKEN = "13d9288fbc264fb88a8112094407486a"
@@ -247,7 +247,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS (FAB COMPACTO + SIN BORDE AZUL)
+# 3. ESTILOS CSS (FAB A LA IZQUIERDA + SIN BORDE AZUL)
 # ==========================================
 st.markdown(f"""
     <style>
@@ -494,11 +494,11 @@ st.markdown(f"""
         padding-top: 4px;
     }}
 
-    /* FAB FLOTANTE CORTO Y NARANJA */
+    /* FAB FLOTANTE A LA IZQUIERDA, CORTO Y NARANJA */
     .st-key-btn_fab_ajustes {{
         position: fixed !important;
         bottom: 24px !important;
-        right: 24px !important;
+        left: 24px !important;
         z-index: 99999 !important;
         width: auto !important;
     }}
@@ -573,41 +573,41 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SCRIPT JS: WAKE LOCK + LIMPIEZA UI
+# SCRIPT JS: WAKE LOCK + LIMPIEZA UI + CONTROL SIDEBAR
 # ==========================================
-ocultar_marca_js = """
+ocultar_marca_js = f"""
 <script>
-async function iniciarUtilidades() {
-    if ('wakeLock' in navigator) {
-        try {
+async function iniciarUtilidades() {{
+    if ('wakeLock' in navigator) {{
+        try {{
             let wakeLock = await navigator.wakeLock.request('screen');
-            document.addEventListener('visibilitychange', async () => {
-                if (wakeLock !== null && document.visibilityState === 'visible') {
+            document.addEventListener('visibilitychange', async () => {{
+                if (wakeLock !== null && document.visibilityState === 'visible') {{
                     wakeLock = await navigator.wakeLock.request('screen');
-                }
-            });
-        } catch (err) {}
-    }
+                }}
+            }});
+        }} catch (err) {{}}
+    }}
 
     document.documentElement.style.colorScheme = 'dark';
 
-    function limpiarUI() {
+    function limpiarUI() {{
         const elementosAEliminar = document.querySelectorAll('footer, #MainMenu, header, [data-testid="stDecoration"], [data-testid="stStatusWidget"], .stAppDeployButton');
         elementosAEliminar.forEach(el => el.remove());
         
-        document.querySelectorAll('*').forEach(el => {
+        document.querySelectorAll('*').forEach(el => {{
             const txt = el.innerText || "";
-            if (txt.includes("Made with Streamlit") || txt.includes("Streamlit")) {
-                if (el.tagName === 'FOOTER' || el.tagName === 'DIV' && el.style.position === 'fixed') {
+            if (txt.includes("Made with Streamlit") || txt.includes("Streamlit")) {{
+                if (el.tagName === 'FOOTER' || el.tagName === 'DIV' && el.style.position === 'fixed') {{
                     el.remove();
-                }
-            }
-        });
-    }
+                }}
+            }}
+        }});
+    }}
     
     setInterval(limpiarUI, 1000);
     limpiarUI();
-}
+}}
 iniciarUtilidades();
 </script>
 """
@@ -778,14 +778,14 @@ def renderizar_aplicacion():
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
     # ==========================================
-    # BOTÓN FAB FLOTANTE PARA ABRIR/CERRAR EL DRAWER
+    # BOTÓN FAB FLOTANTE A LA IZQUIERDA
     # ==========================================
     if st.button("AJUSTES", key="btn_fab_ajustes"):
         st.session_state.drawer_abierto = not st.session_state.drawer_abierto
         st.rerun()
 
     # ==========================================
-    # BARRA LATERAL (DRAWER) CONDICIONAL
+    # MANEJO DEL DRAWER (SIDEBAR) SEGÚN ESTADO
     # ==========================================
     if st.session_state.drawer_abierto:
         with st.sidebar:
