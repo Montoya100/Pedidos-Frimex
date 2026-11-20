@@ -144,7 +144,7 @@ def alternar_urgente(producto):
     disparar_sync()
 
 # ==========================================
-# 3. ESTILOS CSS GENERALES Y MODO OSCURO FORZADO
+# 3. ESTILOS CSS GENERALES Y COMPACTOS
 # ==========================================
 st.markdown("""
     <style>
@@ -171,15 +171,19 @@ st.markdown("""
         max-width: 100% !important;
     }
 
-    /* FORZAR SELECTBOX A MODO OSCURO */
+    /* FORZAR SELECTBOX A NEGRO CON TEXTO BLANCO Y ALTURA COMPACTA */
     div[data-baseweb="select"] > div {
-        background-color: #151c2c !important;
+        background-color: #000000 !important;
         color: #ffffff !important;
-        border-color: rgba(255, 255, 255, 0.15) !important;
-        border-radius: 10px !important;
+        border-color: rgba(255, 255, 255, 0.2) !important;
+        border-radius: 8px !important;
+        min-height: 30px !important;
+        height: 30px !important;
     }
     div[data-baseweb="select"] span {
         color: #ffffff !important;
+        font-size: 10px !important;
+        font-weight: 800 !important;
     }
     div[data-baseweb="popover"], div[data-baseweb="menu"] {
         background-color: #111827 !important;
@@ -395,19 +399,21 @@ st.markdown("""
         box-shadow: none !important;
     }
 
+    /* BOTONES MÁS COMPACTOS Y ESTILIZADOS */
     div[data-testid="stButton"] button {
         background-color: #151c2c !important;
         background: #151c2c !important;
         color: #ffffff !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        border-radius: 10px !important;
+        border-radius: 8px !important;
         font-weight: 800 !important;
-        font-size: 10px !important;
-        letter-spacing: 0.8px !important;
+        font-size: 9px !important;
+        letter-spacing: 0.6px !important;
         text-transform: uppercase !important;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.25) !important;
-        height: 36px !important;
-        min-height: 36px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        padding: 0px 6px !important;
     }
 
     div[data-testid="stButton"] button:hover {
@@ -801,7 +807,7 @@ def renderizar_aplicacion():
             st.info("No hay tickets disponibles para mostrar en este periodo.")
 
     # ==========================================
-    # SECCIÓN 2: PANEL DE AJUSTES (SIN ASIGNACIÓN REDUNDANTE)
+    # SECCIÓN 2: PANEL DE AJUSTES
     # ==========================================
     elif st.session_state.vista_local == "AJUSTES":
         st.markdown("### PANEL DE AJUSTES Y CONFIGURACIÓN")
@@ -1067,7 +1073,7 @@ def renderizar_aplicacion():
                                     </div>
                                 """, unsafe_allow_html=True)
 
-                                col_f1, col_f2 = st.columns([0.45, 0.55])
+                                col_f1, col_f2 = st.columns([0.48, 0.52])
                                 with col_f1:
                                     if st.button(texto_estado, key=f"tarjeta_btn_{producto}", use_container_width=True):
                                         alternar_estado(producto, cant_total)
