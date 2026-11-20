@@ -52,7 +52,7 @@ def obtener_estado_global():
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False,
-        "version_estado": 0
+        "version_asignaciones": 0
     }
 
 estado_global = obtener_estado_global()
@@ -115,10 +115,9 @@ def alternar_estado(producto, cantidad_actual):
 def asignar_colaborador(producto, colaborador):
     if colaborador and colaborador != "NINGUNO":
         estado_global["asignaciones_productos"][producto] = colaborador
-        st.toast(f"Asignado a {colaborador}")
     else:
         estado_global["asignaciones_productos"].pop(producto, None)
-        st.toast("Asignación retirada")
+    estado_global["version_asignaciones"] += 1
 
 def alternar_urgente(producto):
     if producto in estado_global["urgentes_activos"]:
@@ -247,20 +246,6 @@ st.markdown("""
 
     @keyframes pulseDot { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
 
-    @keyframes pulseGlow {
-        0% { box-shadow: 0 0 5px rgba(0, 119, 237, 0.4); border-color: #0077ed; }
-        50% { box-shadow: 0 0 15px rgba(0, 119, 237, 0.8); border-color: #3b82f6; }
-        100% { box-shadow: 0 0 5px rgba(0, 119, 237, 0.4); border-color: #0077ed; }
-    }
-
-    .anim-pulso-nuevo { animation: pulseGlow 1.2s infinite ease-in-out !important; }
-
-    .txt-incremento {
-        display: inline-block; background-color: rgba(0, 119, 237, 0.25); color: #60a5fa;
-        font-size: 13px !important; font-weight: 800 !important; padding: 1px 6px;
-        border-radius: 6px; margin-left: 4px; border: 1px solid rgba(0, 119, 237, 0.4); vertical-align: middle;
-    }
-
     .metrics-row {
         display: flex; justify-content: space-around; align-items: center;
         background: #111827; border-radius: 14px; padding: 8px 12px 10px 12px;
@@ -327,8 +312,6 @@ st.markdown("""
         text-decoration-thickness: 2px !important;
         text-decoration-color: rgba(255, 255, 255, 0.8) !important;
     }
-
-    .card-master-reciente { background: #1d4ed8 !important; border: 1px solid rgba(96, 165, 250, 0.4) !important; color: #ffffff !important; }
 
     .card-master-title {
         font-size: 15px !important;
@@ -401,9 +384,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 4. CONSULTA A LA API DE LOYVERSE
+# 4. CONSULTA A LA API DE LOYVERSE (CACHÉ ESTABLE)
 # ==========================================
-@st.cache_data(ttl=5, show_spinner=False)
+@st.cache_data(ttl=10, show_spinner=False)
 def obtener_recibos_hoy_cached(created_at_min_str):
     url = "https://api.loyverse.com/v1.0/receipts"
     params = {"created_at_min": created_at_min_str, "limit": 250}
@@ -433,7 +416,7 @@ def obtener_recibos_hoy():
     return obtener_recibos_hoy_cached(created_at_min)
 
 # ==========================================
-# 5. RENDERIZADO PRINCIPAL ESTABLE (SIN BUCLES DE PARPADEO)
+# 5. RENDERIZADO PRINCIPAL ESTABLE CON FRAGMENTO DE ASIGNACIONES
 # ==========================================
 def renderizar_aplicacion():
     recibos = obtener_recibos_hoy()
@@ -505,9 +488,6 @@ def renderizar_aplicacion():
     if "popups_nuevos" not in st.session_state:
         st.session_state.popups_nuevos = {}
 
-    if "reproducido_modal_audio" not in st.session_state:
-        st.session_state.reproducido_modal_audio = False
-
     if "num_campos_colab" not in st.session_state:
         st.session_state.num_campos_colab = max(6, len(estado_global["colaboradores"]))
 
@@ -515,7 +495,7 @@ def renderizar_aplicacion():
     ahora_mexico = datetime.now(tz_mexico)
     hora_mexico_12h = ahora_mexico.strftime("%I:%M:%S %p")
 
-    # CÁLCULO DE PENDIENTES
+    # CÁLCULO DE PENDIENTes
     piezas_totales = sum([1 if p in infinitos_activos else c for p, c in conteo_productos.items()])
     piezas_pendientes = 0
     
@@ -532,9 +512,9 @@ def renderizar_aplicacion():
                 piezas_pendientes += (cant_total - cant_marcada)
 
     # ==========================================
-    # ENCABEZADO PRINCIPAL Y BOTÓN DE ACTUALIZACIÓN MANUAL
+    # ENCABEZADO PRINCIPAL (SIN BOTÓN DE SYNC)
     # ==========================================
-    col_hdr_left, col_hdr_mid, col_hdr_right = st.columns([0.40, 0.18, 0.42])
+    col_hdr_left, col_hdr_mid, col_hdr_right = st.columns([0.45, 0.20, 0.35])
     
     with col_hdr_left:
         st.markdown(f"""
@@ -562,23 +542,18 @@ def renderizar_aplicacion():
         """, unsafe_allow_html=True)
 
     with col_hdr_right:
-        c_nav1, c_nav2, c_nav3, c_nav4 = st.columns(4)
+        c_nav1, c_nav2, c_nav3 = st.columns(3)
         with c_nav1:
-            if st.button("TAB", use_container_width=True, type="primary" if st.session_state.vista_local == "TABLERO" else "secondary"):
+            if st.button("TABLERO", use_container_width=True, type="primary" if st.session_state.vista_local == "TABLERO" else "secondary"):
                 st.session_state.vista_local = "TABLERO"
                 st.rerun()
         with c_nav2:
-            if st.button("TICK", use_container_width=True, type="primary" if st.session_state.vista_local == "TICKETS" else "secondary"):
+            if st.button("TICKETS", use_container_width=True, type="primary" if st.session_state.vista_local == "TICKETS" else "secondary"):
                 st.session_state.vista_local = "TICKETS"
                 st.rerun()
         with c_nav3:
-            if st.button("AJUS", use_container_width=True, type="primary" if st.session_state.vista_local == "AJUSTES" else "secondary"):
+            if st.button("AJUSTES", use_container_width=True, type="primary" if st.session_state.vista_local == "AJUSTES" else "secondary"):
                 st.session_state.vista_local = "AJUSTES"
-                st.rerun()
-        with c_nav4:
-            if st.button("🔄 SYNC", use_container_width=True):
-                st.cache_data.clear()
-                st.toast("Datos sincronizados con Loyverse")
                 st.rerun()
 
     # ==========================================
@@ -961,13 +936,9 @@ def renderizar_aplicacion():
                     producto, cant_total = item
                     es_urgente = producto in urgentes_activos
                     es_infinito = producto in infinitos_activos
-                    ultima_upd = st.session_state.tiempos_actualizacion.get(producto)
-                    es_reciente = bool(ultima_upd and (ahora_utc - ultima_upd).total_seconds() < 120 and not es_infinito)
                     
                     if es_urgente:
                         prioridad = 0
-                    elif es_reciente:
-                        prioridad = 1
                     else:
                         prioridad = 2
                         
