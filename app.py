@@ -59,7 +59,8 @@ def obtener_estado_global():
         "asignaciones_productos": {}, # {producto: nombre_colaborador}
         "urgentes_activos": set(),    # Productos marcados como urgentes
         "tickets_completados_items": set(), # IDs únicos de items de tickets marcados como listos
-        "vista_actual": "TABLERO",    # "TABLERO" o "TICKETS"
+        "titulos_personalizados_tickets": {}, # {ticket_id: custom_name}
+        "vista_actual": "TABLERO",    # SIEMPRE INICIA EN "TABLERO"
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False
@@ -77,6 +78,7 @@ def borrar_todo():
         "asignaciones_productos": estado_global["asignaciones_productos"].copy(),
         "urgentes_activos": estado_global["urgentes_activos"].copy(),
         "tickets_completados_items": estado_global["tickets_completados_items"].copy(),
+        "titulos_personalizados_tickets": estado_global["titulos_personalizados_tickets"].copy(),
         "hora_corte_utc": estado_global["hora_corte_utc"]
     }
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
@@ -86,6 +88,7 @@ def borrar_todo():
     estado_global["asignaciones_productos"].clear()
     estado_global["urgentes_activos"].clear()
     estado_global["tickets_completados_items"].clear()
+    estado_global["titulos_personalizados_tickets"].clear()
     estado_global["notas_tablero"] = ["", "", ""]
     estado_global["descartar_celebracion"] = False
     st.toast("Tablero limpiado y barrera de corte establecida")
@@ -100,6 +103,7 @@ def restaurar_estado():
         estado_global["asignaciones_productos"] = estado_global["respaldo"]["asignaciones_productos"].copy()
         estado_global["urgentes_activos"] = estado_global["respaldo"]["urgentes_activos"].copy()
         estado_global["tickets_completados_items"] = estado_global["respaldo"]["tickets_completados_items"].copy()
+        estado_global["titulos_personalizados_tickets"] = estado_global["respaldo"]["titulos_personalizados_tickets"].copy()
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
         estado_global["descartar_celebracion"] = False
@@ -247,7 +251,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS (FAB IZQUIERDO COMPACTO + BOTONES TICKETS)
+# 3. ESTILOS CSS (FAB IZQUIERDO + TACHADO EN TICKETS)
 # ==========================================
 st.markdown(f"""
     <style>
@@ -786,13 +790,12 @@ def renderizar_aplicacion():
         st.session_state.ultimo_conteo = conteo_productos.copy()
 
     # ==========================================
-    # BOTÓN FAB FLOTANTE A LA IZQUIERDA (DISPARADOR SIDEBAR WEB/MÓVIL)
+    # BOTÓN FAB FLOTANTE A LA IZQUIERDA
     # ==========================================
     if st.button("AJUSTES", key="btn_fab_ajustes"):
         st.session_state.drawer_abierto = not st.session_state.drawer_abierto
         st.rerun()
 
-    # Script JS específico para forzar la apertura/cierre del sidebar nativo de Streamlit en web
     if st.session_state.drawer_abierto:
         components.html("""
         <script>
@@ -806,7 +809,7 @@ def renderizar_aplicacion():
         """, height=0, width=0)
 
     # ==========================================
-    # BARRA LATERAL (DRAWER) CON REPORTE DE COLABORADORES
+    # BARRA LATERAL (DRAWER)
     # ==========================================
     with st.sidebar:
         st.markdown("### PANEL DE AJUSTES")
@@ -818,7 +821,7 @@ def renderizar_aplicacion():
 
         st.markdown("---")
         
-        # Botón para la gestión independiente de tickets
+        # Botones de navegación entre Tablero y Gestión de Tickets
         if estado_global["vista_actual"] == "TABLERO":
             if st.button("GESTIÓN DE TICKETS", use_container_width=True, type="primary"):
                 estado_global["vista_actual"] = "TICKETS"
@@ -950,15 +953,10 @@ def renderizar_aplicacion():
                             st.toast(f"Borrado: {p_nombre}")
                             st.rerun()
 
-        # ==========================================
-        # REPORTE DE PRODUCTIVIDAD DE COLABORADORES
-        # ==========================================
+        # Ranking de Colaboradores
         st.markdown("---")
         st.markdown("#### 🏆 Ranking de Colaboradores")
-        conteo_colab = {}
-        for colab in estado_global["colaboradores"]:
-            conteo_colab[colab] = 0
-
+        conteo_colab = {colab: 0 for colab in estado_global["colaboradores"]}
         for prod, colab_asig in estado_global["asignaciones_productos"].items():
             if colab_asig in conteo_colab:
                 cant_prod = conteo_productos.get(prod, 1)
@@ -1029,7 +1027,6 @@ def renderizar_aplicacion():
             </div>
         """, unsafe_allow_html=True)
 
-    # RENDERIZAR NOTAS ACTIVAS DESGLOSADAS SI APLICA
     notas_filtradas = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
     if notas_filtradas and st.session_state.get("desglosar_notas", False):
         for num_nota, nota_txt in notas_filtradas:
@@ -1066,20 +1063,54 @@ def renderizar_aplicacion():
     """, unsafe_allow_html=True)
 
     # ==========================================
-    # VISTA 1: GESTIÓN INDEPENDIENTE DE TICKETS DESGLOSADOS
+    # VISTA 1: GESTIÓN DE TICKETS (SEPARADOS: PENDIENTES VS COMPLETADOS)
     # ==========================================
     if estado_global["vista_actual"] == "TICKETS":
-        st.markdown("### GESTIÓN INDEPENDIENTE DE TICKETS")
-        st.markdown("<p style='color: #9ca3af; font-size: 12px;'>Marca los productos terminados por cada ticket o actívalos como urgentes (🔥) para enviarlos al tablero principal.</p>", unsafe_allow_html=True)
+        st.markdown("### GESTIÓN DE TICKETS INDIVIDUALES")
+        st.markdown("<p style='color: #9ca3af; font-size: 12px;'>Los tickets completamente listos se mueven automáticamente al apartado inferior para liberar espacio.</p>", unsafe_allow_html=True)
         
         if recibos:
+            tickets_pendientes_lista = []
+            tickets_completados_lista = []
+
             for idx_recibo, recibo in enumerate(recibos):
                 ticket_id = recibo.get("id", str(idx_recibo))
+                line_items = recibo.get("line_items", [])
+                
+                # Verificar si todos los items del ticket están marcados
+                todos_listos = True
+                if line_items:
+                    for idx_item, item in enumerate(line_items):
+                        nombre = item.get("item_name", "Producto")
+                        variante = item.get("variant_name")
+                        nombre_completo = f"{nombre} ({variante})" if variante and variante != "Default" else nombre
+                        item_key_uid = f"{ticket_id}_{idx_item}_{nombre_completo}"
+                        if item_key_uid not in estado_global["tickets_completados_items"]:
+                            todos_listos = False
+                            break
+                else:
+                    todos_listos = False
+
+                if todos_listos and len(line_items) > 0:
+                    tickets_completados_lista.append((idx_recibo, recibo, ticket_id))
+                else:
+                    tickets_pendientes_lista.append((idx_recibo, recibo, ticket_id))
+
+            def renderizar_bloque_ticket(idx_recibo, recibo, ticket_id, completado=False):
                 receipt_number = recibo.get("receipt_number", f"#{idx_recibo + 1}")
                 created_at_str = recibo.get("receipt_date") or recibo.get("created_at", "")
                 
-                # Obtener nombre del cliente si está disponible en el recibo de Loyverse
+                # Cliente y Comentarios
                 customer_name = recibo.get("customer_name") or recibo.get("customer", {}).get("name")
+                note_recibo = recibo.get("note") or recibo.get("comment") or ""
+                
+                titulo_custom = estado_global["titulos_personalizados_tickets"].get(ticket_id)
+                if titulo_custom:
+                    titulo_principal = titulo_custom
+                else:
+                    titulo_principal = customer_name.upper() if customer_name else f"TICKET {receipt_number}"
+
+                sub_detalle = f"TICKET {receipt_number}" if customer_name or titulo_custom else f"HORA: "
                 
                 try:
                     dt_ticket = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
@@ -1089,21 +1120,32 @@ def renderizar_aplicacion():
 
                 line_items = recibo.get("line_items", [])
                 
+                bg_color = "#0f172a" if completado else "#111827"
+                border_color = "rgba(52, 199, 89, 0.4)" if completado else "rgba(255,255,255,0.08)"
+                
                 with st.container():
-                    # TÍTULO DEL TICKET / CLIENTE EN LETRAS GRANDES
-                    titulo_principal = customer_name.upper() if customer_name else f"TICKET {receipt_number}"
-                    sub_detalle = f"TICKET {receipt_number}" if customer_name else f"HORA: {hora_ticket}"
-
                     st.markdown(f"""
-                        <div style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; margin-bottom: 12px;">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+                        <div style="background: {bg_color}; border: 1px solid {border_color}; border-radius: 12px; padding: 14px; margin-bottom: 12px; opacity: {'0.85' if completado else '1'};">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
                                 <div>
-                                    <div style="font-weight: 900; color: #ffffff; font-size: 17px; letter-spacing: 0.5px; text-transform: uppercase;">{titulo_principal}</div>
-                                    <div style="font-weight: 700; color: #38bdf8; font-size: 11px; margin-top: 2px;">{sub_detalle}</div>
+                                    <div style="font-weight: 900; color: {'#34c759' if completado else '#ffffff'}; font-size: 17px; letter-spacing: 0.5px; text-transform: uppercase;">{titulo_principal}</div>
+                                    <div style="font-weight: 700; color: #38bdf8; font-size: 11px; margin-top: 2px;">{sub_detalle} {f'({receipt_number})' if customer_name or titulo_custom else ''}</div>
+                                    {f'<div style="font-style: italic; color: #fbbf24; font-size: 11px; margin-top: 4px;">💬 Nota: {note_recibo}</div>' if note_recibo else ''}
                                 </div>
                                 <span style="font-size: 11px; color: #9ca3af; font-weight: 700; background: #151c2c; padding: 3px 8px; border-radius: 6px;">{hora_ticket}</span>
                             </div>
                     """, unsafe_allow_html=True)
+
+                    # Opción para editar el título del ticket si se desea personalizar
+                    with st.expander(f"Editar nombre del ticket #{receipt_number}"):
+                        nuevo_nombre_ticket = st.text_input("Nombre o alias personalizado:", value=titulo_custom if titulo_custom else (customer_name if customer_name else ""), key=f"edit_title_{ticket_id}")
+                        if st.button("Guardar Nombre", key=f"btn_save_title_{ticket_id}"):
+                            if nuevo_nombre_ticket.strip():
+                                estado_global["titulos_personalizados_tickets"][ticket_id] = nuevo_nombre_ticket.strip().upper()
+                            else:
+                                estado_global["titulos_personalizados_tickets"].pop(ticket_id, None)
+                            st.toast("Nombre de ticket actualizado")
+                            st.rerun()
 
                     for idx_item, item in enumerate(line_items):
                         nombre = item.get("item_name", "Producto")
@@ -1124,7 +1166,9 @@ def renderizar_aplicacion():
                         col_t1, col_t2, col_t3 = st.columns([0.60, 0.25, 0.15])
                         
                         with col_t1:
-                            chk_val = st.checkbox(f"{cant_num}x **{nombre_completo}**", value=esta_listo, key=f"chk_ticket_{item_key_uid}")
+                            # Producto tachado si esta_listo es True
+                            label_chk = f"~~{cant_num}x {nombre_completo}~~" if esta_listo else f"{cant_num}x **{nombre_completo}**"
+                            chk_val = st.checkbox(label_chk, value=esta_listo, key=f"chk_ticket_{item_key_uid}")
                             if chk_val != esta_listo:
                                 if chk_val:
                                     estado_global["tickets_completados_items"].add(item_key_uid)
@@ -1144,18 +1188,31 @@ def renderizar_aplicacion():
                             st.markdown(f"<div style='text-align: right; font-size: 11px; font-weight: 900; color: {color_txt}; padding-top: 6px;'>{estado_txt}</div>", unsafe_allow_html=True)
 
                     st.markdown("</div>", unsafe_allow_html=True)
-                    
-                    # DIVISOR VISIBLE ENTRE TICKET Y TICKET
                     st.markdown("<hr style='border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 16px 0;'>", unsafe_allow_html=True)
 
-            # SECCIÓN PARA AGREGAR NOTAS RÁPIDAS DESDE GESTIÓN DE TICKETS
+            # RENDERIZAR PENDIENTES PRIMERO
+            if tickets_pendientes_lista:
+                st.markdown("#### ⏳ Tickets Pendientes de Producción")
+                for idx_recibo, recibo, ticket_id in tickets_pendientes_lista:
+                    renderizar_bloque_ticket(idx_recibo, recibo, ticket_id, completado=False)
+
+            # RENDERIZAR COMPLETADOS AL FONDO
+            if tickets_completados_lista:
+                st.markdown("""
+                    <div class="divider-completados" style="margin: 24px 0 12px 0;">
+                        <span>TICKETS COMPLETADOS Y CONCRETADOS</span>
+                    </div>
+                """, unsafe_allow_html=True)
+                for idx_recibo, recibo, ticket_id in tickets_completados_lista:
+                    renderizar_bloque_ticket(idx_recibo, recibo, ticket_id, completado=True)
+
+            # SECCIÓN PARA AGREGAR NOTAS RÁPIDAS
             st.markdown("#### Agregar Nota al Tablero Principal")
             with st.form("form_nota_rapida_tickets", clear_on_submit=True):
                 nueva_nota_txt = st.text_input("Escribe una nota rápida para el banner superior:")
                 btn_enviar_nota_ticket = st.form_submit_button("Publicar Nota en Tablero", use_container_width=True)
 
                 if btn_enviar_nota_ticket and nueva_nota_txt.strip():
-                    # Desplazar notas existentes y colocar la nueva en la primera posición
                     notas_actuales = estado_global["notas_tablero"]
                     nuevas_notas = [nueva_nota_txt.strip().upper(), notas_actuales[0], notas_actuales[1]]
                     estado_global["notas_tablero"] = nuevas_notas
@@ -1168,7 +1225,7 @@ def renderizar_aplicacion():
             st.info("No hay tickets disponibles para mostrar en este periodo.")
 
     # ==========================================
-    # VISTA 2: TABLA DE PRODUCCIÓN PRINCIPAL
+    # VISTA 2: TABLA DE PRODUCCIÓN PRINCIPAL (VISTA POR DEFECTO)
     # ==========================================
     else:
         if conteo_productos and piezas_pendientes == 0 and not estado_global["descartar_celebracion"]:
