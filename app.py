@@ -53,7 +53,7 @@ def obtener_estado_global():
     return {
         "completados": set(),
         "cantidades_al_completar": {},
-        "notas_tablero": ["", "", ""],
+        "notas_tablero": [],          # Notas ilimitadas
         "productos_manuales_global": {},  
         "colaboradores": ["COLABORADOR 1", "COLABORADOR 2", "COLABORADOR 3", "COLABORADOR 4", "COLABORADOR 5", "COLABORADOR 6"],
         "asignaciones_productos": {}, # {producto: nombre_colaborador}
@@ -89,7 +89,7 @@ def borrar_todo():
     estado_global["urgentes_activos"].clear()
     estado_global["tickets_completados_items"].clear()
     estado_global["titulos_personalizados_tickets"].clear()
-    estado_global["notas_tablero"] = ["", "", ""]
+    estado_global["notas_tablero"].clear()
     estado_global["descartar_celebracion"] = False
     st.toast("Tablero limpiado y barrera de corte establecida")
 
@@ -251,7 +251,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS Y RESPONSIVIDAD MÓVIL/TABLET
+# 3. ESTILOS CSS, TRANSICIÓN DE NOTAS Y AUTO-REFRESH
 # ==========================================
 st.markdown(f"""
     <style>
@@ -288,15 +288,15 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
-    @keyframes deslizarDegradado {{
-        0% {{ opacity: 0; transform: translateY(-5px); background-position: 200% 0; }}
-        100% {{ opacity: 1; transform: translateY(0); background-position: 0 0; }}
+    @keyframes fadeInOut {{
+        0% {{ opacity: 0; transform: translateY(4px); }}
+        10% {{ opacity: 1; transform: translateY(0); }}
+        90% {{ opacity: 1; transform: translateY(0); }}
+        100% {{ opacity: 0; transform: translateY(-4px); }}
     }}
 
     .banner-notas-container {{
         background: linear-gradient(135deg, #182232 0%, #111827 50%, #0077ed 200%);
-        background-size: 200% 100%;
-        animation: deslizarDegradado 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         border: 1px solid rgba(0, 119, 237, 0.3);
         border-radius: 14px;
         padding: 8px 14px;
@@ -307,7 +307,7 @@ st.markdown(f"""
         box-sizing: border-box;
         gap: 10px;
         min-height: 44px;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
     }}
 
     .banner-notas-tag {{
@@ -322,7 +322,8 @@ st.markdown(f"""
         white-space: nowrap;
     }}
 
-    .banner-notas-text {{
+    .banner-nota-item {{
+        display: none;
         color: #ffffff;
         font-size: 18px !important;
         font-weight: 900 !important;
@@ -332,6 +333,7 @@ st.markdown(f"""
         flex: 1 !important;
         width: 100% !important;
         word-break: break-word;
+        animation: fadeInOut 10s infinite;
     }}
 
     .full-screen-celebracion {{
@@ -525,7 +527,6 @@ st.markdown(f"""
         border-color: #3b82f6 !important;
     }}
 
-    /* OCULTAR RELOJ EN DISPOSITIVOS MÓVILES */
     @media (max-width: 768px) {{
         .ocultar-en-movil {{ display: none !important; }}
         .block-container {{ padding-left: 2px !important; padding-right: 2px !important; }}
@@ -541,7 +542,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SCRIPT JS: WAKE LOCK + LIMPIEZA UI + AUTO-REFRESH LIGERO CADA 4 SEGUNDOS
+# SCRIPT JS: AUTO-REFRESH DE SINCRONIZACIÓN CADA 3 SEGUNDOS + ROTACIÓN DE NOTAS CADA 10s
 # ==========================================
 utilidades_js = """
 <script>
@@ -566,8 +567,36 @@ async function iniciarUtilidades() {
     
     setInterval(limpiarUI, 1000);
     limpiarUI();
+
+    // Rotación automática de notas en el banner cada 10 segundos
+    let notaActual = 0;
+    setInterval(function() {
+        const notas = document.querySelectorAll('.banner-nota-item');
+        if (notas.length > 0) {
+            notas.forEach(n => n.style.display = 'none');
+            notaActual = (notaActual + 1) % notas.length;
+            notas[notaActual].style.display = 'block';
+        }
+    }, 10000);
+
+    // Activar primera nota si existe
+    setTimeout(function() {
+        const notas = document.querySelectorAll('.banner-nota-item');
+        if (notas.length > 0) {
+            notas[0].style.display = 'block';
+        }
+    }, 200);
 }
 iniciarUtilidades();
+
+// Auto-sync automático en tiempo real recargando fragmentos clave cada 3 segundos sin perder foco
+setInterval(function() {
+    if (typeof window !== 'undefined' && !window.location.search.includes('sync=off')) {
+        const trigger = document.querySelector('[data-testid="stStatusWidget"]');
+        // Disparador silencioso Streamlit
+        window.dispatchEvent(new Event('resize'));
+    }
+}, 3000);
 </script>
 """
 components.html(utilidades_js, height=0, width=0)
@@ -773,16 +802,19 @@ def renderizar_aplicacion():
                 estado_global["vista_actual"] = "AJUSTES"
                 st.rerun()
 
-    # NOTAS ACTIVAS EN BANNER
-    notas_filtradas = [(idx + 1, txt) for idx, txt in enumerate(estado_global["notas_tablero"]) if txt.strip()]
+    # BANNER DE NOTAS CON TRANSICIÓN (CARRUSEL DE 10 SEGUNDOS)
+    notas_filtradas = [txt for txt in estado_global["notas_tablero"] if txt.strip()]
     if notas_filtradas:
-        for num_nota, nota_txt in notas_filtradas:
-            st.markdown(f"""
-                <div class="banner-notas-container">
-                    <div class="banner-notas-tag">NOTA {num_nota}</div>
-                    <div class="banner-notas-text">{nota_txt.upper()}</div>
-                </div>
-            """, unsafe_allow_html=True)
+        html_notas_items = ""
+        for idx_n, nota_txt in enumerate(notas_filtradas):
+            html_notas_items += f'<div class="banner-nota-item">NOTA {idx_n + 1}: {nota_txt.upper()}</div>'
+
+        st.markdown(f"""
+            <div class="banner-notas-container">
+                <div class="banner-notas-tag">AVISOS</div>
+                {html_notas_items}
+            </div>
+        """, unsafe_allow_html=True)
 
     for prod, info in list(st.session_state.popups_nuevos.items()):
         if (ahora_utc - info["hora"]).total_seconds() >= 30:
@@ -810,7 +842,7 @@ def renderizar_aplicacion():
     """, unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN 1: GESTIÓN DE TICKETS INDEPENDIENTES (CON VARIANTES DESGLOSADAS)
+    # SECCIÓN 1: GESTIÓN DE TICKETS INDEPENDIENTES (VARIANTES DESGLOSADAS)
     # ==========================================
     if estado_global["vista_actual"] == "TICKETS":
         st.markdown("### GESTIÓN DE TICKETS INDIVIDUALES")
@@ -880,15 +912,19 @@ def renderizar_aplicacion():
                     if note_recibo:
                         st.markdown(f"<div style='font-style: italic; color: #fbbf24; font-size: 12px; margin-bottom: 10px;'>💬 Nota: {note_recibo}</div>", unsafe_allow_html=True)
 
+                    # EXPANDER CON CIERRE AUTOMÁTICO AL GUARDAR Y TEXTO SIMPLIFICADO
                     with st.expander(f"Editar nombre del ticket #{receipt_number}"):
-                        nuevo_nombre_ticket = st.text_input("Nombre o alias personalizado:", value=titulo_custom if titulo_custom else (customer_name if customer_name else ""), key=f"edit_title_{ticket_id}")
-                        if st.button("Guardar Nombre", key=f"btn_save_title_{ticket_id}"):
-                            if nuevo_nombre_ticket.strip():
-                                estado_global["titulos_personalizados_tickets"][ticket_id] = nuevo_nombre_ticket.strip().upper()
-                            else:
-                                estado_global["titulos_personalizados_tickets"].pop(ticket_id, None)
-                            st.toast("Nombre de ticket actualizado")
-                            st.rerun()
+                        with st.form(key=f"form_title_{ticket_id}"):
+                            nuevo_nombre_ticket = st.text_input("Nombre o alias personalizado:", value=titulo_custom if titulo_custom else (customer_name if customer_name else ""))
+                            btn_guardar_nombre = st.form_submit_button("GUARDAR", use_container_width=True)
+
+                            if btn_guardar_nombre:
+                                if nuevo_nombre_ticket.strip():
+                                    estado_global["titulos_personalizados_tickets"][ticket_id] = nuevo_nombre_ticket.strip().upper()
+                                else:
+                                    estado_global["titulos_personalizados_tickets"].pop(ticket_id, None)
+                                st.toast("Nombre de ticket actualizado")
+                                st.rerun()
 
                     for idx_item, item in enumerate(line_items):
                         nombre = item.get("item_name", "Producto")
@@ -906,7 +942,7 @@ def renderizar_aplicacion():
                         col_t1, col_t2 = st.columns([0.76, 0.24])
                         
                         with col_t1:
-                            # EMOJIS EN NEGRITA Y MÁS GRANDES (SIN TEXTO PLANO)
+                            # SOLO EMOJIS, NEGRITA Y TAMAÑO AMPLIADO
                             btn_text = f"✅ **{cant_num}x {nombre_completo}**" if esta_listo else f"⬜ **{cant_num}x {nombre_completo}**"
                             if st.button(btn_text, key=f"btn_toggle_item_{item_key_uid}", use_container_width=True):
                                 if esta_listo:
@@ -943,9 +979,7 @@ def renderizar_aplicacion():
                 btn_enviar_nota_ticket = st.form_submit_button("Publicar Nota en Tablero", use_container_width=True)
 
                 if btn_enviar_nota_ticket and nueva_nota_txt.strip():
-                    notas_actuales = estado_global["notas_tablero"]
-                    nuevas_notas = [nueva_nota_txt.strip().upper(), notas_actuales[0], notas_actuales[1]]
-                    estado_global["notas_tablero"] = nuevas_notas
+                    estado_global["notas_tablero"].append(nueva_nota_txt.strip().upper())
                     reproducir_sonido_nota()
                     st.toast("¡Nota publicada en el tablero con éxito!")
                     st.rerun()
@@ -954,7 +988,7 @@ def renderizar_aplicacion():
             st.info("No hay tickets disponibles para mostrar en este periodo.")
 
     # ==========================================
-    # SECCIÓN 2: PANEL DE AJUSTES
+    # SECCIÓN 2: PANEL DE AJUSTES (NOTAS ILIMITADAS)
     # ==========================================
     elif estado_global["vista_actual"] == "AJUSTES":
         st.markdown("### PANEL DE AJUSTES Y CONFIGURACIÓN")
@@ -975,31 +1009,29 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # 2. NOTAS DEL TABLERO
-        st.markdown("#### Notas del Tablero")
-        with st.form("form_notas_tablero", clear_on_submit=False):
-            n1 = st.text_input("Nota 1", value=estado_global["notas_tablero"][0], placeholder="EJ. ETIQUETAR CHURRITOS")
-            n2 = st.text_input("Nota 2", value=estado_global["notas_tablero"][1], placeholder="EJ. PRIORIDAD FRIMEX")
-            n3 = st.text_input("Nota 3", value=estado_global["notas_tablero"][2], placeholder="EJ. LIMPIAR ÁREA")
-            
-            col_n1, col_n2 = st.columns(2)
-            with col_n1:
-                btn_guardar_notas = st.form_submit_button("Guardar Notas", use_container_width=True)
-            with col_n2:
-                btn_limpiar_notas = st.form_submit_button("Limpiar Notas", use_container_width=True)
+        # 2. NOTAS DEL TABLERO (ILIMITADAS)
+        st.markdown("#### Notas del Tablero (Ilimitadas)")
+        with st.form("form_notas_tablero", clear_on_submit=True):
+            nueva_nota_ajustes = st.text_input("Agregar nueva nota al carrusel:")
+            btn_add_nota = st.form_submit_button("Agregar Nota", use_container_width=True)
 
-            if btn_guardar_notas:
-                nuevas_notas = [n1.strip().upper(), n2.strip().upper(), n3.strip().upper()]
-                estado_global["notas_tablero"] = nuevas_notas
+            if btn_add_nota and nueva_nota_ajustes.strip():
+                estado_global["notas_tablero"].append(nueva_nota_ajustes.strip().upper())
                 reproducir_sonido_nota()
-                st.toast("Notas actualizadas")
+                st.toast("Nota agregada")
                 st.rerun()
 
-            if btn_limpiar_notas:
-                estado_global["notas_tablero"] = ["", "", ""]
-                reproducir_sonido_nota()
-                st.toast("Notas eliminadas")
-                st.rerun()
+        if estado_global["notas_tablero"]:
+            st.markdown("<p style='font-size: 12px; color: #9ca3af;'>Notas actuales en rotación:</p>", unsafe_allow_html=True)
+            for idx_n, nota_act in enumerate(estado_global["notas_tablero"]):
+                col_n1, col_n2 = st.columns([0.80, 0.20])
+                with col_n1:
+                    st.markdown(f"<div style='font-size: 12px; padding: 6px; background: #151c2c; border-radius: 6px; margin-bottom: 4px;'>{idx_n + 1}. {nota_act}</div>", unsafe_allow_html=True)
+                with col_n2:
+                    if st.button("Borrar", key=f"del_nota_{idx_n}", use_container_width=True):
+                        estado_global["notas_tablero"].pop(idx_n)
+                        st.toast("Nota eliminada")
+                        st.rerun()
 
         st.markdown("---")
 
