@@ -144,7 +144,7 @@ def alternar_urgente(producto):
     disparar_sync()
 
 # ==========================================
-# 3. ESTILOS CSS (5 COLUMNAS Y BOTONES AZUL MARINO)
+# 3. ESTILOS CSS (FORZAR #121827 EN BOTONES Y SELECTORES)
 # ==========================================
 st.markdown("""
     <style>
@@ -171,9 +171,9 @@ st.markdown("""
         max-width: 100% !important;
     }
 
-    /* FORZAR SELECTBOX DE ASIGNACIÓN CON EL MISMO AZUL MARINO DEL BANNER */
+    /* FORZAR SELECTBOX A #121827 CON TEXTO BLANCO */
     div[data-baseweb="select"] > div {
-        background-color: #0077ed !important;
+        background-color: #121827 !important;
         color: #ffffff !important;
         border-color: rgba(255, 255, 255, 0.25) !important;
         border-radius: 8px !important;
@@ -200,7 +200,7 @@ st.markdown("""
     }
 
     .banner-notas-container {
-        background: #111827 !important;
+        background: #121827 !important;
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 12px;
         padding: 8px 12px;
@@ -215,7 +215,7 @@ st.markdown("""
     }
 
     .banner-notas-tag {
-        background: #0077ed;
+        background: #121827;
         color: #ffffff;
         font-weight: 900;
         font-size: 10px !important;
@@ -225,6 +225,7 @@ st.markdown("""
         text-transform: uppercase;
         white-space: nowrap;
         flex-shrink: 0;
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .banner-nota-texto {
@@ -277,7 +278,7 @@ st.markdown("""
     .sync-text-inline { color: #38bdf8; font-weight: 700; }
 
     .header-clock-large {
-        background: #151c2c; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 6px 12px;
+        background: #121827; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 6px 12px;
         color: #ffffff !important; font-size: 16px !important; font-weight: 900 !important;
         letter-spacing: 0.8px; display: flex; align-items: center; gap: 6px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.3); white-space: nowrap;
@@ -291,16 +292,16 @@ st.markdown("""
     @keyframes pulseDot { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
 
     @keyframes pulseBlue {
-        0% { box-shadow: 0 0 4px rgba(0, 119, 237, 0.5); border-color: #0077ed; }
-        50% { box-shadow: 0 0 14px rgba(0, 119, 237, 0.9); border-color: #60a5fa; }
-        100% { box-shadow: 0 0 4px rgba(0, 119, 237, 0.5); border-color: #0077ed; }
+        0% { box-shadow: 0 0 4px rgba(18, 24, 39, 0.5); border-color: #121827; }
+        50% { box-shadow: 0 0 14px rgba(18, 24, 39, 0.9); border-color: #60a5fa; }
+        100% { box-shadow: 0 0 4px rgba(18, 24, 39, 0.5); border-color: #121827; }
     }
 
     .anim-azul-nuevo { animation: pulseBlue 1.2s infinite ease-in-out !important; }
 
     .metrics-row {
         display: flex; justify-content: space-around; align-items: center;
-        background: #111827; border-radius: 12px; padding: 6px 10px 8px 10px;
+        background: #121827; border-radius: 12px; padding: 6px 10px 8px 10px;
         margin-bottom: 6px; border: 1px solid rgba(255,255,255,0.06); position: relative; overflow: hidden;
         box-shadow: 0 2px 8px rgba(0,0,0,0.25);
     }
@@ -334,7 +335,6 @@ st.markdown("""
 
     .footer-sutil span { color: #34c759 !important; font-weight: 900 !important; }
 
-    /* TARJETA OPTIMIZADA PARA 5 COLUMNAS */
     .card-master-container {
         border-radius: 12px;
         padding: 8px 10px;
@@ -358,7 +358,7 @@ st.markdown("""
     .card-master-pendiente { background: #dc2626 !important; border: 1px solid rgba(239, 68, 68, 0.4) !important; color: #ffffff !important; }
     .card-master-asignado { background: #ea580c !important; border: 1px solid rgba(251, 146, 60, 0.8) !important; color: #ffffff !important; box-shadow: 0 0 14px rgba(234, 88, 12, 0.45) !important; }
     .card-master-urgente { background: #b91c1c !important; border: 2px solid #fbbf24 !important; color: #ffffff !important; box-shadow: 0 0 14px rgba(251, 191, 36, 0.4) !important; }
-    .card-master-nuevo-azul { background: #1d4ed8 !important; border: 2px solid #60a5fa !important; color: #ffffff !important; box-shadow: 0 0 14px rgba(96, 165, 250, 0.6) !important; }
+    .card-master-nuevo-azul { background: #121827 !important; border: 2px solid #60a5fa !important; color: #ffffff !important; box-shadow: 0 0 14px rgba(96, 165, 250, 0.6) !important; }
     
     .card-master-completado { background: #047857 !important; border: 1px solid rgba(16, 185, 129, 0.4) !important; color: #ffffff !important; opacity: 0.75; }
     .card-master-completado .card-master-title,
@@ -406,10 +406,10 @@ st.markdown("""
         box-shadow: none !important;
     }
 
-    /* FORZAR TODOS LOS BOTONES A AZUL MARINO (#0077ed) */
+    /* FORZAR TODOS LOS BOTONES A #121827 CON TEXTO BLANCO */
     div[data-testid="stButton"] button {
-        background-color: #0077ed !important;
-        background: #0077ed !important;
+        background-color: #121827 !important;
+        background: #121827 !important;
         color: #ffffff !important;
         border: 1px solid rgba(255, 255, 255, 0.25) !important;
         border-radius: 7px !important;
@@ -425,8 +425,8 @@ st.markdown("""
     }
 
     div[data-testid="stButton"] button:hover {
-        background-color: #1d4ed8 !important;
-        background: #1d4ed8 !important;
+        background-color: #1e293b !important;
+        background: #1e293b !important;
         color: #ffffff !important;
         border-color: #60a5fa !important;
     }
@@ -731,7 +731,7 @@ def renderizar_aplicacion():
                                     <div style="font-weight: 900; color: {'#34c759' if completado else '#ffffff'}; font-size: 15px; letter-spacing: 0.5px; text-transform: uppercase;">{titulo_principal}</div>
                                     <div style="font-weight: 700; color: #38bdf8; font-size: 10px; margin-top: 2px;">{sub_detalle}</div>
                                 </div>
-                                <span style="font-size: 10px; color: #9ca3af; font-weight: 700; background: #151c2c; padding: 2px 6px; border-radius: 6px;">{hora_ticket}</span>
+                                <span style="font-size: 10px; color: #9ca3af; font-weight: 700; background: #121827; padding: 2px 6px; border-radius: 6px;">{hora_ticket}</span>
                             </div>
                         </div>
                     """, unsafe_allow_html=True)
@@ -832,7 +832,7 @@ def renderizar_aplicacion():
         ranking_ordenado = sorted(conteo_colab.items(), key=lambda x: x[1], reverse=True)
         for pos, (nombre_colab, total_piezas) in enumerate(ranking_ordenado):
             medalla = "🥇" if pos == 0 else ("🥈" if pos == 1 else ("🥉" if pos == 2 else f"#{pos+1}"))
-            st.markdown(f"<div style='font-size: 12px; font-weight: 800; padding: 5px 8px; background: #111827; border-radius: 6px; margin-bottom: 4px; color: #e2e8f0; display: flex; justify-content: space-between;'><span>{medalla} {nombre_colab}</span><span style='color: #38bdf8;'>{total_piezas} pzas</span></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size: 12px; font-weight: 800; padding: 5px 8px; background: #121827; border-radius: 6px; margin-bottom: 4px; color: #e2e8f0; display: flex; justify-content: space-between;'><span>{medalla} {nombre_colab}</span><span style='color: #38bdf8;'>{total_piezas} pzas</span></div>", unsafe_allow_html=True)
 
         st.markdown("---")
 
