@@ -247,7 +247,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS (INCLUYENDO EL FAB NARANJA)
+# 3. ESTILOS CSS (FAB COMPACTO + SIN BORDE AZUL)
 # ==========================================
 st.markdown(f"""
     <style>
@@ -494,12 +494,16 @@ st.markdown(f"""
         padding-top: 4px;
     }}
 
-    /* FAB FLOTANTE PARA AJUSTES (TEXTO NARANJA) */
-    .st-key-btn_fab_ajustes button {{
+    /* FAB FLOTANTE CORTO Y NARANJA */
+    .st-key-btn_fab_ajustes {{
         position: fixed !important;
         bottom: 24px !important;
         right: 24px !important;
         z-index: 99999 !important;
+        width: auto !important;
+    }}
+
+    .st-key-btn_fab_ajustes button {{
         background-color: #111827 !important;
         border: 2px solid #ea580c !important;
         color: #ea580c !important;
@@ -507,15 +511,22 @@ st.markdown(f"""
         font-weight: 900 !important;
         font-size: 12px !important;
         letter-spacing: 1px !important;
-        padding: 12px 24px !important;
+        padding: 10px 20px !important;
         box-shadow: 0 4px 20px rgba(234, 88, 12, 0.4) !important;
         text-transform: uppercase !important;
+        width: auto !important;
     }}
 
     .st-key-btn_fab_ajustes button:hover {{
         background-color: #ea580c !important;
         color: #ffffff !important;
         border-color: #f97316 !important;
+    }}
+
+    /* ELIMINAR ANILLO DE FOCO AZUL EN TODOS LOS BOTONES */
+    button:focus, button:active, button:focus-visible {{
+        outline: none !important;
+        box-shadow: none !important;
     }}
 
     /* BOTONERAS DE ACCIÓN EN TARJETAS */
@@ -546,11 +557,6 @@ st.markdown(f"""
         background: #1e293b !important;
         color: #60a5fa !important;
         border-color: #3b82f6 !important;
-    }}
-
-    button:focus {{
-        outline: 3px solid #38bdf8 !important;
-        outline-offset: 2px !important;
     }}
 
     @media (max-width: 768px) {{
@@ -779,7 +785,7 @@ def renderizar_aplicacion():
         st.rerun()
 
     # ==========================================
-    # BARRA LATERAL (DRAWER) CONTROLADA
+    # BARRA LATERAL (DRAWER) CONDICIONAL
     # ==========================================
     if st.session_state.drawer_abierto:
         with st.sidebar:
