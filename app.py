@@ -51,7 +51,8 @@ def obtener_estado_global():
         "titulos_personalizados_tickets": {}, 
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
-        "descartar_celebracion": False
+        "descartar_celebracion": False,
+        "tiempos_creacion_manual": {} # {producto: timestamp_creacion}
     }
 
 estado_global = obtener_estado_global()
@@ -70,7 +71,8 @@ def borrar_todo():
         "urgentes_activos": estado_global["urgentes_activos"].copy(),
         "tickets_completados_items": estado_global["tickets_completados_items"].copy(),
         "titulos_personalizados_tickets": estado_global["titulos_personalizados_tickets"].copy(),
-        "hora_corte_utc": estado_global["hora_corte_utc"]
+        "hora_corte_utc": estado_global["hora_corte_utc"],
+        "tiempos_creacion_manual": estado_global["tiempos_creacion_manual"].copy()
     }
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
     estado_global["completados"].clear()
@@ -81,6 +83,7 @@ def borrar_todo():
     estado_global["tickets_completados_items"].clear()
     estado_global["titulos_personalizados_tickets"].clear()
     estado_global["notas_tablero"].clear()
+    estado_global["tiempos_creacion_manual"].clear()
     estado_global["descartar_celebracion"] = False
     st.toast("Tablero limpiado y barrera de corte establecida")
 
@@ -96,6 +99,7 @@ def restaurar_estado():
         estado_global["tickets_completados_items"] = estado_global["respaldo"]["tickets_completados_items"].copy()
         estado_global["titulos_personalizados_tickets"] = estado_global["respaldo"]["titulos_personalizados_tickets"].copy()
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
+        estado_global["tiempos_creacion_manual"] = estado_global["respaldo"]["tiempos_creacion_manual"].copy()
         estado_global["respaldo"] = None
         estado_global["descartar_celebracion"] = False
         st.toast("Tablero restaurado correctamente")
@@ -127,7 +131,7 @@ def alternar_urgente(producto):
         st.toast(f"¡{producto} marcado como URGENTE!", icon="🔥")
 
 # ==========================================
-# 3. ESTILOS CSS GENERALES
+# 3. ESTILOS CSS GENERALES Y LIMPIOS DE PARPADEO
 # ==========================================
 st.markdown("""
     <style>
@@ -245,6 +249,14 @@ st.markdown("""
 
     @keyframes pulseDot { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
 
+    @keyframes pulseBlue {
+        0% { box-shadow: 0 0 5px rgba(0, 119, 237, 0.5); border-color: #0077ed; }
+        50% { box-shadow: 0 0 18px rgba(0, 119, 237, 0.9); border-color: #60a5fa; }
+        100% { box-shadow: 0 0 5px rgba(0, 119, 237, 0.5); border-color: #0077ed; }
+    }
+
+    .anim-azul-nuevo { animation: pulseBlue 1.2s infinite ease-in-out !important; }
+
     .metrics-row {
         display: flex; justify-content: space-around; align-items: center;
         background: #111827; border-radius: 14px; padding: 8px 12px 10px 12px;
@@ -303,6 +315,7 @@ st.markdown("""
     .card-master-pendiente { background: #dc2626 !important; border: 1px solid rgba(239, 68, 68, 0.4) !important; color: #ffffff !important; }
     .card-master-asignado { background: #ea580c !important; border: 1px solid rgba(251, 146, 60, 0.8) !important; color: #ffffff !important; box-shadow: 0 0 16px rgba(234, 88, 12, 0.5) !important; }
     .card-master-urgente { background: #b91c1c !important; border: 2px solid #fbbf24 !important; color: #ffffff !important; box-shadow: 0 0 16px rgba(251, 191, 36, 0.4) !important; }
+    .card-master-nuevo-azul { background: #1d4ed8 !important; border: 2px solid #60a5fa !important; color: #ffffff !important; box-shadow: 0 0 16px rgba(96, 165, 250, 0.6) !important; }
     
     .card-master-completado { background: #047857 !important; border: 1px solid rgba(16, 185, 129, 0.4) !important; color: #ffffff !important; opacity: 0.75; }
     .card-master-completado .card-master-title,
@@ -385,7 +398,7 @@ st.markdown("""
 # ==========================================
 # 4. CONSULTA A LA API DE LOYVERSE
 # ==========================================
-@st.cache_data(ttl=5, show_spinner=False)
+@st.cache_data(ttl=6, show_spinner=False)
 def obtener_recibos_hoy_cached(created_at_min_str):
     url = "https://api.loyverse.com/v1.0/receipts"
     params = {"created_at_min": created_at_min_str, "limit": 250}
@@ -415,9 +428,8 @@ def obtener_recibos_hoy():
     return obtener_recibos_hoy_cached(created_at_min)
 
 # ==========================================
-# 5. RENDERIZADO PRINCIPAL ESTABLE SIN BUCLES
+# 5. RENDERIZADO PRINCIPAL SIN PARPADEO
 # ==========================================
-@st.fragment(run_every=4)
 def renderizar_aplicacion():
     recibos = obtener_recibos_hoy()
     conteo_productos = {}
@@ -449,7 +461,8 @@ def renderizar_aplicacion():
                 cant_num = int(cantidad) if float(cantidad).is_integer() else cantidad
                 conteo_productos[nombre_completo] = conteo_productos.get(nombre_completo, 0) + cant_num
 
-    # FUSIONAR PRODUCTOS MANUALES
+    # FUSIONAR PRODUCTOS MANUALES Y REGISTRAR TIEMPO DE CREACIÓN (AZUL POR 30s)
+    ahora_epoch = time.time()
     for prod_manual, datos in estado_global["productos_manuales_global"].items():
         if isinstance(datos, dict):
             cant_manual = datos.get("cantidad", 1)
@@ -459,6 +472,9 @@ def renderizar_aplicacion():
             cant_manual = datos
             es_infinito = False
             es_urgente = False
+
+        if prod_manual not in estado_global["tiempos_creacion_manual"]:
+            estado_global["tiempos_creacion_manual"][prod_manual] = ahora_epoch
 
         if es_infinito:
             conteo_productos[prod_manual] = 1  
@@ -485,7 +501,6 @@ def renderizar_aplicacion():
     if "num_campos_colab" not in st.session_state:
         st.session_state.num_campos_colab = max(6, len(estado_global["colaboradores"]))
 
-    ahora_utc = datetime.now(timezone.utc)
     ahora_mexico = datetime.now(tz_mexico)
     hora_mexico_12h = ahora_mexico.strftime("%I:%M:%S %p")
 
@@ -806,6 +821,7 @@ def renderizar_aplicacion():
                     "infinito": es_infinito_nuevo,
                     "urgente": es_urgente_nuevo
                 }
+                estado_global["tiempos_creacion_manual"][prod_key] = time.time()
                 if es_urgente_nuevo:
                     estado_global["urgentes_activos"].add(prod_key)
                 st.toast(f"Agregado: {prod_key}")
@@ -845,6 +861,7 @@ def renderizar_aplicacion():
 
                         if btn_borrar_item:
                             estado_global["productos_manuales_global"].pop(p_nombre, None)
+                            estado_global["tiempos_creacion_manual"].pop(p_nombre, None)
                             estado_global["completados"].discard(p_nombre)
                             estado_global["cantidades_al_completar"].pop(p_nombre, None)
                             estado_global["asignaciones_productos"].pop(p_nombre, None)
@@ -940,19 +957,16 @@ def renderizar_aplicacion():
                     else:
                         activos.append((prod, cant_total))
 
+                # ORDENAMIENTO: URGENTES PRIMERO, LUEGO ALFABÉTICO ESTRICTO
                 def clave_ordenamiento(item):
-                    producto, cant_total = item
+                    producto, _ = item
                     es_urgente = producto in urgentes_activos
-                    
-                    if es_urgente:
-                        prioridad = 0
-                    else:
-                        prioridad = 2
-                        
-                    return (prioridad, -cant_total)
+                    # Prioridad 0 para urgentes, Prioridad 1 para normales. Luego orden alfabético estricto (producto)
+                    prioridad = 0 if es_urgente else 1
+                    return (prioridad, producto)
 
                 activos.sort(key=clave_ordenamiento)
-                completados.sort(key=lambda x: x[1], reverse=True)
+                completados.sort(key=lambda x: x[0]) # Completados también en orden alfabético
 
                 def renderizar_lista_productos(lista):
                     for i in range(0, len(lista), 4):
@@ -966,14 +980,23 @@ def renderizar_aplicacion():
                                 es_urgente = producto in urgentes_activos
                                 colab_asignado = estado_global["asignaciones_productos"].get(producto)
 
+                                # Verificar si es producto nuevo (azul por 30 segundos)
+                                tiempo_creacion = estado_global["tiempos_creacion_manual"].get(producto, 0)
+                                es_nuevo_azul = (ahora_epoch - tiempo_creacion < 30) and not es_completado
+
                                 if es_infinito:
                                     valor_mostrar = "∞"
                                 else:
-                                    cant_base = estado_global["cantidades_al_completar"].get(producto, 0)
+                                    cant_base = estado_global["cantidades_al_completار"].get(producto, 0) if "cantidades_al_completار" in estado_global else estado_global["cantidades_al_completar"].get(producto, 0)
                                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
                                     valor_mostrar = str(cant_mostrar)
 
-                                if es_urgente and not es_completado:
+                                # SELECCIÓN DE ESTILO DE TARJETA
+                                if es_nuevo_azul:
+                                    clase_css = "card-master-nuevo-azul anim-azul-nuevo"
+                                    texto_estado = "TERMINAR"
+                                    html_flama = '⚡ '
+                                elif es_urgente and not es_completado:
                                     clase_css = "card-master-urgente"
                                     texto_estado = "TERMINAR"
                                     html_flama = '🔥 '
