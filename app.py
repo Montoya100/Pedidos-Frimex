@@ -144,7 +144,7 @@ def alternar_urgente(producto):
     disparar_sync()
 
 # ==========================================
-# 3. ESTILOS CSS CON TAMAÑO ESPECÍFICO PARA TERMINAR
+# 3. ESTILOS CSS
 # ==========================================
 st.markdown("""
     <style>
@@ -441,7 +441,7 @@ st.markdown("""
         box-shadow: none !important;
     }
 
-    /* BOTONES GENERALES EN TAMAÑO NORMAL Y LEGIBLE */
+    /* BOTONES GENERALES EN TAMAÑO NORMAL, UNIFORME Y LEGIBLE */
     div[data-testid="stButton"] {
         margin: 0 !important;
         padding: 0 !important;
@@ -473,11 +473,6 @@ st.markdown("""
         padding: 0 !important;
         line-height: 1 !important;
         white-space: nowrap !important;
-    }
-
-    /* AUMENTAR LIGERAMENTE EL TAMAÑO EXCLUSIVAMENTE AL BOTÓN DE TERMINAR / PENDIENTE */
-    div[data-testid="stButton"] button[kind="secondary"] {
-        font-size: 11.5px !important;
     }
 
     div[data-testid="stButton"] button:hover {
@@ -1104,10 +1099,10 @@ def renderizar_aplicacion():
                                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
                                     valor_mostrar = str(cant_mostrar)
 
-                                # SELECCIÓN DE ESTILO DE TARJETA Y TEXTO DEL BOTÓN
+                                # TEXTOS DE LOS BOTONES SEGÚN EL SEMÁFORO DE COLOR
                                 if es_nuevo_azul:
                                     clase_css = "card-master-nuevo-azul anim-azul-nuevo"
-                                    texto_estado = "TERMINAR"
+                                    texto_estado = "NUEVO"
                                     html_flama = ''
                                 elif es_urgente and not es_completado:
                                     clase_css = "card-master-urgente"
@@ -1119,11 +1114,11 @@ def renderizar_aplicacion():
                                     html_flama = ''
                                 elif es_completado:
                                     clase_css = "card-master-completado"
-                                    texto_estado = "PENDIENTE"
+                                    texto_estado = "REVISAR"
                                     html_flama = ''
                                 else:
                                     clase_css = "card-master-pendiente"
-                                    texto_estado = "TERMINAR"
+                                    texto_estado = "PENDIENTE"
                                     html_flama = ''
 
                                 html_badge_colab = f'<div class="colab-asignado-txt">{colab_asignado}</div>' if colab_asignado else ''
