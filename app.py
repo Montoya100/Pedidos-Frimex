@@ -251,7 +251,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS, TRANSICIÓN DE NOTAS Y AUTO-REFRESH
+# 3. ESTILOS CSS, CARRUSEL DE NOTAS Y AUTO-REFRESH AUTOMÁTICO
 # ==========================================
 st.markdown(f"""
     <style>
@@ -286,13 +286,6 @@ st.markdown(f"""
         padding-left: 0.3rem !important; 
         padding-right: 0.3rem !important;
         max-width: 100% !important;
-    }}
-
-    @keyframes fadeInOut {{
-        0% {{ opacity: 0; transform: translateY(4px); }}
-        10% {{ opacity: 1; transform: translateY(0); }}
-        90% {{ opacity: 1; transform: translateY(0); }}
-        100% {{ opacity: 0; transform: translateY(-4px); }}
     }}
 
     .banner-notas-container {{
@@ -333,7 +326,10 @@ st.markdown(f"""
         flex: 1 !important;
         width: 100% !important;
         word-break: break-word;
-        animation: fadeInOut 10s infinite;
+    }}
+
+    .banner-nota-item.activo {{
+        display: block !important;
     }}
 
     .full-screen-celebracion {{
@@ -542,7 +538,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SCRIPT JS: AUTO-REFRESH DE SINCRONIZACIÓN CADA 3 SEGUNDOS + ROTACIÓN DE NOTAS CADA 10s
+# SCRIPT JS: AUTO-REFRESH REAL CADA 5 SEGUNDOS + ROTACIÓN DE NOTAS CADA 10s
 # ==========================================
 utilidades_js = """
 <script>
@@ -568,35 +564,36 @@ async function iniciarUtilidades() {
     setInterval(limpiarUI, 1000);
     limpiarUI();
 
-    // Rotación automática de notas en el banner cada 10 segundos
-    let notaActual = 0;
-    setInterval(function() {
+    // Rotación del carrusel de notas cada 10 segundos
+    let notaIndex = 0;
+    function rotarNotas() {
         const notas = document.querySelectorAll('.banner-nota-item');
         if (notas.length > 0) {
-            notas.forEach(n => n.style.display = 'none');
-            notaActual = (notaActual + 1) % notas.length;
-            notas[notaActual].style.display = 'block';
+            notas.forEach(n => n.classList.remove('activo'));
+            notaIndex = (notaIndex + 1) % notas.length;
+            notas[notaIndex].classList.add('activo');
         }
-    }, 10000);
+    }
 
-    // Activar primera nota si existe
+    // Activar primera nota inmediatamente al cargar
     setTimeout(function() {
         const notas = document.querySelectorAll('.banner-nota-item');
         if (notas.length > 0) {
-            notas[0].style.display = 'block';
+            notas[0].classList.add('activo');
+            setInterval(rotarNotas, 10000);
         }
-    }, 200);
+    }, 300);
 }
 iniciarUtilidades();
 
-// Auto-sync automático en tiempo real recargando fragmentos clave cada 3 segundos sin perder foco
-setInterval(function() {
-    if (typeof window !== 'undefined' && !window.location.search.includes('sync=off')) {
-        const trigger = document.querySelector('[data-testid="stStatusWidget"]');
-        // Disparador silencioso Streamlit
-        window.dispatchEvent(new Event('resize'));
-    }
-}, 3000);
+// SINCRONIZACIÓN AUTOMÁTICA REAL EN SEGUNDO PLANO CADA 5 SEGUNDOS
+setTimeout(function() {
+    setInterval(function() {
+        if (!window.location.hash.includes('nosync')) {
+            window.location.reload();
+        }
+    }, 5000);
+}, 5000);
 </script>
 """
 components.html(utilidades_js, height=0, width=0)
@@ -659,7 +656,6 @@ def renderizar_aplicacion():
                 cantidad = item.get("quantity", 0)
                 variante = item.get("variant_name")
                 
-                # EN EL TABLERO AGRUPAMOS CON VARIANTES PARA MANTENER ORDEN
                 if variante and variante != "Default":
                     nombre_completo = f"{nombre} ({variante})"
                 else:
@@ -802,12 +798,13 @@ def renderizar_aplicacion():
                 estado_global["vista_actual"] = "AJUSTES"
                 st.rerun()
 
-    # BANNER DE NOTAS CON TRANSICIÓN (CARRUSEL DE 10 SEGUNDOS)
+    # BANNER DE NOTAS CON CARRUSEL AUTOMÁTICO
     notas_filtradas = [txt for txt in estado_global["notas_tablero"] if txt.strip()]
     if notas_filtradas:
         html_notas_items = ""
         for idx_n, nota_txt in enumerate(notas_filtradas):
-            html_notas_items += f'<div class="banner-nota-item">NOTA {idx_n + 1}: {nota_txt.upper()}</div>'
+            clase_activo = "activo" if idx_n == 0 else ""
+            html_notas_items += f'<div class="banner-nota-item {clase_activo}">NOTA {idx_n + 1}: {nota_txt.upper()}</div>'
 
         st.markdown(f"""
             <div class="banner-notas-container">
@@ -842,7 +839,7 @@ def renderizar_aplicacion():
     """, unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN 1: GESTIÓN DE TICKETS INDEPENDIENTES (VARIANTES DESGLOSADAS)
+    # SECCIÓN 1: GESTIÓN DE TICKETS INDEPENDIENTES
     # ==========================================
     if estado_global["vista_actual"] == "TICKETS":
         st.markdown("### GESTIÓN DE TICKETS INDIVIDUALES")
@@ -895,7 +892,6 @@ def renderizar_aplicacion():
                 bg_color = "#0f172a" if completado else "#111827"
                 border_color = "rgba(52, 199, 89, 0.4)" if completado else "rgba(255,255,255,0.08)"
                 
-                # CONTENEDOR SEGURO CONTRA TEXTO PLANO
                 with st.container():
                     st.markdown(f"""
                         <div style="background: {bg_color}; border: 1px solid {border_color}; border-radius: 12px; padding: 14px; margin-bottom: 12px; opacity: {'0.85' if completado else '1'};">
@@ -912,7 +908,6 @@ def renderizar_aplicacion():
                     if note_recibo:
                         st.markdown(f"<div style='font-style: italic; color: #fbbf24; font-size: 12px; margin-bottom: 10px;'>💬 Nota: {note_recibo}</div>", unsafe_allow_html=True)
 
-                    # EXPANDER CON CIERRE AUTOMÁTICO AL GUARDAR Y TEXTO SIMPLIFICADO
                     with st.expander(f"Editar nombre del ticket #{receipt_number}"):
                         with st.form(key=f"form_title_{ticket_id}"):
                             nuevo_nombre_ticket = st.text_input("Nombre o alias personalizado:", value=titulo_custom if titulo_custom else (customer_name if customer_name else ""))
@@ -942,7 +937,6 @@ def renderizar_aplicacion():
                         col_t1, col_t2 = st.columns([0.76, 0.24])
                         
                         with col_t1:
-                            # SOLO EMOJIS, NEGRITA Y TAMAÑO AMPLIADO
                             btn_text = f"✅ **{cant_num}x {nombre_completo}**" if esta_listo else f"⬜ **{cant_num}x {nombre_completo}**"
                             if st.button(btn_text, key=f"btn_toggle_item_{item_key_uid}", use_container_width=True):
                                 if esta_listo:
@@ -988,7 +982,7 @@ def renderizar_aplicacion():
             st.info("No hay tickets disponibles para mostrar en este periodo.")
 
     # ==========================================
-    # SECCIÓN 2: PANEL DE AJUSTES (NOTAS ILIMITADAS)
+    # SECCIÓN 2: PANEL DE AJUSTES
     # ==========================================
     elif estado_global["vista_actual"] == "AJUSTES":
         st.markdown("### PANEL DE AJUSTES Y CONFIGURACIÓN")
@@ -1009,7 +1003,7 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # 2. NOTAS DEL TABLERO (ILIMITADAS)
+        # 2. NOTAS DEL TABLERO
         st.markdown("#### Notas del Tablero (Ilimitadas)")
         with st.form("form_notas_tablero", clear_on_submit=True):
             nueva_nota_ajustes = st.text_input("Agregar nueva nota al carrusel:")
@@ -1157,7 +1151,7 @@ def renderizar_aplicacion():
                 st.rerun()
 
     # ==========================================
-    # SECCIÓN 3: TABLA DE PRODUCCIÓN PRINCIPAL (VISTA POR DEFECTO)
+    # SECCIÓN 3: TABLA DE PRODUCCIÓN PRINCIPAL
     # ==========================================
     else:
         if conteo_productos and piezas_pendientes == 0 and not estado_global["descartar_celebracion"]:
@@ -1231,7 +1225,6 @@ def renderizar_aplicacion():
                                 if ultima_upd and (ahora_utc - ultima_upd).total_seconds() < 120 and not es_completado and not es_infinito:
                                     es_reciente = True
 
-                                # ESTILOS Y COLORES DE TARJETA
                                 if es_urgente and not es_completado:
                                     clase_css = "card-master-urgente"
                                     texto_estado = "TERMINAR"
@@ -1261,7 +1254,6 @@ def renderizar_aplicacion():
 
                                 html_badge_colab = f'<div class="colab-asignado-txt">{colab_asignado}</div>' if colab_asignado else ''
 
-                                # TARJETA PRINCIPAL
                                 st.markdown(f"""
                                     <div class="card-master-container {clase_css}">
                                         <div class="card-content-top">
@@ -1272,7 +1264,6 @@ def renderizar_aplicacion():
                                     </div>
                                 """, unsafe_allow_html=True)
 
-                                # BOTÓN DE TERMINAR + SELECTOR DE ASIGNACIÓN EN LA MISMA FILA
                                 col_f1, col_f2 = st.columns([0.45, 0.55])
                                 with col_f1:
                                     st.button(
