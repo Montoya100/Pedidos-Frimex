@@ -51,8 +51,7 @@ def obtener_estado_global():
         "titulos_personalizados_tickets": {}, 
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
-        "descartar_celebracion": False,
-        "version_global": 0
+        "descartar_celebracion": False
     }
 
 estado_global = obtener_estado_global()
@@ -83,7 +82,6 @@ def borrar_todo():
     estado_global["titulos_personalizados_tickets"].clear()
     estado_global["notas_tablero"].clear()
     estado_global["descartar_celebracion"] = False
-    estado_global["version_global"] += 1
     st.toast("Tablero limpiado y barrera de corte establecida")
 
 def restaurar_estado():
@@ -100,7 +98,6 @@ def restaurar_estado():
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
         estado_global["descartar_celebracion"] = False
-        estado_global["version_global"] += 1
         st.toast("Tablero restaurado correctamente")
     else:
         st.toast("Sin respaldo previo disponible")
@@ -113,14 +110,13 @@ def alternar_estado(producto, cantidad_actual):
         estado_global["completados"].add(producto)
         estado_global["cantidades_al_completar"][producto] = cantidad_actual
     estado_global["descartar_celebracion"] = False
-    estado_global["version_global"] += 1
 
-def asignar_colaborador(producto, colaborador):
-    if colaborador and colaborador != "NINGUNO":
-        estado_global["asignaciones_productos"][producto] = colaborador
+def asignar_colaborador_callback(producto):
+    colab_elegido = st.session_state.get(f"select_asignar_{producto}", "NINGUNO")
+    if colab_elegido and colab_elegido != "NINGUNO":
+        estado_global["asignaciones_productos"][producto] = colab_elegido
     else:
         estado_global["asignaciones_productos"].pop(producto, None)
-    estado_global["version_global"] += 1
 
 def alternar_urgente(producto):
     if producto in estado_global["urgentes_activos"]:
@@ -129,7 +125,6 @@ def alternar_urgente(producto):
     else:
         estado_global["urgentes_activos"].add(producto)
         st.toast(f"¡{producto} marcado como URGENTE!", icon="🔥")
-    estado_global["version_global"] += 1
 
 # ==========================================
 # 3. ESTILOS CSS GENERALES
@@ -420,7 +415,7 @@ def obtener_recibos_hoy():
     return obtener_recibos_hoy_cached(created_at_min)
 
 # ==========================================
-# 5. RENDERIZADO PRINCIPAL CON REFRESCO ESTABLE
+# 5. RENDERIZADO PRINCIPAL ESTABLE SIN BUCLES
 # ==========================================
 @st.fragment(run_every=4)
 def renderizar_aplicacion():
@@ -486,12 +481,6 @@ def renderizar_aplicacion():
             if cant_total > cant_marcada:
                 estado_global["completados"].remove(prod)
                 estado_global["cantidades_al_completar"].pop(prod, None)
-
-    if "tiempos_actualizacion" not in st.session_state:
-        st.session_state.tiempos_actualizacion = {}
-
-    if "popups_nuevos" not in st.session_state:
-        st.session_state.popups_nuevos = {}
 
     if "num_campos_colab" not in st.session_state:
         st.session_state.num_campos_colab = max(6, len(estado_global["colaboradores"]))
@@ -679,7 +668,6 @@ def renderizar_aplicacion():
                                     estado_global["titulos_personalizados_tickets"][ticket_id] = nuevo_nombre_ticket.strip().upper()
                                 else:
                                     estado_global["titulos_personalizados_tickets"].pop(ticket_id, None)
-                                estado_global["version_global"] += 1
                                 st.toast("Nombre de ticket actualizado")
                                 st.rerun()
 
@@ -705,7 +693,6 @@ def renderizar_aplicacion():
                                     estado_global["tickets_completados_items"].discard(item_key_uid)
                                 else:
                                     estado_global["tickets_completados_items"].add(item_key_uid)
-                                estado_global["version_global"] += 1
                                 st.rerun()
 
                         with col_t2:
@@ -737,7 +724,6 @@ def renderizar_aplicacion():
 
                 if btn_enviar_nota_ticket and nueva_nota_txt.strip():
                     estado_global["notas_tablero"].append(nueva_nota_txt.strip().upper())
-                    estado_global["version_global"] += 1
                     st.toast("¡Nota publicada en el tablero con éxito!")
                     st.rerun()
 
@@ -774,7 +760,6 @@ def renderizar_aplicacion():
 
             if btn_add_nota and nueva_nota_ajustes.strip():
                 estado_global["notas_tablero"].append(nueva_nota_ajustes.strip().upper())
-                estado_global["version_global"] += 1
                 st.toast("Nota agregada")
                 st.rerun()
 
@@ -793,12 +778,10 @@ def renderizar_aplicacion():
                         if btn_guardar_nota:
                             if nota_editada_txt.strip():
                                 estado_global["notas_tablero"][idx_n] = nota_editada_txt.strip().upper()
-                                estado_global["version_global"] += 1
                                 st.toast("Nota actualizada")
                                 st.rerun()
                         if btn_borrar_nota:
                             estado_global["notas_tablero"].pop(idx_n)
-                            estado_global["version_global"] += 1
                             st.toast("Nota eliminada")
                             st.rerun()
 
@@ -825,7 +808,6 @@ def renderizar_aplicacion():
                 }
                 if es_urgente_nuevo:
                     estado_global["urgentes_activos"].add(prod_key)
-                estado_global["version_global"] += 1
                 st.toast(f"Agregado: {prod_key}")
                 st.rerun()
 
@@ -858,7 +840,6 @@ def renderizar_aplicacion():
                                 estado_global["urgentes_activos"].add(p_nombre)
                             else:
                                 estado_global["urgentes_activos"].discard(p_nombre)
-                            estado_global["version_global"] += 1
                             st.toast(f"Actualizado: {p_nombre}")
                             st.rerun()
 
@@ -868,13 +849,12 @@ def renderizar_aplicacion():
                             estado_global["cantidades_al_completar"].pop(p_nombre, None)
                             estado_global["asignaciones_productos"].pop(p_nombre, None)
                             estado_global["urgentes_activos"].discard(p_nombre)
-                            estado_global["version_global"] += 1
                             st.toast(f"Borrado: {p_nombre}")
                             st.rerun()
 
         st.markdown("---")
 
-        # EDICIÓN DE ASIGNACIONES
+        # EDICIÓN DE ASIGNACIONES EN AJUSTES
         st.markdown("#### 👥 Edición y Asignación de Colaboradores por Producto")
         if conteo_productos:
             lista_colabs = ["NINGUNO"] + estado_global["colaboradores"]
@@ -882,10 +862,14 @@ def renderizar_aplicacion():
                 colab_actual = estado_global["asignaciones_productos"].get(prod_asignable, "NINGUNO")
                 idx_asig = lista_colabs.index(colab_actual) if colab_actual in lista_colabs else 0
                 
-                nuevo_asig = st.selectbox(f"Asignar a: {prod_asignable}", options=lista_colabs, index=idx_asig, key=f"ajustes_asig_{prod_asignable}")
-                if nuevo_asig != colab_actual:
-                    asignar_colaborador(prod_asignable, nuevo_asig)
-                    st.rerun()
+                st.selectbox(
+                    f"Asignar a: {prod_asignable}",
+                    options=lista_colabs,
+                    index=idx_asig,
+                    key=f"ajustes_asig_{prod_asignable}",
+                    on_change=asignar_colaborador_callback,
+                    args=(prod_asignable,)
+                )
         else:
             st.info("No hay productos activos para asignar.")
 
@@ -912,7 +896,6 @@ def renderizar_aplicacion():
 
             if btn_guardar_colabs:
                 estado_global["colaboradores"] = [c.strip().upper() for c in colab_inputs if c.strip()]
-                estado_global["version_global"] += 1
                 st.toast("Colaboradores actualizados")
                 st.rerun()
 
@@ -1031,17 +1014,15 @@ def renderizar_aplicacion():
                                     if colab_asignado and colab_asignado in lista_colabs:
                                         index_actual = lista_colabs.index(colab_asignado)
 
-                                    colab_seleccionado = st.selectbox(
+                                    st.selectbox(
                                         f"Asignar {producto}",
                                         options=lista_colabs,
                                         index=index_actual,
                                         key=f"select_asignar_{producto}",
-                                        label_visibility="collapsed"
+                                        label_visibility="collapsed",
+                                        on_change=asignar_colaborador_callback,
+                                        args=(producto,)
                                     )
-
-                                    if colab_seleccionado != (colab_asignado if colab_asignado else "NINGUNO"):
-                                        asignar_colaborador(producto, colab_seleccionado)
-                                        st.rerun()
 
                 if activos:
                     renderizar_lista_productos(activos)
