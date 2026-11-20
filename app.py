@@ -35,17 +35,6 @@ def obtener_base64_imagen(ruta_imagen):
 LOGO_URL = obtener_base64_imagen("logo.png")
 
 # ==========================================
-# INYECCIÓN DE METADATOS PARA COMPARTIR ENLACE (OG)
-# ==========================================
-st.markdown(f"""
-    <head>
-        <meta property="og:title" content="Tablero Mostacho - Producción en Vivo">
-        <meta property="og:description" content="Sistema de control y producción en tiempo real.">
-        <meta property="og:image" content="{LOGO_URL}">
-    </head>
-""", unsafe_allow_html=True)
-
-# ==========================================
 # 2. ESTADO GLOBAL COMPARTIDO Y PERSISTENTE
 # ==========================================
 @st.cache_resource
@@ -53,13 +42,13 @@ def obtener_estado_global():
     return {
         "completados": set(),
         "cantidades_al_completar": {},
-        "notas_tablero": [],          # Notas ilimitadas
+        "notas_tablero": [],          
         "productos_manuales_global": {},  
         "colaboradores": ["COLABORADOR 1", "COLABORADOR 2", "COLABORADOR 3", "COLABORADOR 4", "COLABORADOR 5", "COLABORADOR 6"],
         "asignaciones_productos": {}, # {producto: nombre_colaborador}
-        "urgentes_activos": set(),    # Productos marcados como urgentes
-        "tickets_completados_items": set(), # IDs únicos de items de tickets marcados como listos
-        "titulos_personalizados_tickets": {}, # {ticket_id: custom_name}
+        "urgentes_activos": set(),    
+        "tickets_completados_items": set(), 
+        "titulos_personalizados_tickets": {}, 
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False,
@@ -70,9 +59,6 @@ estado_global = obtener_estado_global()
 
 if "vista_local" not in st.session_state:
     st.session_state.vista_local = "TABLERO"
-
-def marcar_cambio_global():
-    estado_global["version_estado"] += 1
 
 def borrar_todo():
     estado_global["respaldo"] = {
@@ -97,7 +83,6 @@ def borrar_todo():
     estado_global["titulos_personalizados_tickets"].clear()
     estado_global["notas_tablero"].clear()
     estado_global["descartar_celebracion"] = False
-    marcar_cambio_global()
     st.toast("Tablero limpiado y barrera de corte establecida")
 
 def restaurar_estado():
@@ -114,7 +99,6 @@ def restaurar_estado():
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
         estado_global["descartar_celebracion"] = False
-        marcar_cambio_global()
         st.toast("Tablero restaurado correctamente")
     else:
         st.toast("Sin respaldo previo disponible")
@@ -126,9 +110,7 @@ def alternar_estado(producto, cantidad_actual):
     else:
         estado_global["completados"].add(producto)
         estado_global["cantidades_al_completar"][producto] = cantidad_actual
-
     estado_global["descartar_celebracion"] = False
-    marcar_cambio_global()
 
 def asignar_colaborador(producto, colaborador):
     if colaborador and colaborador != "NINGUNO":
@@ -137,7 +119,6 @@ def asignar_colaborador(producto, colaborador):
     else:
         estado_global["asignaciones_productos"].pop(producto, None)
         st.toast("Asignación retirada")
-    marcar_cambio_global()
 
 def alternar_urgente(producto):
     if producto in estado_global["urgentes_activos"]:
@@ -146,79 +127,6 @@ def alternar_urgente(producto):
     else:
         estado_global["urgentes_activos"].add(producto)
         st.toast(f"¡{producto} marcado como URGENTE!", icon="🔥")
-    marcar_cambio_global()
-
-# ==========================================
-# SONIDOS DE NOTIFICACIÓN (NATIVOS SEGUROS)
-# ==========================================
-def reproducir_sonido_notificacion():
-    st.markdown("""
-        <script>
-        try {
-            var AudioContext = window.parent.AudioContext || window.parent.webkitAudioContext;
-            if (AudioContext) {
-                var ctx = new AudioContext();
-                if (ctx.state === 'suspended') { ctx.resume(); }
-                var osc = ctx.createOscillator();
-                var gain = ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-                gain.gain.setValueAtTime(0.3, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.25);
-            }
-        } catch(e) {}
-        </script>
-    """, unsafe_allow_html=True)
-
-def reproducir_sonido_nota():
-    st.markdown("""
-        <script>
-        try {
-            var AudioContext = window.parent.AudioContext || window.parent.webkitAudioContext;
-            if (AudioContext) {
-                var ctx = new AudioContext();
-                if (ctx.state === 'suspended') { ctx.resume(); }
-                var osc = ctx.createOscillator();
-                var gain = ctx.createGain();
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(440, ctx.currentTime);
-                gain.gain.setValueAtTime(0.2, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.2);
-            }
-        } catch(e) {}
-        </script>
-    """, unsafe_allow_html=True)
-
-def reproducir_sonido_celebracion():
-    st.markdown("""
-        <script>
-        try {
-            var AudioContext = window.parent.AudioContext || window.parent.webkitAudioContext;
-            if (AudioContext) {
-                var ctx = new AudioContext();
-                if (ctx.state === 'suspended') { ctx.resume(); }
-                var osc = ctx.createOscillator();
-                var gain = ctx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(523.25, ctx.currentTime);
-                gain.gain.setValueAtTime(0.4, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.35);
-            }
-        } catch(e) {}
-        </script>
-    """, unsafe_allow_html=True)
 
 # ==========================================
 # 3. ESTILOS CSS GENERALES
@@ -248,7 +156,6 @@ st.markdown("""
         max-width: 100% !important;
     }
 
-    /* BANNER DE NOTAS SEGURO (SIN COMPONENTES HTML AISLADOS) */
     .banner-notas-container {
         background: #111827 !important;
         border: 1px solid rgba(255, 255, 255, 0.12);
@@ -496,7 +403,7 @@ st.markdown("""
 # ==========================================
 # 4. CONSULTA A LA API DE LOYVERSE
 # ==========================================
-@st.cache_data(ttl=2, show_spinner=False)
+@st.cache_data(ttl=5, show_spinner=False)
 def obtener_recibos_hoy_cached(created_at_min_str):
     url = "https://api.loyverse.com/v1.0/receipts"
     params = {"created_at_min": created_at_min_str, "limit": 250}
@@ -526,9 +433,8 @@ def obtener_recibos_hoy():
     return obtener_recibos_hoy_cached(created_at_min)
 
 # ==========================================
-# 5. FRAGMENTO DE SINCRONIZACIÓN EN TIEMPO REAL (CADA 3 SEGUNDOS)
+# 5. RENDERIZADO PRINCIPAL ESTABLE (SIN BUCLES DE PARPADEO)
 # ==========================================
-@st.fragment(run_every=3)
 def renderizar_aplicacion():
     recibos = obtener_recibos_hoy()
     conteo_productos = {}
@@ -625,34 +531,10 @@ def renderizar_aplicacion():
                 cant_marcada = estado_global["cantidades_al_completar"].get(prod, 0)
                 piezas_pendientes += (cant_total - cant_marcada)
 
-    if "ultimo_conteo" not in st.session_state:
-        st.session_state.ultimo_conteo = conteo_productos.copy()
-    else:
-        nuevo_pedido_detectado = False
-        for prod, cant in conteo_productos.items():
-            if prod in infinitos_activos:
-                continue
-            cant_anterior = st.session_state.ultimo_conteo.get(prod, 0)
-            if cant > cant_anterior:
-                diferencia = cant - cant_anterior
-                nuevo_pedido_detectado = True
-                st.session_state.tiempos_actualizacion[prod] = ahora_utc
-                st.session_state.popups_nuevos[prod] = {
-                    "incremento": diferencia,
-                    "hora": ahora_utc
-                }
-
-        if nuevo_pedido_detectado:
-            reproducir_sonido_notificacion()
-            estado_global["descartar_celebracion"] = False
-            st.session_state.reproducido_modal_audio = False
-
-        st.session_state.ultimo_conteo = conteo_productos.copy()
-
     # ==========================================
-    # ENCABEZADO PRINCIPAL
+    # ENCABEZADO PRINCIPAL Y BOTÓN DE ACTUALIZACIÓN MANUAL
     # ==========================================
-    col_hdr_left, col_hdr_mid, col_hdr_right = st.columns([0.42, 0.18, 0.40])
+    col_hdr_left, col_hdr_mid, col_hdr_right = st.columns([0.40, 0.18, 0.42])
     
     with col_hdr_left:
         st.markdown(f"""
@@ -680,18 +562,23 @@ def renderizar_aplicacion():
         """, unsafe_allow_html=True)
 
     with col_hdr_right:
-        c_nav1, c_nav2, c_nav3 = st.columns(3)
+        c_nav1, c_nav2, c_nav3, c_nav4 = st.columns(4)
         with c_nav1:
-            if st.button("TABLERO", use_container_width=True, type="primary" if st.session_state.vista_local == "TABLERO" else "secondary"):
+            if st.button("TAB", use_container_width=True, type="primary" if st.session_state.vista_local == "TABLERO" else "secondary"):
                 st.session_state.vista_local = "TABLERO"
                 st.rerun()
         with c_nav2:
-            if st.button("TICKETS", use_container_width=True, type="primary" if st.session_state.vista_local == "TICKETS" else "secondary"):
+            if st.button("TICK", use_container_width=True, type="primary" if st.session_state.vista_local == "TICKETS" else "secondary"):
                 st.session_state.vista_local = "TICKETS"
                 st.rerun()
         with c_nav3:
-            if st.button("AJUSTES", use_container_width=True, type="primary" if st.session_state.vista_local == "AJUSTES" else "secondary"):
+            if st.button("AJUS", use_container_width=True, type="primary" if st.session_state.vista_local == "AJUSTES" else "secondary"):
                 st.session_state.vista_local = "AJUSTES"
+                st.rerun()
+        with c_nav4:
+            if st.button("🔄 SYNC", use_container_width=True):
+                st.cache_data.clear()
+                st.toast("Datos sincronizados con Loyverse")
                 st.rerun()
 
     # ==========================================
@@ -710,10 +597,6 @@ def renderizar_aplicacion():
                 <div class="banner-nota-texto">{texto_nota_actual}</div>
             </div>
         """, unsafe_allow_html=True)
-
-    for prod, info in list(st.session_state.popups_nuevos.items()):
-        if (ahora_utc - info["hora"]).total_seconds() >= 30:
-            st.session_state.popups_nuevos.pop(prod, None)
 
     piezas_completadas = max(0, piezas_totales - piezas_pendientes)
     pct_progreso = int((piezas_completadas / piezas_totales * 100)) if piezas_totales > 0 else 100
@@ -816,7 +699,6 @@ def renderizar_aplicacion():
                                     estado_global["titulos_personalizados_tickets"][ticket_id] = nuevo_nombre_ticket.strip().upper()
                                 else:
                                     estado_global["titulos_personalizados_tickets"].pop(ticket_id, None)
-                                marcar_cambio_global()
                                 st.toast("Nombre de ticket actualizado")
                                 st.rerun()
 
@@ -842,7 +724,6 @@ def renderizar_aplicacion():
                                     estado_global["tickets_completados_items"].discard(item_key_uid)
                                 else:
                                     estado_global["tickets_completados_items"].add(item_key_uid)
-                                marcar_cambio_global()
                                 st.rerun()
 
                         with col_t2:
@@ -874,8 +755,6 @@ def renderizar_aplicacion():
 
                 if btn_enviar_nota_ticket and nueva_nota_txt.strip():
                     estado_global["notas_tablero"].append(nueva_nota_txt.strip().upper())
-                    marcar_cambio_global()
-                    reproducir_sonido_nota()
                     st.toast("¡Nota publicada en el tablero con éxito!")
                     st.rerun()
 
@@ -912,8 +791,6 @@ def renderizar_aplicacion():
 
             if btn_add_nota and nueva_nota_ajustes.strip():
                 estado_global["notas_tablero"].append(nueva_nota_ajustes.strip().upper())
-                marcar_cambio_global()
-                reproducir_sonido_nota()
                 st.toast("Nota agregada")
                 st.rerun()
 
@@ -926,7 +803,6 @@ def renderizar_aplicacion():
                 with col_n2:
                     if st.button("Borrar", key=f"del_nota_{idx_n}", use_container_width=True):
                         estado_global["notas_tablero"].pop(idx_n)
-                        marcar_cambio_global()
                         st.toast("Nota eliminada")
                         st.rerun()
 
@@ -953,7 +829,6 @@ def renderizar_aplicacion():
                 }
                 if es_urgente_nuevo:
                     estado_global["urgentes_activos"].add(prod_key)
-                marcar_cambio_global()
                 st.toast(f"Agregado: {prod_key}")
                 st.rerun()
 
@@ -986,7 +861,6 @@ def renderizar_aplicacion():
                                 estado_global["urgentes_activos"].add(p_nombre)
                             else:
                                 estado_global["urgentes_activos"].discard(p_nombre)
-                            marcar_cambio_global()
                             st.toast(f"Actualizado: {p_nombre}")
                             st.rerun()
 
@@ -996,7 +870,6 @@ def renderizar_aplicacion():
                             estado_global["cantidades_al_completar"].pop(p_nombre, None)
                             estado_global["asignaciones_productos"].pop(p_nombre, None)
                             estado_global["urgentes_activos"].discard(p_nombre)
-                            marcar_cambio_global()
                             st.toast(f"Borrado: {p_nombre}")
                             st.rerun()
 
@@ -1040,7 +913,6 @@ def renderizar_aplicacion():
 
             if btn_guardar_colabs:
                 estado_global["colaboradores"] = [c.strip().upper() for c in colab_inputs if c.strip()]
-                marcar_cambio_global()
                 st.toast("Colaboradores actualizados")
                 st.rerun()
 
@@ -1062,10 +934,6 @@ def renderizar_aplicacion():
     # ==========================================
     else:
         if conteo_productos and piezas_pendientes == 0 and not estado_global["descartar_celebracion"]:
-            if not st.session_state.reproducido_modal_audio:
-                reproducir_sonido_celebracion()
-                st.session_state.reproducido_modal_audio = True
-
             st.markdown(f"""
                 <div class="full-screen-celebracion">
                     <img src="{LOGO_URL}" class="img-celebracion-logo" style="height: 75px; width: auto; filter: drop-shadow(0 3px 12px rgba(255, 149, 0, 0.6));" alt="Logo">
@@ -1076,7 +944,6 @@ def renderizar_aplicacion():
 
             if st.button("REVISAR PENDIENTES", use_container_width=True, type="primary", key="btn_pantalla_completa_cerrar"):
                 estado_global["descartar_celebracion"] = True
-                marcar_cambio_global()
                 st.rerun()
 
         else:
@@ -1128,21 +995,12 @@ def renderizar_aplicacion():
                                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
                                     valor_mostrar = str(cant_mostrar)
 
-                                ultima_upd = st.session_state.tiempos_actualizacion.get(producto)
-                                es_reciente = False
-                                if ultima_upd and (ahora_utc - ultima_upd).total_seconds() < 120 and not es_completado and not es_infinito:
-                                    es_reciente = True
-
                                 if es_urgente and not es_completado:
                                     clase_css = "card-master-urgente"
                                     texto_estado = "TERMINAR"
                                     html_flama = '🔥 '
                                 elif colab_asignado and not es_completado:
                                     clase_css = "card-master-asignado"
-                                    texto_estado = "TERMINAR"
-                                    html_flama = ''
-                                elif es_reciente:
-                                    clase_css = "card-master-reciente anim-pulso-nuevo"
                                     texto_estado = "TERMINAR"
                                     html_flama = ''
                                 elif es_completado:
@@ -1154,18 +1012,12 @@ def renderizar_aplicacion():
                                     texto_estado = "TERMINAR"
                                     html_flama = ''
 
-                                info_popup = st.session_state.popups_nuevos.get(producto)
-                                html_incremento = ""
-                                if info_popup and not es_completado and not es_infinito:
-                                    inc = info_popup["incremento"]
-                                    html_incremento = f'<span class="txt-incremento">+{inc}</span>'
-
                                 html_badge_colab = f'<div class="colab-asignado-txt">{colab_asignado}</div>' if colab_asignado else ''
 
                                 st.markdown(f"""
                                     <div class="card-master-container {clase_css}">
                                         <div class="card-content-top">
-                                            <div class="card-master-title">{html_flama}{producto} {html_incremento}</div>
+                                            <div class="card-master-title">{html_flama}{producto}</div>
                                             <div class="card-master-num">{valor_mostrar}</div>
                                         </div>
                                         {html_badge_colab}
@@ -1174,13 +1026,9 @@ def renderizar_aplicacion():
 
                                 col_f1, col_f2 = st.columns([0.45, 0.55])
                                 with col_f1:
-                                    st.button(
-                                        texto_estado, 
-                                        key=f"tarjeta_btn_{producto}", 
-                                        on_click=alternar_estado, 
-                                        args=(producto, cant_total),
-                                        use_container_width=True
-                                    )
+                                    if st.button(texto_estado, key=f"tarjeta_btn_{producto}", use_container_width=True):
+                                        alternar_estado(producto, cant_total)
+                                        st.rerun()
 
                                 with col_f2:
                                     lista_colabs = ["NINGUNO"] + estado_global["colaboradores"]
