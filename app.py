@@ -52,7 +52,7 @@ def obtener_estado_global():
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False,
-        "version_asignaciones": 0
+        "version_global": 0
     }
 
 estado_global = obtener_estado_global()
@@ -83,6 +83,7 @@ def borrar_todo():
     estado_global["titulos_personalizados_tickets"].clear()
     estado_global["notas_tablero"].clear()
     estado_global["descartar_celebracion"] = False
+    estado_global["version_global"] += 1
     st.toast("Tablero limpiado y barrera de corte establecida")
 
 def restaurar_estado():
@@ -99,6 +100,7 @@ def restaurar_estado():
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["respaldo"] = None
         estado_global["descartar_celebracion"] = False
+        estado_global["version_global"] += 1
         st.toast("Tablero restaurado correctamente")
     else:
         st.toast("Sin respaldo previo disponible")
@@ -111,13 +113,14 @@ def alternar_estado(producto, cantidad_actual):
         estado_global["completados"].add(producto)
         estado_global["cantidades_al_completar"][producto] = cantidad_actual
     estado_global["descartar_celebracion"] = False
+    estado_global["version_global"] += 1
 
 def asignar_colaborador(producto, colaborador):
     if colaborador and colaborador != "NINGUNO":
         estado_global["asignaciones_productos"][producto] = colaborador
     else:
         estado_global["asignaciones_productos"].pop(producto, None)
-    estado_global["version_asignaciones"] += 1
+    estado_global["version_global"] += 1
 
 def alternar_urgente(producto):
     if producto in estado_global["urgentes_activos"]:
@@ -126,6 +129,7 @@ def alternar_urgente(producto):
     else:
         estado_global["urgentes_activos"].add(producto)
         st.toast(f"¡{producto} marcado como URGENTE!", icon="🔥")
+    estado_global["version_global"] += 1
 
 # ==========================================
 # 3. ESTILOS CSS GENERALES
@@ -384,9 +388,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 4. CONSULTA A LA API DE LOYVERSE (CACHÉ ESTABLE)
+# 4. CONSULTA A LA API DE LOYVERSE (CONECTADA AUTOMÁTICAMENTE CADA 5 SEG)
 # ==========================================
-@st.cache_data(ttl=10, show_spinner=False)
+@st.cache_data(ttl=5, show_spinner=False)
 def obtener_recibos_hoy_cached(created_at_min_str):
     url = "https://api.loyverse.com/v1.0/receipts"
     params = {"created_at_min": created_at_min_str, "limit": 250}
@@ -416,8 +420,9 @@ def obtener_recibos_hoy():
     return obtener_recibos_hoy_cached(created_at_min)
 
 # ==========================================
-# 5. RENDERIZADO PRINCIPAL ESTABLE CON FRAGMENTO DE ASIGNACIONES
+# 5. RENDERIZADO CON FRAGMENTO AUTOMÁTICO DE ACTUALIZACIÓN
 # ==========================================
+@st.fragment(run_every=5)
 def renderizar_aplicacion():
     recibos = obtener_recibos_hoy()
     conteo_productos = {}
@@ -495,7 +500,7 @@ def renderizar_aplicacion():
     ahora_mexico = datetime.now(tz_mexico)
     hora_mexico_12h = ahora_mexico.strftime("%I:%M:%S %p")
 
-    # CÁLCULO DE PENDIENTes
+    # CÁLCULO DE PENDIENTES
     piezas_totales = sum([1 if p in infinitos_activos else c for p, c in conteo_productos.items()])
     piezas_pendientes = 0
     
@@ -512,7 +517,7 @@ def renderizar_aplicacion():
                 piezas_pendientes += (cant_total - cant_marcada)
 
     # ==========================================
-    # ENCABEZADO PRINCIPAL (SIN BOTÓN DE SYNC)
+    # ENCABEZADO PRINCIPAL
     # ==========================================
     col_hdr_left, col_hdr_mid, col_hdr_right = st.columns([0.45, 0.20, 0.35])
     
@@ -674,6 +679,7 @@ def renderizar_aplicacion():
                                     estado_global["titulos_personalizados_tickets"][ticket_id] = nuevo_nombre_ticket.strip().upper()
                                 else:
                                     estado_global["titulos_personalizados_tickets"].pop(ticket_id, None)
+                                estado_global["version_global"] += 1
                                 st.toast("Nombre de ticket actualizado")
                                 st.rerun()
 
@@ -699,6 +705,7 @@ def renderizar_aplicacion():
                                     estado_global["tickets_completados_items"].discard(item_key_uid)
                                 else:
                                     estado_global["tickets_completados_items"].add(item_key_uid)
+                                estado_global["version_global"] += 1
                                 st.rerun()
 
                         with col_t2:
@@ -730,6 +737,7 @@ def renderizar_aplicacion():
 
                 if btn_enviar_nota_ticket and nueva_nota_txt.strip():
                     estado_global["notas_tablero"].append(nueva_nota_txt.strip().upper())
+                    estado_global["version_global"] += 1
                     st.toast("¡Nota publicada en el tablero con éxito!")
                     st.rerun()
 
@@ -758,28 +766,41 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # 2. NOTAS DEL TABLERO
-        st.markdown("#### Notas del Tablero (Ilimitadas)")
+        # 2. NOTAS DEL TABLERO (CON BOTÓN DE EDITAR Y BORRAR)
+        st.markdown("#### Notas del Tablero")
         with st.form("form_notas_tablero", clear_on_submit=True):
             nueva_nota_ajustes = st.text_input("Agregar nueva nota al carrusel:")
             btn_add_nota = st.form_submit_button("Agregar Nota", use_container_width=True)
 
             if btn_add_nota and nueva_nota_ajustes.strip():
                 estado_global["notas_tablero"].append(nueva_nota_ajustes.strip().upper())
+                estado_global["version_global"] += 1
                 st.toast("Nota agregada")
                 st.rerun()
 
         if estado_global["notas_tablero"]:
             st.markdown("<p style='font-size: 12px; color: #9ca3af;'>Notas actuales en rotación:</p>", unsafe_allow_html=True)
             for idx_n, nota_act in enumerate(estado_global["notas_tablero"]):
-                col_n1, col_n2 = st.columns([0.80, 0.20])
-                with col_n1:
-                    st.markdown(f"<div style='font-size: 12px; padding: 6px; background: #151c2c; border-radius: 6px; margin-bottom: 4px;'>{idx_n + 1}. {nota_act}</div>", unsafe_allow_html=True)
-                with col_n2:
-                    if st.button("Borrar", key=f"del_nota_{idx_n}", use_container_width=True):
-                        estado_global["notas_tablero"].pop(idx_n)
-                        st.toast("Nota eliminada")
-                        st.rerun()
+                with st.expander(f"Nota {idx_n + 1}: {nota_act[:30]}..."):
+                    with st.form(key=f"form_edit_nota_{idx_n}"):
+                        nota_editada_txt = st.text_input("Editar texto de la nota:", value=nota_act)
+                        col_ne1, col_ne2 = st.columns(2)
+                        with col_ne1:
+                            btn_guardar_nota = st.form_submit_button("GUARDAR CAMBIOS", use_container_width=True)
+                        with col_ne2:
+                            btn_borrar_nota = st.form_submit_button("BORRAR NOTA", use_container_width=True)
+
+                        if btn_guardar_nota:
+                            if nota_editada_txt.strip():
+                                estado_global["notas_tablero"][idx_n] = nota_editada_txt.strip().upper()
+                                estado_global["version_global"] += 1
+                                st.toast("Nota actualizada")
+                                st.rerun()
+                        if btn_borrar_nota:
+                            estado_global["notas_tablero"].pop(idx_n)
+                            estado_global["version_global"] += 1
+                            st.toast("Nota eliminada")
+                            st.rerun()
 
         st.markdown("---")
 
@@ -804,6 +825,7 @@ def renderizar_aplicacion():
                 }
                 if es_urgente_nuevo:
                     estado_global["urgentes_activos"].add(prod_key)
+                estado_global["version_global"] += 1
                 st.toast(f"Agregado: {prod_key}")
                 st.rerun()
 
@@ -836,6 +858,7 @@ def renderizar_aplicacion():
                                 estado_global["urgentes_activos"].add(p_nombre)
                             else:
                                 estado_global["urgentes_activos"].discard(p_nombre)
+                            estado_global["version_global"] += 1
                             st.toast(f"Actualizado: {p_nombre}")
                             st.rerun()
 
@@ -845,6 +868,7 @@ def renderizar_aplicacion():
                             estado_global["cantidades_al_completar"].pop(p_nombre, None)
                             estado_global["asignaciones_productos"].pop(p_nombre, None)
                             estado_global["urgentes_activos"].discard(p_nombre)
+                            estado_global["version_global"] += 1
                             st.toast(f"Borrado: {p_nombre}")
                             st.rerun()
 
@@ -888,6 +912,7 @@ def renderizar_aplicacion():
 
             if btn_guardar_colabs:
                 estado_global["colaboradores"] = [c.strip().upper() for c in colab_inputs if c.strip()]
+                estado_global["version_global"] += 1
                 st.toast("Colaboradores actualizados")
                 st.rerun()
 
@@ -935,7 +960,6 @@ def renderizar_aplicacion():
                 def clave_ordenamiento(item):
                     producto, cant_total = item
                     es_urgente = producto in urgentes_activos
-                    es_infinito = producto in infinitos_activos
                     
                     if es_urgente:
                         prioridad = 0
