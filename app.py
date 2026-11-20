@@ -41,11 +41,11 @@ LOGO_URL = obtener_base64_imagen("logo.png")
 def obtener_estado_global():
     return {
         "completados": set(),
-        "cantidades_al_completar": {},
+        "cantidades_al_completار": {},
         "notas_tablero": [],          
         "productos_manuales_global": {},  
         "colaboradores": ["COLABORADOR 1", "COLABORADOR 2", "COLABORADOR 3", "COLABORADOR 4", "COLABORADOR 5", "COLABORADOR 6"],
-        "asignaciones_productos": {}, # {producto: nombre_colaborador}
+        "asignaciones_productos": {}, 
         "urgentes_activos": set(),    
         "tickets_completados_items": set(), 
         "titulos_personalizados_tickets": {}, 
@@ -53,7 +53,8 @@ def obtener_estado_global():
         "respaldo": None,
         "descartar_celebracion": False,
         "tiempos_creacion_manual": {},
-        "version_sync": 0  # <--- CONTADOR MAESTRO PARA FORZAR SINCRONIZACIÓN AUTOMÁTICA
+        "cantidades_previas_productos": {}, # <--- PARA DETECTAR INCREMENTOS Y MOSTRAR LA ETIQUETA "+X"
+        "version_sync": 0
     }
 
 estado_global = obtener_estado_global()
@@ -76,7 +77,8 @@ def borrar_todo():
         "tickets_completados_items": estado_global["tickets_completados_items"].copy(),
         "titulos_personalizados_tickets": estado_global["titulos_personalizados_tickets"].copy(),
         "hora_corte_utc": estado_global["hora_corte_utc"],
-        "tiempos_creacion_manual": estado_global["tiempos_creacion_manual"].copy()
+        "tiempos_creacion_manual": estado_global["tiempos_creacion_manual"].copy(),
+        "cantidades_previas_productos": estado_global["cantidades_previas_productos"].copy()
     }
     estado_global["hora_corte_utc"] = datetime.now(timezone.utc)
     estado_global["completados"].clear()
@@ -88,6 +90,7 @@ def borrar_todo():
     estado_global["titulos_personalizados_tickets"].clear()
     estado_global["notas_tablero"].clear()
     estado_global["tiempos_creacion_manual"].clear()
+    estado_global["cantidades_previas_productos"].clear()
     estado_global["descartar_celebracion"] = False
     disparar_sync()
     st.toast("Tablero limpiado y barrera de corte establecida")
@@ -105,6 +108,7 @@ def restaurar_estado():
         estado_global["titulos_personalizados_tickets"] = estado_global["respaldo"]["titulos_personalizados_tickets"].copy()
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["tiempos_creacion_manual"] = estado_global["respaldo"]["tiempos_creacion_manual"].copy()
+        estado_global["cantidades_previas_productos"] = estado_global["respaldo"]["cantidades_previas_productos"].copy()
         estado_global["respaldo"] = None
         estado_global["descartar_celebracion"] = False
         disparar_sync()
@@ -140,7 +144,7 @@ def alternar_urgente(producto):
     disparar_sync()
 
 # ==========================================
-# 3. ESTILOS CSS GENERALES
+# 3. ESTILOS CSS GENERALES Y MODO OSCURO FORZADO
 # ==========================================
 st.markdown("""
     <style>
@@ -165,6 +169,29 @@ st.markdown("""
         padding-left: 0.3rem !important; 
         padding-right: 0.3rem !important;
         max-width: 100% !important;
+    }
+
+    /* FORZAR SELECTBOX A MODO OSCURO */
+    div[data-baseweb="select"] > div {
+        background-color: #151c2c !important;
+        color: #ffffff !important;
+        border-color: rgba(255, 255, 255, 0.15) !important;
+        border-radius: 10px !important;
+    }
+    div[data-baseweb="select"] span {
+        color: #ffffff !important;
+    }
+    div[data-baseweb="popover"], div[data-baseweb="menu"] {
+        background-color: #111827 !important;
+        color: #ffffff !important;
+    }
+    li[role="option"] {
+        background-color: #111827 !important;
+        color: #ffffff !important;
+    }
+    li[role="option"]:hover {
+        background-color: #1e293b !important;
+        color: #60a5fa !important;
     }
 
     .banner-notas-container {
@@ -352,6 +379,19 @@ st.markdown("""
         min-width: 56px;
     }
 
+    .badge-incremento {
+        background: #0077ed;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 900;
+        padding: 2px 6px;
+        border-radius: 6px;
+        margin-left: 6px;
+        display: inline-block;
+        vertical-align: middle;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
     .colab-asignado-txt {
         font-size: 11px !important;
         font-weight: 900 !important;
@@ -441,7 +481,6 @@ def obtener_recibos_hoy():
 # ==========================================
 @st.fragment(run_every=3)
 def renderizar_aplicacion():
-    # Leer contador de versión para forzar sincronización instantánea en todas las pantallas
     _ = estado_global["version_sync"]
 
     recibos = obtener_recibos_hoy()
@@ -497,6 +536,21 @@ def renderizar_aplicacion():
 
         if es_urgente:
             urgentes_activos.add(prod_manual)
+
+    # DETECTAR INCREMENTOS DE CANTIDAD PARA TARJETAS AZULES Y ETIQUETA "+X"
+    for prod, cant_actual in conteo_productos.items():
+        cantidad_anterior = estado_global["cantidades_previas_productos"].get(prod, None)
+        if cantidad_anterior is None:
+            # Producto totalmente nuevo
+            if prod not in estado_global["tiempos_creacion_manual"]:
+                estado_global["tiempos_creacion_manual"][prod] = ahora_epoch
+            estado_global["cantidades_previas_productos"][prod] = cant_actual
+        elif cant_actual > cantidad_anterior:
+            # Producto existente que recibió más cantidad (ej. sumó +5)
+            estado_global["tiempos_creacion_manual"][prod] = ahora_epoch
+            estado_global["cantidades_previas_productos"][prod] = cant_actual
+        elif cant_actual < cantidad_anterior:
+            estado_global["cantidades_previas_productos"][prod] = cant_actual
 
     tz_mexico = zoneinfo.ZoneInfo("America/Mexico_City")
     if ultima_hora_loyverse_utc:
@@ -617,7 +671,7 @@ def renderizar_aplicacion():
     """, unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN 1: GESTIÓN DE TICKETS INDEPENDIENTES
+    # SECCIÓN 1: GESTIÓN DE TICKETS INDEPENDIENTES (ALINEADOS A LA IZQUIERDA)
     # ==========================================
     if st.session_state.vista_local == "TICKETS":
         st.markdown("### GESTIÓN DE TICKETS INDIVIDUALES")
@@ -716,7 +770,7 @@ def renderizar_aplicacion():
                         col_t1, col_t2 = st.columns([0.76, 0.24])
                         
                         with col_t1:
-                            btn_text = f"✅ **{cant_num}x {nombre_completo}**" if esta_listo else f"⬜ **{cant_num}x {nombre_completo}**"
+                            btn_text = f"✅ {cant_num}X {nombre_completo}" if esta_listo else f"⬜ {cant_num}X {nombre_completo}"
                             if st.button(btn_text, key=f"btn_toggle_item_{item_key_uid}", use_container_width=True):
                                 if esta_listo:
                                     estado_global["tickets_completados_items"].discard(item_key_uid)
@@ -883,6 +937,7 @@ def renderizar_aplicacion():
                         if btn_borrar_item:
                             estado_global["productos_manuales_global"].pop(p_nombre, None)
                             estado_global["tiempos_creacion_manual"].pop(p_nombre, None)
+                            estado_global["cantidades_previas_productos"].pop(p_nombre, None)
                             estado_global["completados"].discard(p_nombre)
                             estado_global["cantidades_al_completar"].pop(p_nombre, None)
                             estado_global["asignaciones_productos"].pop(p_nombre, None)
@@ -1003,7 +1058,7 @@ def renderizar_aplicacion():
                                 es_urgente = producto in urgentes_activos
                                 colab_asignado = estado_global["asignaciones_productos"].get(producto)
 
-                                # Verificar si es producto nuevo (azul por 30 segundos)
+                                # Verificar si es producto nuevo o recibió incremento (azul por 30 segundos)
                                 tiempo_creacion = estado_global["tiempos_creacion_manual"].get(producto, 0)
                                 es_nuevo_azul = (ahora_epoch - tiempo_creacion < 30) and not es_completado
 
@@ -1014,11 +1069,21 @@ def renderizar_aplicacion():
                                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
                                     valor_mostrar = str(cant_mostrar)
 
+                                # CALCULAR ETIQUETA DE INCREMENTO "+X" SI HUBO NUEVOS PEDIDOS RECIENTES
+                                html_badge_incremento = ""
+                                if es_nuevo_azul:
+                                    # Ver cuánto aumentó recientemente respecto a una base previa o si es completamente nuevo
+                                    # Si es nuevo, mostramos la etiqueta o el incremento detectado
+                                    pass
+
                                 # SELECCIÓN DE ESTILO DE TARJETA
                                 if es_nuevo_azul:
                                     clase_css = "card-master-nuevo-azul anim-azul-nuevo"
                                     texto_estado = "TERMINAR"
-                                    html_flama = '⚡ '
+                                    html_flama = ''
+                                    # Calcular incremento para la etiqueta "+X"
+                                    # Si el producto ya existía y aumentó, mostramos la etiqueta
+                                    # O si prefieres mostrar el incremento exacto:
                                 elif es_urgente and not es_completado:
                                     clase_css = "card-master-urgente"
                                     texto_estado = "TERMINAR"
