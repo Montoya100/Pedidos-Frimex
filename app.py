@@ -41,7 +41,7 @@ LOGO_URL = obtener_base64_imagen("logo.png")
 def obtener_estado_global():
     return {
         "completados": set(),
-        "cantidades_al_completار": {},
+        "cantidades_al_completar": {},
         "notas_tablero": [],          
         "productos_manuales_global": {},  
         "colaboradores": ["COLABORADOR 1", "COLABORADOR 2", "COLABORADOR 3", "COLABORADOR 4", "COLABORADOR 5", "COLABORADOR 6"],
@@ -53,7 +53,7 @@ def obtener_estado_global():
         "respaldo": None,
         "descartar_celebracion": False,
         "tiempos_creacion_manual": {},
-        "cantidades_previas_productos": {}, # <--- PARA DETECTAR INCREMENTOS Y MOSTRAR LA ETIQUETA "+X"
+        "cantidades_previas_productos": {}, 
         "version_sync": 0
     }
 
@@ -379,19 +379,6 @@ st.markdown("""
         min-width: 56px;
     }
 
-    .badge-incremento {
-        background: #0077ed;
-        color: #ffffff;
-        font-size: 11px;
-        font-weight: 900;
-        padding: 2px 6px;
-        border-radius: 6px;
-        margin-left: 6px;
-        display: inline-block;
-        vertical-align: middle;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    }
-
     .colab-asignado-txt {
         font-size: 11px !important;
         font-weight: 900 !important;
@@ -537,16 +524,14 @@ def renderizar_aplicacion():
         if es_urgente:
             urgentes_activos.add(prod_manual)
 
-    # DETECTAR INCREMENTOS DE CANTIDAD PARA TARJETAS AZULES Y ETIQUETA "+X"
+    # DETECTAR INCREMENTOS DE CANTIDAD PARA TARJETAS AZULES (30 SEG)
     for prod, cant_actual in conteo_productos.items():
         cantidad_anterior = estado_global["cantidades_previas_productos"].get(prod, None)
         if cantidad_anterior is None:
-            # Producto totalmente nuevo
             if prod not in estado_global["tiempos_creacion_manual"]:
                 estado_global["tiempos_creacion_manual"][prod] = ahora_epoch
             estado_global["cantidades_previas_productos"][prod] = cant_actual
         elif cant_actual > cantidad_anterior:
-            # Producto existente que recibió más cantidad (ej. sumó +5)
             estado_global["tiempos_creacion_manual"][prod] = ahora_epoch
             estado_global["cantidades_previas_productos"][prod] = cant_actual
         elif cant_actual < cantidad_anterior:
@@ -816,7 +801,7 @@ def renderizar_aplicacion():
             st.info("No hay tickets disponibles para mostrar en este periodo.")
 
     # ==========================================
-    # SECCIÓN 2: PANEL DE AJUSTES
+    # SECCIÓN 2: PANEL DE AJUSTES (SIN ASIGNACIÓN REDUNDANTE)
     # ==========================================
     elif st.session_state.vista_local == "AJUSTES":
         st.markdown("### PANEL DE AJUSTES Y CONFIGURACIÓN")
@@ -948,27 +933,6 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # EDICIÓN DE ASIGNACIONES EN AJUSTES
-        st.markdown("#### 👥 Edición y Asignación de Colaboradores por Producto")
-        if conteo_productos:
-            lista_colabs = ["NINGUNO"] + estado_global["colaboradores"]
-            for prod_asignable in sorted(conteo_productos.keys()):
-                colab_actual = estado_global["asignaciones_productos"].get(prod_asignable, "NINGUNO")
-                idx_asig = lista_colabs.index(colab_actual) if colab_actual in lista_colabs else 0
-                
-                st.selectbox(
-                    f"Asignar a: {prod_asignable}",
-                    options=lista_colabs,
-                    index=idx_asig,
-                    key=f"ajustes_asig_{prod_asignable}",
-                    on_change=asignar_colaborador_callback,
-                    args=(prod_asignable,)
-                )
-        else:
-            st.info("No hay productos activos para asignar.")
-
-        st.markdown("---")
-
         # 4. CONFIGURACIÓN DE COLABORADORES
         st.markdown("#### Configuración de Colaboradores")
         with st.form("form_colaboradores", clear_on_submit=False):
@@ -1069,21 +1033,11 @@ def renderizar_aplicacion():
                                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
                                     valor_mostrar = str(cant_mostrar)
 
-                                # CALCULAR ETIQUETA DE INCREMENTO "+X" SI HUBO NUEVOS PEDIDOS RECIENTES
-                                html_badge_incremento = ""
-                                if es_nuevo_azul:
-                                    # Ver cuánto aumentó recientemente respecto a una base previa o si es completamente nuevo
-                                    # Si es nuevo, mostramos la etiqueta o el incremento detectado
-                                    pass
-
                                 # SELECCIÓN DE ESTILO DE TARJETA
                                 if es_nuevo_azul:
                                     clase_css = "card-master-nuevo-azul anim-azul-nuevo"
                                     texto_estado = "TERMINAR"
                                     html_flama = ''
-                                    # Calcular incremento para la etiqueta "+X"
-                                    # Si el producto ya existía y aumentó, mostramos la etiqueta
-                                    # O si prefieres mostrar el incremento exacto:
                                 elif es_urgente and not es_completado:
                                     clase_css = "card-master-urgente"
                                     texto_estado = "TERMINAR"
