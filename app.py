@@ -388,7 +388,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 4. CONSULTA A LA API DE LOYVERSE (CONECTADA AUTOMÁTICAMENTE CADA 5 SEG)
+# 4. CONSULTA A LA API DE LOYVERSE
 # ==========================================
 @st.cache_data(ttl=5, show_spinner=False)
 def obtener_recibos_hoy_cached(created_at_min_str):
@@ -420,9 +420,9 @@ def obtener_recibos_hoy():
     return obtener_recibos_hoy_cached(created_at_min)
 
 # ==========================================
-# 5. RENDERIZADO CON FRAGMENTO AUTOMÁTICO DE ACTUALIZACIÓN
+# 5. RENDERIZADO PRINCIPAL CON REFRESCO ESTABLE
 # ==========================================
-@st.fragment(run_every=5)
+@st.fragment(run_every=4)
 def renderizar_aplicacion():
     recibos = obtener_recibos_hoy()
     conteo_productos = {}
@@ -766,7 +766,7 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # 2. NOTAS DEL TABLERO (CON BOTÓN DE EDITAR Y BORRAR)
+        # 2. NOTAS DEL TABLERO
         st.markdown("#### Notas del Tablero")
         with st.form("form_notas_tablero", clear_on_submit=True):
             nueva_nota_ajustes = st.text_input("Agregar nueva nota al carrusel:")
