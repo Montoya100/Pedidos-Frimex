@@ -144,7 +144,7 @@ def alternar_urgente(producto):
     disparar_sync()
 
 # ==========================================
-# 3. ESTILOS CSS (6 COLUMNAS Y BOTONES FORZADOS)
+# 3. ESTILOS CSS (5 COLUMNAS Y BOTONES AZUL MARINO)
 # ==========================================
 st.markdown("""
     <style>
@@ -171,18 +171,19 @@ st.markdown("""
         max-width: 100% !important;
     }
 
-    /* FORZAR SELECTBOX A NEGRO CON TEXTO BLANCO */
+    /* FORZAR SELECTBOX DE ASIGNACIÓN CON EL MISMO AZUL MARINO DEL BANNER */
     div[data-baseweb="select"] > div {
-        background-color: #000000 !important;
+        background-color: #0077ed !important;
         color: #ffffff !important;
-        border-color: rgba(255, 255, 255, 0.2) !important;
+        border-color: rgba(255, 255, 255, 0.25) !important;
         border-radius: 8px !important;
-        min-height: 28px !important;
-        height: 28px !important;
+        min-height: 32px !important;
+        height: 32px !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
     }
     div[data-baseweb="select"] span {
         color: #ffffff !important;
-        font-size: 9px !important;
+        font-size: 9.5px !important;
         font-weight: 800 !important;
     }
     div[data-baseweb="popover"], div[data-baseweb="menu"] {
@@ -333,16 +334,16 @@ st.markdown("""
 
     .footer-sutil span { color: #34c759 !important; font-weight: 900 !important; }
 
-    /* TARJETA OPTIMIZADA PARA 6 COLUMNAS */
+    /* TARJETA OPTIMIZADA PARA 5 COLUMNAS */
     .card-master-container {
-        border-radius: 10px;
-        padding: 6px 8px;
-        margin-bottom: 4px;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        border-radius: 12px;
+        padding: 8px 10px;
+        margin-bottom: 5px;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.35);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        min-height: 54px;
+        min-height: 62px;
         backdrop-filter: blur(10px);
     }
 
@@ -351,13 +352,13 @@ st.markdown("""
         align-items: center;
         justify-content: space-between;
         width: 100%;
-        gap: 4px;
+        gap: 6px;
     }
 
     .card-master-pendiente { background: #dc2626 !important; border: 1px solid rgba(239, 68, 68, 0.4) !important; color: #ffffff !important; }
-    .card-master-asignado { background: #ea580c !important; border: 1px solid rgba(251, 146, 60, 0.8) !important; color: #ffffff !important; box-shadow: 0 0 12px rgba(234, 88, 12, 0.4) !important; }
-    .card-master-urgente { background: #b91c1c !important; border: 2px solid #fbbf24 !important; color: #ffffff !important; box-shadow: 0 0 12px rgba(251, 191, 36, 0.35) !important; }
-    .card-master-nuevo-azul { background: #1d4ed8 !important; border: 2px solid #60a5fa !important; color: #ffffff !important; box-shadow: 0 0 12px rgba(96, 165, 250, 0.5) !important; }
+    .card-master-asignado { background: #ea580c !important; border: 1px solid rgba(251, 146, 60, 0.8) !important; color: #ffffff !important; box-shadow: 0 0 14px rgba(234, 88, 12, 0.45) !important; }
+    .card-master-urgente { background: #b91c1c !important; border: 2px solid #fbbf24 !important; color: #ffffff !important; box-shadow: 0 0 14px rgba(251, 191, 36, 0.4) !important; }
+    .card-master-nuevo-azul { background: #1d4ed8 !important; border: 2px solid #60a5fa !important; color: #ffffff !important; box-shadow: 0 0 14px rgba(96, 165, 250, 0.6) !important; }
     
     .card-master-completado { background: #047857 !important; border: 1px solid rgba(16, 185, 129, 0.4) !important; color: #ffffff !important; opacity: 0.75; }
     .card-master-completado .card-master-title,
@@ -368,10 +369,10 @@ st.markdown("""
     }
 
     .card-master-title {
-        font-size: 11px !important;
+        font-size: 13px !important;
         font-weight: 800 !important;
         text-transform: uppercase !important;
-        line-height: 1.1 !important;
+        line-height: 1.15 !important;
         flex: 1;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -382,21 +383,21 @@ st.markdown("""
 
     .card-master-num {
         font-family: 'JetBrains Mono', monospace !important;
-        font-size: 26px !important;
+        font-size: 32px !important;
         font-weight: 900 !important;
         line-height: 1 !important;
         text-align: right;
-        min-width: 38px;
+        min-width: 44px;
     }
 
     .colab-asignado-txt {
-        font-size: 9px !important;
+        font-size: 10px !important;
         font-weight: 900 !important;
         color: #ffffff !important;
-        margin-top: 2px;
-        letter-spacing: 0.5px;
+        margin-top: 3px;
+        letter-spacing: 0.6px;
         text-transform: uppercase;
-        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        border-top: 1px solid rgba(255, 255, 255, 0.25);
         padding-top: 2px;
     }
 
@@ -405,21 +406,21 @@ st.markdown("""
         box-shadow: none !important;
     }
 
-    /* FORZAR BOTÓN AZUL SÓLIDO */
+    /* FORZAR TODOS LOS BOTONES A AZUL MARINO (#0077ed) */
     div[data-testid="stButton"] button {
         background-color: #0077ed !important;
         background: #0077ed !important;
         color: #ffffff !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        border-radius: 6px !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        border-radius: 7px !important;
         font-weight: 800 !important;
-        font-size: 8.5px !important;
-        letter-spacing: 0.5px !important;
+        font-size: 9px !important;
+        letter-spacing: 0.6px !important;
         text-transform: uppercase !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-        height: 28px !important;
-        min-height: 28px !important;
-        padding: 0px 4px !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.25) !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        padding: 0px 6px !important;
         width: 100% !important;
     }
 
@@ -437,9 +438,9 @@ st.markdown("""
         .header-logo-container { flex-direction: row !important; justify-content: space-between !important; align-items: center !important; padding: 0 2px !important; }
         .header-logo-img { height: 30px !important; display: block !important; }
         .header-title { font-size: 13px !important; }
-        .card-master-title { font-size: 11px !important; }
-        .card-master-num { font-size: 24px !important; }
-        .card-master-container { min-height: 50px !important; padding: 6px 8px !important; border-radius: 10px !important; }
+        .card-master-title { font-size: 12px !important; }
+        .card-master-num { font-size: 28px !important; }
+        .card-master-container { min-height: 56px !important; padding: 7px 9px !important; border-radius: 10px !important; }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -985,7 +986,7 @@ def renderizar_aplicacion():
                 st.rerun()
 
     # ==========================================
-    # SECCIÓN 3: TABLA DE PRODUCCIÓN PRINCIPAL (6 COLUMNAS)
+    # SECCIÓN 3: TABLA DE PRODUCCIÓN PRINCIPAL (5 COLUMNAS)
     # ==========================================
     else:
         if conteo_productos and piezas_pendientes == 0 and not estado_global["descartar_celebracion"]:
@@ -1024,10 +1025,10 @@ def renderizar_aplicacion():
                 completados.sort(key=lambda x: x[0])
 
                 def renderizar_lista_productos(lista):
-                    # 6 COLUMNAS POR FILA PARA MOSTRAR MÁS DE 12 PIEZAS EN PANTALLAS DE 32"
-                    for i in range(0, len(lista), 6):
-                        grupo = lista[i:i+6]
-                        cols = st.columns(6)
+                    # 5 COLUMNAS POR FILA PARA UN TAMAÑO ÓPTIMO Y CÓMODO
+                    for i in range(0, len(lista), 5):
+                        grupo = lista[i:i+5]
+                        cols = st.columns(5)
 
                         for idx, (producto, cant_total) in enumerate(grupo):
                             with cols[idx]:
