@@ -251,7 +251,7 @@ def reproducir_sonido_celebracion():
     components.html(sound_js, height=0, width=0)
 
 # ==========================================
-# 3. ESTILOS CSS, CARRUSEL DE NOTAS Y AUTO-REFRESH AUTOMÁTICO
+# 3. ESTILOS CSS, BANNER LIMPIO Y AUTO-REFRESH SUTIL
 # ==========================================
 st.markdown(f"""
     <style>
@@ -288,9 +288,10 @@ st.markdown(f"""
         max-width: 100% !important;
     }}
 
+    /* BANNER DE NOTAS (FONDO SÓLIDO SIN DEGRADADO AZUL) */
     .banner-notas-container {{
-        background: linear-gradient(135deg, #182232 0%, #111827 50%, #0077ed 200%);
-        border: 1px solid rgba(0, 119, 237, 0.3);
+        background: #111827 !important;
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 14px;
         padding: 8px 14px;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
@@ -318,7 +319,7 @@ st.markdown(f"""
     .banner-nota-item {{
         display: none;
         color: #ffffff;
-        font-size: 18px !important;
+        font-size: 17px !important;
         font-weight: 900 !important;
         line-height: 1.2;
         letter-spacing: 0.6px;
@@ -538,7 +539,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SCRIPT JS: AUTO-REFRESH REAL CADA 5 SEGUNDOS + ROTACIÓN DE NOTAS CADA 10s
+# SCRIPT JS: AUTO-REFRESH DE SINCRONIZACIÓN AUTOMÁTICA Y CARRUSEL DE NOTAS
 # ==========================================
 utilidades_js = """
 <script>
@@ -568,28 +569,27 @@ async function iniciarUtilidades() {
     let notaIndex = 0;
     function rotarNotas() {
         const notas = document.querySelectorAll('.banner-nota-item');
-        if (notas.length > 0) {
-            notas.forEach(n => n.classList.remove('activo'));
+        if (notas.length > 1) {
+            notas[notaIndex].classList.remove('activo');
             notaIndex = (notaIndex + 1) % notas.length;
             notas[notaIndex].classList.add('activo');
         }
     }
 
-    // Activar primera nota inmediatamente al cargar
-    setTimeout(function() {
-        const notas = document.querySelectorAll('.banner-nota-item');
-        if (notas.length > 0) {
-            notas[0].classList.add('activo');
+    const notasIniciales = document.querySelectorAll('.banner-nota-item');
+    if (notasIniciales.length > 0) {
+        notasIniciales[0].classList.add('activo');
+        if (notasIniciales.length > 1) {
             setInterval(rotarNotas, 10000);
         }
-    }, 300);
+    }
 }
 iniciarUtilidades();
 
-// SINCRONIZACIÓN AUTOMÁTICA REAL EN SEGUNDO PLANO CADA 5 SEGUNDOS
+// Sincronización automática de datos en segundo plano cada 5 segundos sin parpadeos molestos
 setTimeout(function() {
     setInterval(function() {
-        if (!window.location.hash.includes('nosync')) {
+        if (typeof window !== 'undefined' && !window.location.hash.includes('nosync')) {
             window.location.reload();
         }
     }, 5000);
@@ -798,13 +798,14 @@ def renderizar_aplicacion():
                 estado_global["vista_actual"] = "AJUSTES"
                 st.rerun()
 
-    # BANNER DE NOTAS CON CARRUSEL AUTOMÁTICO
+    # BANNER DE NOTAS CON FORMATO "NOTA 1 DE 3", "NOTA 2 DE 3" Y SIN DEGRADADO
     notas_filtradas = [txt for txt in estado_global["notas_tablero"] if txt.strip()]
     if notas_filtradas:
+        total_notas = len(notas_filtradas)
         html_notas_items = ""
         for idx_n, nota_txt in enumerate(notas_filtradas):
             clase_activo = "activo" if idx_n == 0 else ""
-            html_notas_items += f'<div class="banner-nota-item {clase_activo}">NOTA {idx_n + 1}: {nota_txt.upper()}</div>'
+            html_notas_items += f'<div class="banner-nota-item {clase_activo}">NOTA {idx_n + 1} DE {total_notas}: {nota_txt.upper()}</div>'
 
         st.markdown(f"""
             <div class="banner-notas-container">
@@ -969,7 +970,7 @@ def renderizar_aplicacion():
 
             st.markdown("#### Agregar Nota al Tablero Principal")
             with st.form("form_nota_rapida_tickets", clear_on_submit=True):
-                nueva_nota_txt = st.text_input("Escribe una nota rápida para el banner superior:")
+                nueva_nota_txt = st.text_input("Escribe una nota rápida para el carrusel:")
                 btn_enviar_nota_ticket = st.form_submit_button("Publicar Nota en Tablero", use_container_width=True)
 
                 if btn_enviar_nota_ticket and nueva_nota_txt.strip():
