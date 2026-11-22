@@ -2,9 +2,37 @@ import base64
 import os
 import time
 import requests
+import json
+import unicodedata
 import streamlit as st
 from datetime import datetime, timezone
 import zoneinfo
+
+# ==========================================
+# 0. PERSISTENCIA DE CONFIGURACIÓN (JSON)
+# ==========================================
+CONFIG_FILE = "config_sistema.json"
+
+def cargar_configuracion_sistema():
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {
+        "colaboradores": ["COLABORADOR 1", "COLABORADOR 2", "COLABORADOR 3", "COLABORADOR 4", "COLABORADOR 5", "COLABORADOR 6"],
+        "num_columnas": 5
+    }
+
+def guardar_configuracion_sistema(data):
+    try:
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+    except Exception:
+        pass
+
+config_guardada = cargar_configuracion_sistema()
 
 # ==========================================
 # 1. CONFIGURACIÓN DE PÁGINA Y FAVICON
@@ -16,7 +44,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-LOYVERSE_TOKEN = "13d9288fbc264fb88a8112094407486a"
+# Token seguro desde st.secrets con respaldo
+LOYVERSE_TOKEN = st.secrets.get("LOYVERSE_TOKEN", "13d9288fbc264fb88a8112094407486a")
 HEADERS_LOYVERSE = {
     "Authorization": f"Bearer {LOYVERSE_TOKEN}",
     "Content-Type": "application/json",
@@ -44,7 +73,8 @@ def obtener_estado_global():
         "cantidades_al_completar": {},
         "notas_tablero": [],          
         "productos_manuales_global": {},  
-        "colaboradores": ["COLABORADOR 1", "COLABORADOR 2", "COLABORADOR 3", "COLABORADOR 4", "COLABORADOR 5", "COLABORADOR 6"],
+        "colaboradores": config_guardada.get("colaboradores", ["COLABORADOR 1", "COLABORADOR 2", "COLABORADOR 3", "COLABORADOR 4", "COLABORADOR 5", "COLABORADOR 6"]),
+        "num_columnas": config_guardada.get("num_columnas", 5),
         "asignaciones_productos": {}, 
         "urgentes_activos": set(),    
         "tickets_completados_items": set(), 
@@ -72,6 +102,7 @@ def borrar_todo():
         "productos_manuales_global": {k: v.copy() for k, v in estado_global["productos_manuales_global"].items()},
         "notas_tablero": estado_global["notas_tablero"].copy(),
         "colaboradores": estado_global["colaboradores"].copy(),
+        "num_columnas": estado_global["num_columnas"],
         "asignaciones_productos": estado_global["asignaciones_productos"].copy(),
         "urgentes_activos": estado_global["urgentes_activos"].copy(),
         "tickets_completados_items": estado_global["tickets_completados_items"].copy(),
@@ -102,6 +133,7 @@ def restaurar_estado():
         estado_global["productos_manuales_global"] = {k: v.copy() for k, v in estado_global["respaldo"]["productos_manuales_global"].items()}
         estado_global["notas_tablero"] = estado_global["respaldo"]["notas_tablero"].copy()
         estado_global["colaboradores"] = estado_global["respaldo"]["colaboradores"].copy()
+        estado_global["num_columnas"] = estado_global["respaldo"]["num_columnas"]
         estado_global["asignaciones_productos"] = estado_global["respaldo"]["asignaciones_productos"].copy()
         estado_global["urgentes_activos"] = estado_global["respaldo"]["urgentes_activos"].copy()
         estado_global["tickets_completados_items"] = estado_global["respaldo"]["tickets_completados_items"].copy()
@@ -142,6 +174,11 @@ def alternar_urgente(producto):
         estado_global["urgentes_activos"].add(producto)
         st.toast(f"¡{producto} marcado como URGENTE!", icon="🔥")
     disparar_sync()
+
+# Función para normalizar texto y ordenar sin importar acentos/mayúsculas
+def normalizar_texto_orden(texto):
+    nfkd_form = unicodedata.normalize('NFKD', texto)
+    return "".join([c for c in nfkd_form if not unicodedata.combining(c)]).upper()
 
 # ==========================================
 # 3. ESTILOS CSS
@@ -394,7 +431,6 @@ st.markdown("""
     .card-master-asignado { background: #ea580c !important; border: 1px solid rgba(251, 146, 60, 0.8) !important; color: #ffffff !important; box-shadow: 0 0 14px rgba(234, 88, 12, 0.45) !important; }
     .card-master-urgente { background: #b91c1c !important; border: 2px solid #fbbf24 !important; color: #ffffff !important; box-shadow: 0 0 14px rgba(251, 191, 36, 0.4) !important; }
     
-    /* TARJETA NUEVO CON EL MISMO AZUL SÓLIDO DE LA ETIQUETA DE NOTA (#0077ed) */
     .card-master-nuevo-azul { background: #0077ed !important; border: 2px solid #ffffff !important; color: #ffffff !important; box-shadow: 0 0 14px rgba(0, 119, 237, 0.7) !important; }
     
     .card-master-completado { background: #047857 !important; border: 1px solid rgba(16, 185, 129, 0.4) !important; color: #ffffff !important; opacity: 0.75; }
@@ -487,7 +523,6 @@ st.markdown("""
         border-color: #60a5fa !important;
     }
 
-    /* ADAPTACIÓN MÓVIL: TEXTOS MÁS GRANDES ÚNICAMENTE EN TELÉFONOS */
     @media (max-width: 768px) {
         .ocultar-en-movil { display: none !important; }
         .block-container { padding-left: 2px !important; padding-right: 2px !important; }
@@ -496,7 +531,6 @@ st.markdown("""
         .header-logo-img { height: 30px !important; display: block !important; }
         .header-title { font-size: 13px !important; }
         
-        /* Aumentar textos en versión móvil */
         .card-master-title { font-size: 14px !important; }
         .card-master-num { font-size: 32px !important; }
         .card-master-container { min-height: 60px !important; padding: 8px 10px !important; border-radius: 10px !important; }
@@ -691,7 +725,7 @@ def renderizar_aplicacion():
                 st.rerun()
 
     # ==========================================
-    # BANNER DE NOTAS NATIVO (10 SEGUNDOS POR NOTA)
+    # BANNER DE NOTAS NATIVO
     # ==========================================
     notas_filtradas = [txt for txt in estado_global["notas_tablero"] if txt.strip()]
     if notas_filtradas:
@@ -729,11 +763,11 @@ def renderizar_aplicacion():
     """, unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN 1: GESTIÓN DE TICKETS INDEPENDIENTES
+    # SECCIÓN 1: GESTIÓN DE TICKETS DETALLADOS
     # ==========================================
     if st.session_state.vista_local == "TICKETS":
-        st.markdown("### GESTIÓN DE TICKETS INDIVIDUALES")
-        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Visualiza los tickets con sus productos y variantes exactas tal cual se registran en Loyverse.</p>", unsafe_allow_html=True)
+        st.markdown("### GESTIÓN DETALLADA DE TICKETS")
+        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Visualización avanzada con desglose de variantes, comentarios, precios y totales en comillas.</p>", unsafe_allow_html=True)
         
         if recibos:
             tickets_pendientes_lista = []
@@ -768,9 +802,13 @@ def renderizar_aplicacion():
                 customer_name = recibo.get("customer_name") or recibo.get("customer", {}).get("name")
                 note_recibo = recibo.get("note") or recibo.get("comment") or ""
                 
+                # Precios y totales con comillas estrictas
+                total_receipt_val = recibo.get("total_money", 0.0)
+                total_receipt_fmt = f"\"{float(total_receipt_val):,.2f}\""
+                
                 titulo_custom = estado_global["titulos_personalizados_tickets"].get(ticket_id)
                 titulo_principal = titulo_custom if titulo_custom else (customer_name.upper() if customer_name else f"TICKET {receipt_number}")
-                sub_detalle = f"TICKET {receipt_number}" if customer_name or titulo_custom else ""
+                sub_detalle = f"TICKET {receipt_number} | TOTAL: {total_receipt_fmt}"
                 
                 try:
                     dt_ticket = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
@@ -796,9 +834,9 @@ def renderizar_aplicacion():
                     """, unsafe_allow_html=True)
 
                     if note_recibo:
-                        st.markdown(f"<div style='font-style: italic; color: #fbbf24; font-size: 11px; margin-bottom: 8px;'>💬 Nota: {note_recibo}</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='font-style: italic; color: #fbbf24; font-size: 11px; margin-bottom: 8px;'>💬 Comentario / Nota del Ticket: \"{note_recibo}\"</div>", unsafe_allow_html=True)
 
-                    with st.expander(f"Editar nombre del ticket #{receipt_number}"):
+                    with st.expander(f"Editar nombre o alias del ticket #{receipt_number}"):
                         with st.form(key=f"form_title_{ticket_id}"):
                             nuevo_nombre_ticket = st.text_input("Nombre o alias personalizado:", value=titulo_custom if titulo_custom else (customer_name if customer_name else ""))
                             btn_guardar_nombre = st.form_submit_button("GUARDAR", use_container_width=True)
@@ -812,12 +850,19 @@ def renderizar_aplicacion():
                                 st.toast("Nombre de ticket actualizado")
                                 st.rerun()
 
+                    # Desglose detallado de cada producto, variante y precio entre comillas
                     for idx_item, item in enumerate(line_items):
                         nombre = item.get("item_name", "Producto")
                         cantidad = item.get("quantity", 0)
                         variante = item.get("variant_name")
                         var_str = f" ({variante})" if variante and variante != "Default" else ""
                         nombre_completo = f"{nombre}{var_str}"
+
+                        precio_unit = item.get("price", 0.0)
+                        total_item = item.get("total_money", 0.0)
+                        
+                        precio_fmt = f"\"{float(precio_unit):,.2f}\""
+                        total_item_fmt = f"\"{float(total_item):,.2f}\""
 
                         cant_num = int(cantidad) if float(cantidad).is_integer() else cantidad
                         item_key_uid = f"{ticket_id}_{idx_item}_{nombre_completo}"
@@ -828,7 +873,7 @@ def renderizar_aplicacion():
                         col_t1, col_t2 = st.columns([0.76, 0.24])
                         
                         with col_t1:
-                            btn_text = f"✅ {cant_num}X {nombre_completo}" if esta_listo else f"⬜ {cant_num}X {nombre_completo}"
+                            btn_text = f"✅ {cant_num}X {nombre_completo} [Precio: {precio_fmt} | Total: {total_item_fmt}]" if esta_listo else f"⬜ {cant_num}X {nombre_completo} [Precio: {precio_fmt} | Total: {total_item_fmt}]"
                             if st.button(btn_text, key=f"btn_toggle_item_{item_key_uid}", use_container_width=True):
                                 if esta_listo:
                                     estado_global["tickets_completados_items"].discard(item_key_uid)
@@ -874,28 +919,57 @@ def renderizar_aplicacion():
             st.info("No hay tickets disponibles para mostrar en este periodo.")
 
     # ==========================================
-    # SECCIÓN 2: PANEL DE AJUSTES
+    # SECCIÓN 2: PANEL DE AJUSTES Y CONFIGURACIÓN
     # ==========================================
     elif st.session_state.vista_local == "AJUSTES":
         st.markdown("### PANEL DE AJUSTES Y CONFIGURACIÓN")
         st.markdown("---")
 
-        # 1. TOP DEL DÍA
-        st.markdown("#### 🏆 Top del día")
+        # 1. TOP DEL DÍA Y DESGLOSE POR COLABORADOR
+        st.markdown("#### 🏆 Top del día y Desglose por Colaborador")
         conteo_colab = {colab: 0 for colab in estado_global["colaboradores"]}
+        desglose_productos_colab = {colab: [] for colab in estado_global["colaboradores"]}
+        
         for prod, colab_asig in estado_global["asignaciones_productos"].items():
             if colab_asig in conteo_colab:
                 cant_prod = conteo_productos.get(prod, 1)
-                conteo_colab[colab_asig] += (1 if prod in infinitos_activos else cant_prod)
+                piezas_item = 1 if prod in infinitos_activos else cant_prod
+                conteo_colab[colab_asig] += piezas_item
+                desglose_productos_colab[colab_asig].append(f"{piezas_item}x {prod}")
 
         ranking_ordenado = sorted(conteo_colab.items(), key=lambda x: x[1], reverse=True)
         for pos, (nombre_colab, total_piezas) in enumerate(ranking_ordenado):
             medalla = "🥇" if pos == 0 else ("🥈" if pos == 1 else ("🥉" if pos == 2 else f"#{pos+1}"))
-            st.markdown(f"<div style='font-size: 12px; font-weight: 800; padding: 5px 8px; background: #121827; border-radius: 6px; margin-bottom: 4px; color: #e2e8f0; display: flex; justify-content: space-between;'><span>{medalla} {nombre_colab}</span><span style='color: #38bdf8;'>{total_piezas} pzas</span></div>", unsafe_allow_html=True)
+            productos_asignados_str = ", ".join(desglose_productos_colab[nombre_colab]) if desglose_productos_colab[nombre_colab] else "Sin asignaciones registradas"
+            
+            st.markdown(f"""
+                <div style='font-size: 12px; font-weight: 800; padding: 8px 10px; background: #121827; border-radius: 6px; margin-bottom: 6px; color: #e2e8f0;'>
+                    <div style='display: flex; justify-content: space-between; margin-bottom: 3px;'>
+                        <span>{medalla} {nombre_colab}</span>
+                        <span style='color: #38bdf8;'>{total_piezas} pzas total</span>
+                    </div>
+                    <div style='font-size: 10px; color: #9ca3af; font-weight: 700;'>Productos asignados: {productos_asignados_str}</div>
+                </div>
+            """, unsafe_allow_html=True)
 
         st.markdown("---")
 
-        # 2. NOTAS DEL TABLERO
+        # 2. CONFIGURACIÓN DE COLUMNAS DE LA CUADRÍCULA
+        st.markdown("#### 📐 Diseño de la Cuadrícula Principal")
+        with st.form("form_config_columnas"):
+            nuevo_num_cols = st.selectbox("Número de columnas de productos en pantalla:", options=[3, 4, 5, 6], index=[3, 4, 5, 6].index(estado_global["num_columnas"]) if estado_global["num_columnas"] in [3, 4, 5, 6] else 2)
+            btn_guardar_cols = st.form_submit_button("Guardar Número de Columnas", use_container_width=True)
+            if btn_guardar_cols:
+                estado_global["num_columnas"] = int(nuevo_num_cols)
+                config_guardada["num_columnas"] = int(nuevo_num_cols)
+                guardar_configuracion_sistema(config_guardada)
+                disparar_sync()
+                st.toast("¡Diseño de columnas actualizado!")
+                st.rerun()
+
+        st.markdown("---")
+
+        # 3. NOTAS DEL TABLERO
         st.markdown("#### Notas del Tablero")
         with st.form("form_notas_tablero", clear_on_submit=True):
             nueva_nota_ajustes = st.text_input("Agregar nueva nota al carrusel:")
@@ -933,7 +1007,7 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # 3. AGREGAR PRODUCTOS MANUALES
+        # 4. AGREGAR PRODUCTOS MANUALES
         st.markdown("#### Agregar Productos Manuales")
         with st.form("form_agregar_manual", clear_on_submit=True):
             nombre_manual = st.text_input("Nombre del producto")
@@ -1006,8 +1080,8 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # 4. CONFIGURACIÓN DE COLABORADORES
-        st.markdown("#### Configuración de Colaboradores")
+        # 5. CONFIGURACIÓN PERMANENTE DE COLABORADORES
+        st.markdown("#### Configuración Permanente de Colaboradores")
         with st.form("form_colaboradores", clear_on_submit=False):
             colab_inputs = []
             for idx_c in range(st.session_state.num_campos_colab):
@@ -1026,14 +1100,17 @@ def renderizar_aplicacion():
                 st.rerun()
 
             if btn_guardar_colabs:
-                estado_global["colaboradores"] = [c.strip().upper() for c in colab_inputs if c.strip()]
+                nombres_limpios = [c.strip().upper() for c in colab_inputs if c.strip()]
+                estado_global["colaboradores"] = nombres_limpios
+                config_guardada["colaboradores"] = nombres_limpios
+                guardar_configuracion_sistema(config_guardada)
                 disparar_sync()
-                st.toast("Colaboradores actualizados")
+                st.toast("¡Colaboradores guardados permanentemente!")
                 st.rerun()
 
         st.markdown("---")
 
-        # 5. BOTÓN DE LIMPIAR TABLERO
+        # 6. BOTÓN DE LIMPIAR TABLERO
         col_res1, col_res2 = st.columns(2)
         with col_res1:
             if st.button("Limpiar tablero", use_container_width=True):
@@ -1045,7 +1122,7 @@ def renderizar_aplicacion():
                 st.rerun()
 
     # ==========================================
-    # SECCIÓN 3: TABLA DE PRODUCCIÓN PRINCIPAL (5 COLUMNAS)
+    # SECCIÓN 3: TABLA DE PRODUCCIÓN PRINCIPAL (COLUMNAS DINÁMICAS)
     # ==========================================
     else:
         if conteo_productos and piezas_pendientes == 0 and not estado_global["descartar_celebracion"]:
@@ -1073,21 +1150,22 @@ def renderizar_aplicacion():
                     else:
                         activos.append((prod, cant_total))
 
-                # ORDENAMIENTO: URGENTES PRIMERO, LUEGO ALFABÉTICO ESTRICTO
+                # ORDENAMIENTO LIMPIO (Ignorando acentos y mayúsculas, urgentes primero)
                 def clave_ordenamiento(item):
                     producto, _ = item
                     es_urgente = producto in urgentes_activos
                     prioridad = 0 if es_urgente else 1
-                    return (prioridad, producto)
+                    return (prioridad, normalizar_texto_orden(producto))
 
                 activos.sort(key=clave_ordenamiento)
-                completados.sort(key=lambda x: x[0])
+                completados.sort(key=lambda x: normalizar_texto_orden(x[0]))
+
+                num_cols_grid = estado_global.get("num_columnas", 5)
 
                 def renderizar_lista_productos(lista):
-                    # 5 COLUMNAS POR FILA
-                    for i in range(0, len(lista), 5):
-                        grupo = lista[i:i+5]
-                        cols = st.columns(5)
+                    for i in range(0, len(lista), num_cols_grid):
+                        grupo = lista[i:i+num_cols_grid]
+                        cols = st.columns(num_cols_grid)
 
                         for idx, (producto, cant_total) in enumerate(grupo):
                             with cols[idx]:
@@ -1096,7 +1174,6 @@ def renderizar_aplicacion():
                                 es_urgente = producto in urgentes_activos
                                 colab_asignado = estado_global["asignaciones_productos"].get(producto)
 
-                                # Verificar si es producto nuevo o recibió incremento (azul por 30 segundos)
                                 tiempo_creacion = estado_global["tiempos_creacion_manual"].get(producto, 0)
                                 es_nuevo_azul = (ahora_epoch - tiempo_creacion < 30) and not es_completado
 
@@ -1107,7 +1184,6 @@ def renderizar_aplicacion():
                                     cant_mostrar = cant_total if es_completado else (cant_total - cant_base)
                                     valor_mostrar = str(cant_mostrar)
 
-                                # TEXTOS DE LOS BOTONES SEGÚN EL SEMÁFORO DE COLOR
                                 if es_nuevo_azul:
                                     clase_css = "card-master-nuevo-azul anim-azul-nuevo"
                                     texto_estado = "NUEVO"
@@ -1131,7 +1207,6 @@ def renderizar_aplicacion():
 
                                 html_badge_colab = f'<div class="colab-asignado-txt">{colab_asignado}</div>' if colab_asignado else ''
 
-                                # FILA 1: TARJETA DE PRODUCTO
                                 st.markdown(f"""
                                     <div class="card-master-container {clase_css}">
                                         <div class="card-content-top">
@@ -1142,7 +1217,6 @@ def renderizar_aplicacion():
                                     </div>
                                 """, unsafe_allow_html=True)
 
-                                # FILA 2: BOTÓN Y SELECTOR EN LA MISMA FILA
                                 col_f1, col_f2 = st.columns([0.46, 0.54], gap="small")
                                 with col_f1:
                                     if st.button(texto_estado, key=f"tarjeta_btn_{producto}", use_container_width=True):
