@@ -751,11 +751,11 @@ def renderizar_aplicacion():
     """, unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN 1: TICKETS (SIN PRECIOS, SOLO TEXTOS/VARIANTES)
+    # SECCIÓN 1: TICKETS (CON EXTRACCIÓN AVANZADA DESDE LOYVERSE)
     # ==========================================
     if st.session_state.vista_local == "TICKETS":
-        st.markdown("### TICKETS")
-        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Gestión y control de comandas individuales.</p>", unsafe_allow_html=True)
+        st.markdown("### 📄 TICKETS Y COMANDAS")
+        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Gestión detallada con nombre de cliente, notas y variantes de productos extraídos directamente de Loyverse.</p>", unsafe_allow_html=True)
         
         if recibos:
             tickets_pendientes_lista = []
@@ -787,8 +787,17 @@ def renderizar_aplicacion():
                 receipt_number = recibo.get("receipt_number", f"#{idx_recibo + 1}")
                 created_at_str = recibo.get("receipt_date") or recibo.get("created_at", "")
                 
-                customer_name = recibo.get("customer_name") or recibo.get("customer", {}).get("name")
+                # Extracción robusta de nombre de cliente desde la API de Loyverse
+                customer_name = None
+                if recibo.get("customer_name"):
+                    customer_name = recibo.get("customer_name")
+                elif recibo.get("customer") and isinstance(recibo.get("customer"), dict):
+                    customer_name = recibo.get("customer").get("name")
+                
+                # Extracción de comentarios y notas de Loyverse
                 note_recibo = recibo.get("note") or recibo.get("comment") or ""
+                if not note_recibo and recibo.get("source_id"):
+                    note_recibo = recibo.get("source_id", "")
                 
                 titulo_custom = estado_global["titulos_personalizados_tickets"].get(ticket_id)
                 titulo_principal = titulo_custom if titulo_custom else (customer_name.upper() if customer_name else f"TICKET {receipt_number}")
@@ -834,11 +843,17 @@ def renderizar_aplicacion():
                                 st.toast("Actualizado")
                                 st.rerun()
 
-                    # Productos y variantes sin precios
                     for idx_item, item in enumerate(line_items):
                         nombre = item.get("item_name", "Producto")
                         cantidad = item.get("quantity", 0)
+                        
+                        # Extracción avanzada de variantes de producto
                         variante = item.get("variant_name")
+                        if not variante and item.get("options"):
+                            opts = [opt.get("value") for opt in item.get("options", []) if opt.get("value")]
+                            if opts:
+                                variante = " / ".join(opts)
+
                         var_str = f" ({variante})" if variante and variante != "Default" else ""
                         nombre_completo = f"{nombre}{var_str}"
 
@@ -897,10 +912,10 @@ def renderizar_aplicacion():
             st.info("Sin tickets en este periodo.")
 
     # ==========================================
-    # SECCIÓN 2: AJUSTES (COLUMNAS ABAJO DE COLABORADORES)
+    # SECCIÓN 2: AJUSTES
     # ==========================================
     elif st.session_state.vista_local == "AJUSTES":
-        st.markdown("### AJUSTES")
+        st.markdown("### ⚙️ AJUSTES Y CONFIGURACIÓN")
         st.markdown("---")
 
         # 1. TOP Y DESGLOSE
@@ -1065,7 +1080,7 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # 5. DISEÑO DE CUADRÍCULA (MOVIDO AQUÍ ABAJO)
+        # 5. DISEÑO DE CUADRÍCULA
         st.markdown("#### Diseño de Cuadrícula")
         with st.form("form_config_columnas"):
             nuevo_num_cols = st.selectbox("Columnas de productos:", options=[3, 4, 5, 6], index=[3, 4, 5, 6].index(estado_global["num_columnas"]) if estado_global["num_columnas"] in [3, 4, 5, 6] else 2)
@@ -1091,9 +1106,11 @@ def renderizar_aplicacion():
                 st.rerun()
 
     # ==========================================
-    # SECCIÓN 3: TABLERO PRINCIPAL
+    # SECCIÓN 3: TABLERO DE PRODUCCIÓN PRINCIPAL
     # ==========================================
     else:
+        st.markdown("### 📊 TABLERO DE PRODUCCIÓN")
+        
         if conteo_productos and piezas_pendientes == 0 and not estado_global["descartar_celebracion"]:
             st.markdown(f"""
                 <div class="full-screen-celebracion">
