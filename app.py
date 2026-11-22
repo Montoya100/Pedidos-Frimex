@@ -590,8 +590,18 @@ def renderizar_aplicacion():
             for item in recibo.get("line_items", []):
                 nombre = item.get("item_name", "Producto")
                 cantidad = item.get("quantity", 0)
-                variante = item.get("variant_name")
                 
+                # Extracción robusta de variante y modificadores de Loyverse
+                variante = item.get("variant_name")
+                if not variante or variante == "Default":
+                    variante = item.get("option_values") or item.get("variant") or ""
+                
+                # Si viene como lista o diccionario de opciones
+                if isinstance(variante, list):
+                    variante = " / ".join([str(v.get("name") or v) for v in variante if v])
+                elif isinstance(variante, dict):
+                    variante = str(variante.get("name", ""))
+
                 if variante and variante != "Default":
                     nombre_completo = f"{nombre} ({variante})"
                 else:
@@ -670,7 +680,7 @@ def renderizar_aplicacion():
                 piezas_pendientes += (cant_total - cant_marcada)
 
     # ==========================================
-    # ENCABEZADO PRINCIPAL
+    # ENCABEZADO PRINCIPAL (TABLERO DE PRODUCCIÓN)
     # ==========================================
     col_hdr_left, col_hdr_mid, col_hdr_right = st.columns([0.45, 0.20, 0.35])
     
@@ -680,7 +690,7 @@ def renderizar_aplicacion():
                 <div class="header-left-group">
                     <img src="{LOGO_URL}" class="header-logo-img" alt="Logo Mostacho">
                     <div>
-                        <h1 class="header-title">Tablero Mostacho</h1>
+                        <h1 class="header-title">Tablero de Producción</h1>
                         <div class="sub-brand-line">
                             <span>MOSTACHO BOTANAS</span>
                             <span class="sync-text-inline">| SYNC: {hora_sync_loyverse}</span>
@@ -751,11 +761,11 @@ def renderizar_aplicacion():
     """, unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN 1: TICKETS (CON EXTRACCIÓN AVANZADA DESDE LOYVERSE)
+    # SECCIÓN 1: GESTIÓN DE TICKETS
     # ==========================================
     if st.session_state.vista_local == "TICKETS":
-        st.markdown("### 📄 TICKETS Y COMANDAS")
-        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Gestión detallada con nombre de cliente, notas y variantes de productos extraídos directamente de Loyverse.</p>", unsafe_allow_html=True)
+        st.markdown("### GESTIÓN DE TICKETS")
+        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Espejo de comandas con nombres de cliente, comentarios y variantes exactas.</p>", unsafe_allow_html=True)
         
         if recibos:
             tickets_pendientes_lista = []
@@ -770,6 +780,11 @@ def renderizar_aplicacion():
                     for idx_item, item in enumerate(line_items):
                         nombre = item.get("item_name", "Producto")
                         variante = item.get("variant_name")
+                        if not variante or variante == "Default":
+                            variante = item.get("option_values") or ""
+                        if isinstance(variante, list):
+                            variante = " / ".join([str(v.get("name") or v) for v in variante if v])
+                        
                         var_str = f" ({variante})" if variante and variante != "Default" else ""
                         item_key_uid = f"{ticket_id}_{idx_item}_{nombre}{var_str}"
                         if item_key_uid not in estado_global["tickets_completados_items"]:
@@ -787,17 +802,14 @@ def renderizar_aplicacion():
                 receipt_number = recibo.get("receipt_number", f"#{idx_recibo + 1}")
                 created_at_str = recibo.get("receipt_date") or recibo.get("created_at", "")
                 
-                # Extracción robusta de nombre de cliente desde la API de Loyverse
+                # Extracción de nombre de cliente desde Loyverse
                 customer_name = None
                 if recibo.get("customer_name"):
                     customer_name = recibo.get("customer_name")
                 elif recibo.get("customer") and isinstance(recibo.get("customer"), dict):
                     customer_name = recibo.get("customer").get("name")
                 
-                # Extracción de comentarios y notas de Loyverse
                 note_recibo = recibo.get("note") or recibo.get("comment") or ""
-                if not note_recibo and recibo.get("source_id"):
-                    note_recibo = recibo.get("source_id", "")
                 
                 titulo_custom = estado_global["titulos_personalizados_tickets"].get(ticket_id)
                 titulo_principal = titulo_custom if titulo_custom else (customer_name.upper() if customer_name else f"TICKET {receipt_number}")
@@ -847,12 +859,11 @@ def renderizar_aplicacion():
                         nombre = item.get("item_name", "Producto")
                         cantidad = item.get("quantity", 0)
                         
-                        # Extracción avanzada de variantes de producto
                         variante = item.get("variant_name")
-                        if not variante and item.get("options"):
-                            opts = [opt.get("value") for opt in item.get("options", []) if opt.get("value")]
-                            if opts:
-                                variante = " / ".join(opts)
+                        if not variante or variante == "Default":
+                            variante = item.get("option_values") or ""
+                        if isinstance(variante, list):
+                            variante = " / ".join([str(v.get("name") or v) for v in variante if v])
 
                         var_str = f" ({variante})" if variante and variante != "Default" else ""
                         nombre_completo = f"{nombre}{var_str}"
@@ -912,14 +923,20 @@ def renderizar_aplicacion():
             st.info("Sin tickets en este periodo.")
 
     # ==========================================
-    # SECCIÓN 2: AJUSTES
+    # SECCIÓN 2: AJUSTES (CON ICONOS OUTLINE)
     # ==========================================
     elif st.session_state.vista_local == "AJUSTES":
-        st.markdown("### ⚙️ AJUSTES Y CONFIGURACIÓN")
+        st.markdown("### AJUSTES Y CONFIGURACIÓN")
         st.markdown("---")
 
-        # 1. TOP Y DESGLOSE
-        st.markdown("#### Reporte de Colaboradores")
+        # 1. REPORTE DE COLABORADORES
+        st.markdown("""
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #ffffff;">REPORTE DE COLABORADORES</h4>
+            </div>
+        """, unsafe_allow_html=True)
+        
         conteo_colab = {colab: 0 for colab in estado_global["colaboradores"]}
         desglose_productos_colab = {colab: [] for colab in estado_global["colaboradores"]}
         
@@ -947,8 +964,14 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # 2. NOTAS
-        st.markdown("#### Notas")
+        # 2. NOTAS DEL TABLERO
+        st.markdown("""
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #ffffff;">NOTAS DEL TABLERO</h4>
+            </div>
+        """, unsafe_allow_html=True)
+        
         with st.form("form_notas_tablero", clear_on_submit=True):
             nueva_nota_ajustes = st.text_input("Nueva nota:")
             btn_add_nota = st.form_submit_button("Agregar", use_container_width=True)
@@ -981,8 +1004,14 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # 3. MANUALES
-        st.markdown("#### Manuales")
+        # 3. PRODUCTOS MANUALES
+        st.markdown("""
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #ffffff;">PRODUCTOS MANUALES</h4>
+            </div>
+        """, unsafe_allow_html=True)
+        
         with st.form("form_agregar_manual", clear_on_submit=True):
             nombre_manual = st.text_input("Nombre")
             col_chk1, col_chk2 = st.columns(2)
@@ -1050,8 +1079,14 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # 4. COLABORADORES
-        st.markdown("#### Colaboradores")
+        # 4. CONFIGURACIÓN DE COLABORADORES
+        st.markdown("""
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #ffffff;">COLABORADORES</h4>
+            </div>
+        """, unsafe_allow_html=True)
+        
         with st.form("form_colaboradores", clear_on_submit=False):
             colab_inputs = []
             for idx_c in range(st.session_state.num_campos_colab):
@@ -1081,7 +1116,13 @@ def renderizar_aplicacion():
         st.markdown("---")
 
         # 5. DISEÑO DE CUADRÍCULA
-        st.markdown("#### Diseño de Cuadrícula")
+        st.markdown("""
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #ffffff;">DISEÑO DE CUADRÍCULA</h4>
+            </div>
+        """, unsafe_allow_html=True)
+        
         with st.form("form_config_columnas"):
             nuevo_num_cols = st.selectbox("Columnas de productos:", options=[3, 4, 5, 6], index=[3, 4, 5, 6].index(estado_global["num_columnas"]) if estado_global["num_columnas"] in [3, 4, 5, 6] else 2)
             btn_guardar_cols = st.form_submit_button("Guardar Columnas", use_container_width=True)
@@ -1106,11 +1147,9 @@ def renderizar_aplicacion():
                 st.rerun()
 
     # ==========================================
-    # SECCIÓN 3: TABLERO DE PRODUCCIÓN PRINCIPAL
+    # SECCIÓN 3: TABLERO DE PRODUCCIÓN
     # ==========================================
     else:
-        st.markdown("### 📊 TABLERO DE PRODUCCIÓN")
-        
         if conteo_productos and piezas_pendientes == 0 and not estado_global["descartar_celebracion"]:
             st.markdown(f"""
                 <div class="full-screen-celebracion">
