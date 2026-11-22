@@ -345,17 +345,10 @@ st.markdown("""
 
     .header-clock-large {
         background: #121827; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 6px 12px;
-        color: #ffffff !important; font-size: 16px !important; font-weight: 900 !important;
+        color: #ffffff !important; font-size: 13px !important; font-weight: 900 !important;
         letter-spacing: 0.8px; display: flex; align-items: center; gap: 6px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.3); white-space: nowrap;
     }
-
-    .status-dot {
-        height: 8px; width: 8px; background-color: #34c759; border-radius: 50%; display: inline-block;
-        box-shadow: 0 0 6px #34c759; animation: pulseDot 2s infinite;
-    }
-
-    @keyframes pulseDot { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
 
     @keyframes pulseBlueSolid {
         0% { box-shadow: 0 0 4px rgba(0, 119, 237, 0.5); border-color: #0077ed; }
@@ -466,6 +459,20 @@ st.markdown("""
         text-transform: uppercase;
         border-top: 1px solid rgba(255, 255, 255, 0.25);
         padding-top: 2px;
+    }
+
+    /* Botón de publicar nota con azul llamativo y texto blanco */
+    div.stFormSubmitButton > button {
+        background-color: #0077ed !important;
+        background: #0077ed !important;
+        color: #ffffff !important;
+        border: 1px solid #60a5fa !important;
+        font-weight: 900 !important;
+    }
+    div.stFormSubmitButton > button:hover {
+        background-color: #1d4ed8 !important;
+        background: #1d4ed8 !important;
+        border-color: #93c5fd !important;
     }
 
     button:focus, button:active, button:focus-visible {
@@ -591,10 +598,10 @@ def renderizar_aplicacion():
                 nombre = item.get("item_name", "Producto")
                 cantidad = item.get("quantity", 0)
                 
-                # Extracción mejorada de variantes, atributos y modificadores
+                # Extracción profunda de variantes, modificadores y opciones de Loyverse
                 variante = item.get("variant_name")
                 if not variante or variante == "Default":
-                    variante = item.get("option_values") or item.get("variant") or ""
+                    variante = item.get("option_values") or item.get("variant") or item.get("options") or ""
                 
                 if isinstance(variante, list):
                     variante = " / ".join([str(v.get("name") or v) for v in variante if v])
@@ -703,7 +710,7 @@ def renderizar_aplicacion():
         st.markdown(f"""
             <div class="ocultar-en-movil" style="display: flex; align-items: center; justify-content: center; height: 100%;">
                 <div class="header-clock-large" title="Hora local de México">
-                    <span class="status-dot"></span> <span>{hora_mexico_12h}</span>
+                    <span>{hora_mexico_12h}</span>
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -760,11 +767,11 @@ def renderizar_aplicacion():
     """, unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN 1: GESTIÓN DE TICKETS (CON SEPARADORES INDEPENDIENTES)
+    # SECCIÓN 1: GESTIÓN DE TICKETS (CON FRANJA CORTADORA AL FINAL)
     # ==========================================
     if st.session_state.vista_local == "TICKETS":
         st.markdown("### GESTIÓN DE TICKETS")
-        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Control independiente de comandas y productos de Loyverse.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Control independiente de los pedidos.</p>", unsafe_allow_html=True)
         
         if recibos:
             tickets_pendientes_lista = []
@@ -801,7 +808,7 @@ def renderizar_aplicacion():
                 receipt_number = recibo.get("receipt_number", f"#{idx_recibo + 1}")
                 created_at_str = recibo.get("receipt_date") or recibo.get("created_at", "")
                 
-                # Extracción inteligente de cliente
+                # Extracción robusta de cliente de Loyverse
                 customer_name = None
                 if recibo.get("customer_name"):
                     customer_name = recibo.get("customer_name")
@@ -822,19 +829,17 @@ def renderizar_aplicacion():
 
                 line_items = recibo.get("line_items", [])
                 
-                # Fondo y bordes perfectamente separados para cada ticket individual
-                bg_color = "#111c30" if not completado else "#0a261d"
-                border_color = "#38bdf8" if not completado else "#10b981"
+                bg_color = "#111827" if not completado else "#0d1b16"
                 
                 with st.container():
                     st.markdown(f"""
-                        <div style="background: {bg_color}; border: 2px solid {border_color}; border-radius: 12px; padding: 14px; margin-bottom: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 8px;">
+                        <div style="background: {bg_color}; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 12px; margin-bottom: 14px; box-shadow: 0 3px 10px rgba(0,0,0,0.4);">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">
                                 <div>
-                                    <div style="font-weight: 900; color: {'#34c759' if completado else '#ffffff'}; font-size: 15px; letter-spacing: 0.5px; text-transform: uppercase;">{titulo_principal}</div>
-                                    <div style="font-weight: 700; color: #38bdf8; font-size: 10px; margin-top: 3px;">{sub_detalle}</div>
+                                    <div style="font-weight: 900; color: {'#34c759' if completado else '#ffffff'}; font-size: 14px; letter-spacing: 0.5px; text-transform: uppercase;">{titulo_principal}</div>
+                                    <div style="font-weight: 700; color: #38bdf8; font-size: 10px; margin-top: 2px;">{sub_detalle}</div>
                                 </div>
-                                <span style="font-size: 10px; color: #ffffff; font-weight: 800; background: #1f2937; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">🕒 {hora_ticket}</span>
+                                <span style="font-size: 10px; color: #9ca3af; font-weight: 700; background: #1a2234; padding: 2px 6px; border-radius: 6px;">{hora_ticket}</span>
                             </div>
                         </div>
                     """, unsafe_allow_html=True)
@@ -893,7 +898,14 @@ def renderizar_aplicacion():
                                 alternar_urgente(nombre_completo)
                                 st.rerun()
 
-                    st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
+                    # Franja divisora / corte físico al final de cada ticket
+                    st.markdown("""
+                        <div style="display: flex; align-items: center; margin: 12px 0 16px 0;">
+                            <div style="flex-grow: 1; border-bottom: 2px dashed rgba(56, 189, 248, 0.3);"></div>
+                            <span style="font-size: 8px; color: #38bdf8; font-weight: 800; padding: 0 8px; letter-spacing: 1px;">✂️ FIN DE TICKET</span>
+                            <div style="flex-grow: 1; border-bottom: 2px dashed rgba(56, 189, 248, 0.3);"></div>
+                        </div>
+                    """, unsafe_allow_html=True)
 
             if tickets_pendientes_lista:
                 st.markdown("#### Pendientes")
@@ -924,13 +936,13 @@ def renderizar_aplicacion():
             st.info("Sin tickets en este periodo.")
 
     # ==========================================
-    # SECCIÓN 2: AJUSTES (CON GRÁFICAS Y PODIO ANIMADO)
+    # SECCIÓN 2: AJUSTES (CON GRÁFICAS Y PODIO CON CORONA)
     # ==========================================
     elif st.session_state.vista_local == "AJUSTES":
         st.markdown("### AJUSTES Y CONFIGURACIÓN")
         st.markdown("---")
 
-        # 1. REPORTE DE COLABORADORES CON GRÁFICAS Y PODIO ANIMADO
+        # 1. REPORTE DE COLABORADORES CON GRÁFICAS Y 1.º LUGAR DESTACADO
         st.markdown("""
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
