@@ -591,18 +591,17 @@ def renderizar_aplicacion():
                 nombre = item.get("item_name", "Producto")
                 cantidad = item.get("quantity", 0)
                 
-                # Extracción robusta de variante y modificadores de Loyverse
+                # Extracción robusta de variantes y modificadores en Loyverse
                 variante = item.get("variant_name")
                 if not variante or variante == "Default":
                     variante = item.get("option_values") or item.get("variant") or ""
                 
-                # Si viene como lista o diccionario de opciones
                 if isinstance(variante, list):
                     variante = " / ".join([str(v.get("name") or v) for v in variante if v])
                 elif isinstance(variante, dict):
                     variante = str(variante.get("name", ""))
 
-                if variante and variante != "Default":
+                if variante and variante != "Default" and str(variante).strip():
                     nombre_completo = f"{nombre} ({variante})"
                 else:
                     nombre_completo = nombre
@@ -765,7 +764,7 @@ def renderizar_aplicacion():
     # ==========================================
     if st.session_state.vista_local == "TICKETS":
         st.markdown("### GESTIÓN DE TICKETS")
-        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Espejo de comandas con nombres de cliente, comentarios y variantes exactas.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Espejo de comandas con nombres de cliente, comentarios y variantes exactas de Loyverse.</p>", unsafe_allow_html=True)
         
         if recibos:
             tickets_pendientes_lista = []
@@ -785,7 +784,7 @@ def renderizar_aplicacion():
                         if isinstance(variante, list):
                             variante = " / ".join([str(v.get("name") or v) for v in variante if v])
                         
-                        var_str = f" ({variante})" if variante and variante != "Default" else ""
+                        var_str = f" ({variante})" if variante and variante != "Default" and str(variante).strip() else ""
                         item_key_uid = f"{ticket_id}_{idx_item}_{nombre}{var_str}"
                         if item_key_uid not in estado_global["tickets_completados_items"]:
                             todos_listos = False
@@ -802,7 +801,7 @@ def renderizar_aplicacion():
                 receipt_number = recibo.get("receipt_number", f"#{idx_recibo + 1}")
                 created_at_str = recibo.get("receipt_date") or recibo.get("created_at", "")
                 
-                # Extracción de nombre de cliente desde Loyverse
+                # Extracción robusta de cliente (si en caja se seleccionó un cliente)
                 customer_name = None
                 if recibo.get("customer_name"):
                     customer_name = recibo.get("customer_name")
@@ -813,7 +812,7 @@ def renderizar_aplicacion():
                 
                 titulo_custom = estado_global["titulos_personalizados_tickets"].get(ticket_id)
                 titulo_principal = titulo_custom if titulo_custom else (customer_name.upper() if customer_name else f"TICKET {receipt_number}")
-                sub_detalle = f"TICKET {receipt_number}"
+                sub_detalle = f"TICKET {receipt_number} {f'| CLIENTE: {customer_name.upper()}' if customer_name else '| VENTA GENERAL'}"
                 
                 try:
                     dt_ticket = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
@@ -843,7 +842,7 @@ def renderizar_aplicacion():
 
                     with st.expander(f"Editar alias de ticket #{receipt_number}"):
                         with st.form(key=f"form_title_{ticket_id}"):
-                            nuevo_nombre_ticket = st.text_input("Nombre o alias:", value=titulo_custom if titulo_custom else (customer_name if customer_name else ""))
+                            nuevo_nombre_ticket = st.text_input("Nombre o alias personalizado:", value=titulo_custom if titulo_custom else (customer_name if customer_name else ""))
                             btn_guardar_nombre = st.form_submit_button("GUARDAR", use_container_width=True)
 
                             if btn_guardar_nombre:
@@ -865,7 +864,7 @@ def renderizar_aplicacion():
                         if isinstance(variante, list):
                             variante = " / ".join([str(v.get("name") or v) for v in variante if v])
 
-                        var_str = f" ({variante})" if variante and variante != "Default" else ""
+                        var_str = f" ({variante})" if variante and variante != "Default" and str(variante).strip() else ""
                         nombre_completo = f"{nombre}{var_str}"
 
                         cant_num = int(cantidad) if float(cantidad).is_integer() else cantidad
@@ -923,17 +922,17 @@ def renderizar_aplicacion():
             st.info("Sin tickets en este periodo.")
 
     # ==========================================
-    # SECCIÓN 2: AJUSTES (CON ICONOS OUTLINE)
+    # SECCIÓN 2: AJUSTES (CON GRÁFICAS Y BARRAS VISUALES)
     # ==========================================
     elif st.session_state.vista_local == "AJUSTES":
         st.markdown("### AJUSTES Y CONFIGURACIÓN")
         st.markdown("---")
 
-        # 1. REPORTE DE COLABORADORES
+        # 1. REPORTE DE COLABORADORES CON GRÁFICAS DE BARRAS
         st.markdown("""
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #ffffff;">REPORTE DE COLABORADORES</h4>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #ffffff;">REPORTE Y RENDIMIENTO DE COLABORADORES</h4>
             </div>
         """, unsafe_allow_html=True)
         
@@ -947,16 +946,22 @@ def renderizar_aplicacion():
                 conteo_colab[colab_asig] += piezas_item
                 desglose_productos_colab[colab_asig].append(f"{piezas_item}x {prod}")
 
+        total_general_piezas = sum(conteo_colab.values()) if sum(conteo_colab.values()) > 0 else 1
         ranking_ordenado = sorted(conteo_colab.items(), key=lambda x: x[1], reverse=True)
+        
         for pos, (nombre_colab, total_piezas) in enumerate(ranking_ordenado):
             medalla = "🥇" if pos == 0 else ("🥈" if pos == 1 else ("🥉" if pos == 2 else f"#{pos+1}"))
-            productos_asignados_str = ", ".join(desglose_productos_colab[nombre_colab]) if desglose_productos_colab[nombre_colab] else "Sin asignaciones"
+            productos_asignados_str = ", ".join(desglose_productos_colab[nombre_colab]) if desglose_productos_colab[nombre_colab] else "Sin asignaciones registradas"
+            pct_colab = int((total_piezas / total_general_piezas) * 100)
             
             st.markdown(f"""
-                <div style='font-size: 12px; font-weight: 800; padding: 8px 10px; background: #121827; border-radius: 6px; margin-bottom: 6px; color: #e2e8f0;'>
-                    <div style='display: flex; justify-content: space-between; margin-bottom: 3px;'>
-                        <span>{medalla} {nombre_colab}</span>
-                        <span style='color: #38bdf8;'>{total_piezas} pzas</span>
+                <div style='background: #121827; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;'>
+                    <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;'>
+                        <span style='font-size: 12px; font-weight: 800; color: #ffffff;'>{medalla} {nombre_colab}</span>
+                        <span style='font-size: 12px; font-weight: 900; color: #38bdf8;'>{total_piezas} pzas ({pct_colab}%)</span>
+                    </div>
+                    <div style='width: 100%; background: #1f2937; height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 6px;'>
+                        <div style='width: {pct_colab}%; background: linear-gradient(90deg, #0077ed 0%, #38bdf8 100%); height: 100%; border-radius: 3px;'></div>
                     </div>
                     <div style='font-size: 10px; color: #9ca3af; font-weight: 700;'>Productos: {productos_asignados_str}</div>
                 </div>
