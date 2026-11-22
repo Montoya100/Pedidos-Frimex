@@ -591,7 +591,7 @@ def renderizar_aplicacion():
                 nombre = item.get("item_name", "Producto")
                 cantidad = item.get("quantity", 0)
                 
-                # Extracción robusta de variantes y modificadores en Loyverse
+                # Extracción mejorada de variantes, atributos y modificadores
                 variante = item.get("variant_name")
                 if not variante or variante == "Default":
                     variante = item.get("option_values") or item.get("variant") or ""
@@ -679,7 +679,7 @@ def renderizar_aplicacion():
                 piezas_pendientes += (cant_total - cant_marcada)
 
     # ==========================================
-    # ENCABEZADO PRINCIPAL (TABLERO DE PRODUCCIÓN)
+    # ENCABEZADO PRINCIPAL
     # ==========================================
     col_hdr_left, col_hdr_mid, col_hdr_right = st.columns([0.45, 0.20, 0.35])
     
@@ -760,11 +760,11 @@ def renderizar_aplicacion():
     """, unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN 1: GESTIÓN DE TICKETS
+    # SECCIÓN 1: GESTIÓN DE TICKETS (CON SEPARADORES INDEPENDIENTES)
     # ==========================================
     if st.session_state.vista_local == "TICKETS":
         st.markdown("### GESTIÓN DE TICKETS")
-        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Espejo de comandas con nombres de cliente, comentarios y variantes exactas de Loyverse.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Control independiente de comandas y productos de Loyverse.</p>", unsafe_allow_html=True)
         
         if recibos:
             tickets_pendientes_lista = []
@@ -801,7 +801,7 @@ def renderizar_aplicacion():
                 receipt_number = recibo.get("receipt_number", f"#{idx_recibo + 1}")
                 created_at_str = recibo.get("receipt_date") or recibo.get("created_at", "")
                 
-                # Extracción robusta de cliente (si en caja se seleccionó un cliente)
+                # Extracción inteligente de cliente
                 customer_name = None
                 if recibo.get("customer_name"):
                     customer_name = recibo.get("customer_name")
@@ -821,18 +821,20 @@ def renderizar_aplicacion():
                     hora_ticket = "---"
 
                 line_items = recibo.get("line_items", [])
-                bg_color = "#0f172a" if completado else "#111827"
-                border_color = "rgba(52, 199, 89, 0.4)" if completado else "rgba(255,255,255,0.08)"
+                
+                # Fondo y bordes perfectamente separados para cada ticket individual
+                bg_color = "#111c30" if not completado else "#0a261d"
+                border_color = "#38bdf8" if not completado else "#10b981"
                 
                 with st.container():
                     st.markdown(f"""
-                        <div style="background: {bg_color}; border: 1px solid {border_color}; border-radius: 10px; padding: 12px; margin-bottom: 10px; opacity: {'0.85' if completado else '1'};">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">
+                        <div style="background: {bg_color}; border: 2px solid {border_color}; border-radius: 12px; padding: 14px; margin-bottom: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 8px;">
                                 <div>
                                     <div style="font-weight: 900; color: {'#34c759' if completado else '#ffffff'}; font-size: 15px; letter-spacing: 0.5px; text-transform: uppercase;">{titulo_principal}</div>
-                                    <div style="font-weight: 700; color: #38bdf8; font-size: 10px; margin-top: 2px;">{sub_detalle}</div>
+                                    <div style="font-weight: 700; color: #38bdf8; font-size: 10px; margin-top: 3px;">{sub_detalle}</div>
                                 </div>
-                                <span style="font-size: 10px; color: #9ca3af; font-weight: 700; background: #121827; padding: 2px 6px; border-radius: 6px;">{hora_ticket}</span>
+                                <span style="font-size: 10px; color: #ffffff; font-weight: 800; background: #1f2937; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">🕒 {hora_ticket}</span>
                             </div>
                         </div>
                     """, unsafe_allow_html=True)
@@ -891,7 +893,7 @@ def renderizar_aplicacion():
                                 alternar_urgente(nombre_completo)
                                 st.rerun()
 
-                    st.markdown("<hr style='border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10px 0;'>", unsafe_allow_html=True)
+                    st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
 
             if tickets_pendientes_lista:
                 st.markdown("#### Pendientes")
@@ -922,13 +924,13 @@ def renderizar_aplicacion():
             st.info("Sin tickets en este periodo.")
 
     # ==========================================
-    # SECCIÓN 2: AJUSTES (CON GRÁFICAS Y BARRAS VISUALES)
+    # SECCIÓN 2: AJUSTES (CON GRÁFICAS Y PODIO ANIMADO)
     # ==========================================
     elif st.session_state.vista_local == "AJUSTES":
         st.markdown("### AJUSTES Y CONFIGURACIÓN")
         st.markdown("---")
 
-        # 1. REPORTE DE COLABORADORES CON GRÁFICAS DE BARRAS
+        # 1. REPORTE DE COLABORADORES CON GRÁFICAS Y PODIO ANIMADO
         st.markdown("""
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
@@ -950,15 +952,31 @@ def renderizar_aplicacion():
         ranking_ordenado = sorted(conteo_colab.items(), key=lambda x: x[1], reverse=True)
         
         for pos, (nombre_colab, total_piezas) in enumerate(ranking_ordenado):
-            medalla = "🥇" if pos == 0 else ("🥈" if pos == 1 else ("🥉" if pos == 2 else f"#{pos+1}"))
+            if pos == 0:
+                medalla = "👑 1.º LUGAR"
+                estilo_tarjeta = "background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 2px solid #fbbf24; box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);"
+                color_texto_num = "#fbbf24"
+            elif pos == 1:
+                medalla = "🥈 2.º LUGAR"
+                estilo_tarjeta = "background: #121827; border: 1px solid rgba(255,255,255,0.15);"
+                color_texto_num = "#94a3b8"
+            elif pos == 2:
+                medalla = "🥉 3.º LUGAR"
+                estilo_tarjeta = "background: #121827; border: 1px solid rgba(255,255,255,0.08);"
+                color_texto_num = "#b45309"
+            else:
+                medalla = f"#{pos+1}"
+                estilo_tarjeta = "background: #121827; border: 1px solid rgba(255,255,255,0.06);"
+                color_texto_num = "#9ca3af"
+
             productos_asignados_str = ", ".join(desglose_productos_colab[nombre_colab]) if desglose_productos_colab[nombre_colab] else "Sin asignaciones registradas"
             pct_colab = int((total_piezas / total_general_piezas) * 100)
             
             st.markdown(f"""
-                <div style='background: #121827; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;'>
+                <div style='{estilo_tarjeta} border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;'>
                     <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;'>
-                        <span style='font-size: 12px; font-weight: 800; color: #ffffff;'>{medalla} {nombre_colab}</span>
-                        <span style='font-size: 12px; font-weight: 900; color: #38bdf8;'>{total_piezas} pzas ({pct_colab}%)</span>
+                        <span style='font-size: 12px; font-weight: 800; color: #ffffff;'>{medalla} - {nombre_colab}</span>
+                        <span style='font-size: 12px; font-weight: 900; color: {color_texto_num};'>{total_piezas} pzas ({pct_colab}%)</span>
                     </div>
                     <div style='width: 100%; background: #1f2937; height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 6px;'>
                         <div style='width: {pct_colab}%; background: linear-gradient(90deg, #0077ed 0%, #38bdf8 100%); height: 100%; border-radius: 3px;'></div>
