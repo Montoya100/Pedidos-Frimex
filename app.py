@@ -380,14 +380,6 @@ st.markdown("""
     .metric-inline .val { font-size: 13px !important; font-weight: 800 !important; color: #f87171; }
     .pct-avance { font-size: 9.5px !important; font-weight: 800 !important; color: #9ca3af !important; letter-spacing: 0.5px; text-transform: uppercase; }
 
-    .divider-completados {
-        display: flex; align-items: center; text-align: center; color: #34c759;
-        font-size: 8.5px; font-weight: 800; letter-spacing: 1.2px; margin: 10px 0 6px 0;
-    }
-
-    .divider-completados::before, .divider-completados::after { content: ''; flex: 1; border-bottom: 1px solid #34c759; opacity: 0.25; }
-    .divider-completados span { padding: 0 6px; background-color: #0b0f19; }
-
     .footer-sutil {
         position: fixed; bottom: 0; left: 0; right: 0; background: #070a10; border-top: 1px solid rgba(255,255,255,0.06); padding: 2px 8px; text-align: center; font-size: 8.5px !important; font-weight: 800 !important; color: #6b7280 !important; z-index: 999;
     }
@@ -461,12 +453,16 @@ st.markdown("""
         padding-top: 2px;
     }
 
-    /* Botón de publicar nota con azul llamativo y texto blanco */
+    /* Botón de publicar nota con letras en blanco y negritas */
     div.stFormSubmitButton > button {
         background-color: #0077ed !important;
         background: #0077ed !important;
         color: #ffffff !important;
+        font-weight: 900 !important;
         border: 1px solid #60a5fa !important;
+    }
+    div.stFormSubmitButton > button p {
+        color: #ffffff !important;
         font-weight: 900 !important;
     }
     div.stFormSubmitButton > button:hover {
@@ -598,7 +594,7 @@ def renderizar_aplicacion():
                 nombre = item.get("item_name", "Producto")
                 cantidad = item.get("quantity", 0)
                 
-                # Extracción profunda de variantes, modificadores y opciones de Loyverse
+                # Extracción mejorada de variantes y opciones en Loyverse
                 variante = item.get("variant_name")
                 if not variante or variante == "Default":
                     variante = item.get("option_values") or item.get("variant") or item.get("options") or ""
@@ -767,7 +763,7 @@ def renderizar_aplicacion():
     """, unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN 1: GESTIÓN DE TICKETS (CON FRANJA CORTADORA AL FINAL)
+    # SECCIÓN 1: GESTIÓN DE TICKETS
     # ==========================================
     if st.session_state.vista_local == "TICKETS":
         st.markdown("### GESTIÓN DE TICKETS")
@@ -828,7 +824,6 @@ def renderizar_aplicacion():
                     hora_ticket = "---"
 
                 line_items = recibo.get("line_items", [])
-                
                 bg_color = "#111827" if not completado else "#0d1b16"
                 
                 with st.container():
@@ -898,28 +893,15 @@ def renderizar_aplicacion():
                                 alternar_urgente(nombre_completo)
                                 st.rerun()
 
-                    # Franja divisora / corte físico al final de cada ticket
+                    # Franja divisora ampliada sin texto ni tijeras
                     st.markdown("""
-                        <div style="display: flex; align-items: center; margin: 12px 0 16px 0;">
-                            <div style="flex-grow: 1; border-bottom: 2px dashed rgba(56, 189, 248, 0.3);"></div>
-                            <span style="font-size: 8px; color: #38bdf8; font-weight: 800; padding: 0 8px; letter-spacing: 1px;">✂️ FIN DE TICKET</span>
-                            <div style="flex-grow: 1; border-bottom: 2px dashed rgba(56, 189, 248, 0.3);"></div>
-                        </div>
+                        <div style="border-bottom: 3px dashed rgba(56, 189, 248, 0.4); margin: 14px 0 16px 0;"></div>
                     """, unsafe_allow_html=True)
 
             if tickets_pendientes_lista:
                 st.markdown("#### Pendientes")
                 for idx_recibo, recibo, ticket_id in tickets_pendientes_lista:
                     renderizar_bloque_ticket(idx_recibo, recibo, ticket_id, completado=False)
-
-            if tickets_completados_lista:
-                st.markdown("""
-                    <div class="divider-completados" style="margin: 20px 0 10px 0;">
-                        <span>COMPLETADOS</span>
-                    </div>
-                """, unsafe_allow_html=True)
-                for idx_recibo, recibo, ticket_id in tickets_completados_lista:
-                    renderizar_bloque_ticket(idx_recibo, recibo, ticket_id, completado=True)
 
             st.markdown("#### Agregar Nota")
             with st.form("form_nota_rapida_tickets", clear_on_submit=True):
@@ -932,17 +914,23 @@ def renderizar_aplicacion():
                     st.toast("Publicado")
                     st.rerun()
 
+            # SECCIÓN DE PEDIDOS COMPLETADOS ABAJO DEL BOTÓN
+            if tickets_completados_lista:
+                st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
+                st.markdown("#### PEDIDOS COMPLETADOS")
+                for idx_recibo, recibo, ticket_id in tickets_completados_lista:
+                    renderizar_bloque_ticket(idx_recibo, recibo, ticket_id, completado=True)
+
         else:
             st.info("Sin tickets en este periodo.")
 
     # ==========================================
-    # SECCIÓN 2: AJUSTES (CON GRÁFICAS Y PODIO CON CORONA)
+    # SECCIÓN 2: AJUSTES
     # ==========================================
     elif st.session_state.vista_local == "AJUSTES":
         st.markdown("### AJUSTES Y CONFIGURACIÓN")
         st.markdown("---")
 
-        # 1. REPORTE DE COLABORADORES CON GRÁFICAS Y 1.º LUGAR DESTACADO
         st.markdown("""
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
@@ -999,7 +987,6 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # 2. NOTAS DEL TABLERO
         st.markdown("""
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
@@ -1039,7 +1026,6 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # 3. PRODUCTOS MANUALES
         st.markdown("""
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -1114,7 +1100,6 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # 4. CONFIGURACIÓN DE COLABORADORES
         st.markdown("""
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -1150,7 +1135,6 @@ def renderizar_aplicacion():
 
         st.markdown("---")
 
-        # 5. DISEÑO DE CUADRÍCULA
         st.markdown("""
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
