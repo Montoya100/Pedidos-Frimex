@@ -44,16 +44,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Token seguro desde st.secrets con respaldo
 LOYVERSE_TOKEN = st.secrets.get("LOYVERSE_TOKEN", "13d9288fbc264fb88a8112094407486a")
 HEADERS_LOYVERSE = {
     "Authorization": f"Bearer {LOYVERSE_TOKEN}",
     "Content-Type": "application/json",
 }
 
-# ==========================================
-# CARGAR LOGO LOCAL O FALLBACK
-# ==========================================
 def obtener_base64_imagen(ruta_imagen):
     if os.path.exists(ruta_imagen):
         with open(ruta_imagen, "rb") as image_file:
@@ -175,7 +171,6 @@ def alternar_urgente(producto):
         st.toast(f"¡{producto} marcado como URGENTE!", icon="🔥")
     disparar_sync()
 
-# Función para normalizar texto y ordenar sin importar acentos/mayúsculas
 def normalizar_texto_orden(texto):
     nfkd_form = unicodedata.normalize('NFKD', texto)
     return "".join([c for c in nfkd_form if not unicodedata.combining(c)]).upper()
@@ -216,7 +211,6 @@ st.markdown("""
         align-items: center !important;
     }
 
-    /* SELECTBOX CON TAMAÑO NORMAL Y LEGIBLE */
     div[data-testid="stSelectbox"] {
         margin: 0 !important;
         padding: 0 !important;
@@ -479,7 +473,6 @@ st.markdown("""
         box-shadow: none !important;
     }
 
-    /* BOTONES */
     div[data-testid="stButton"] {
         margin: 0 !important;
         padding: 0 !important;
@@ -607,7 +600,6 @@ def renderizar_aplicacion():
                 cant_num = int(cantidad) if float(cantidad).is_integer() else cantidad
                 conteo_productos[nombre_completo] = conteo_productos.get(nombre_completo, 0) + cant_num
 
-    # FUSIONAR PRODUCTOS MANUALES
     ahora_epoch = time.time()
     for prod_manual, datos in estado_global["productos_manuales_global"].items():
         if isinstance(datos, dict):
@@ -631,7 +623,6 @@ def renderizar_aplicacion():
         if es_urgente:
             urgentes_activos.add(prod_manual)
 
-    # DETECTAR INCREMENTOS DE CANTIDAD PARA TARJETAS AZULES (30 SEG)
     for prod, cant_actual in conteo_productos.items():
         cantidad_anterior = estado_global["cantidades_previas_productos"].get(prod, None)
         if cantidad_anterior is None:
@@ -663,7 +654,6 @@ def renderizar_aplicacion():
     ahora_mexico = datetime.now(tz_mexico)
     hora_mexico_12h = ahora_mexico.strftime("%I:%M:%S %p")
 
-    # CÁLCULO DE PENDIENTES
     piezas_totales = sum([1 if p in infinitos_activos else c for p, c in conteo_productos.items()])
     piezas_pendientes = 0
     
@@ -724,9 +714,7 @@ def renderizar_aplicacion():
                 st.session_state.vista_local = "AJUSTES"
                 st.rerun()
 
-    # ==========================================
-    # BANNER DE NOTAS NATIVO
-    # ==========================================
+    # BANNER DE NOTAS
     notas_filtradas = [txt for txt in estado_global["notas_tablero"] if txt.strip()]
     if notas_filtradas:
         total_notas = len(notas_filtradas)
@@ -763,11 +751,11 @@ def renderizar_aplicacion():
     """, unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN 1: GESTIÓN DE TICKETS DETALLADOS
+    # SECCIÓN 1: TICKETS (SIN PRECIOS, SOLO TEXTOS/VARIANTES)
     # ==========================================
     if st.session_state.vista_local == "TICKETS":
-        st.markdown("### GESTIÓN DETALLADA DE TICKETS")
-        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Visualización avanzada con desglose de variantes, comentarios, precios y totales en comillas.</p>", unsafe_allow_html=True)
+        st.markdown("### TICKETS")
+        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Gestión y control de comandas individuales.</p>", unsafe_allow_html=True)
         
         if recibos:
             tickets_pendientes_lista = []
@@ -802,13 +790,9 @@ def renderizar_aplicacion():
                 customer_name = recibo.get("customer_name") or recibo.get("customer", {}).get("name")
                 note_recibo = recibo.get("note") or recibo.get("comment") or ""
                 
-                # Precios y totales con comillas estrictas
-                total_receipt_val = recibo.get("total_money", 0.0)
-                total_receipt_fmt = f"\"{float(total_receipt_val):,.2f}\""
-                
                 titulo_custom = estado_global["titulos_personalizados_tickets"].get(ticket_id)
                 titulo_principal = titulo_custom if titulo_custom else (customer_name.upper() if customer_name else f"TICKET {receipt_number}")
-                sub_detalle = f"TICKET {receipt_number} | TOTAL: {total_receipt_fmt}"
+                sub_detalle = f"TICKET {receipt_number}"
                 
                 try:
                     dt_ticket = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
@@ -834,11 +818,11 @@ def renderizar_aplicacion():
                     """, unsafe_allow_html=True)
 
                     if note_recibo:
-                        st.markdown(f"<div style='font-style: italic; color: #fbbf24; font-size: 11px; margin-bottom: 8px;'>💬 Comentario / Nota del Ticket: \"{note_recibo}\"</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='font-style: italic; color: #fbbf24; font-size: 11px; margin-bottom: 8px;'>Comentario: \"{note_recibo}\"</div>", unsafe_allow_html=True)
 
-                    with st.expander(f"Editar nombre o alias del ticket #{receipt_number}"):
+                    with st.expander(f"Editar alias de ticket #{receipt_number}"):
                         with st.form(key=f"form_title_{ticket_id}"):
-                            nuevo_nombre_ticket = st.text_input("Nombre o alias personalizado:", value=titulo_custom if titulo_custom else (customer_name if customer_name else ""))
+                            nuevo_nombre_ticket = st.text_input("Nombre o alias:", value=titulo_custom if titulo_custom else (customer_name if customer_name else ""))
                             btn_guardar_nombre = st.form_submit_button("GUARDAR", use_container_width=True)
 
                             if btn_guardar_nombre:
@@ -847,22 +831,16 @@ def renderizar_aplicacion():
                                 else:
                                     estado_global["titulos_personalizados_tickets"].pop(ticket_id, None)
                                 disparar_sync()
-                                st.toast("Nombre de ticket actualizado")
+                                st.toast("Actualizado")
                                 st.rerun()
 
-                    # Desglose detallado de cada producto, variante y precio entre comillas
+                    # Productos y variantes sin precios
                     for idx_item, item in enumerate(line_items):
                         nombre = item.get("item_name", "Producto")
                         cantidad = item.get("quantity", 0)
                         variante = item.get("variant_name")
                         var_str = f" ({variante})" if variante and variante != "Default" else ""
                         nombre_completo = f"{nombre}{var_str}"
-
-                        precio_unit = item.get("price", 0.0)
-                        total_item = item.get("total_money", 0.0)
-                        
-                        precio_fmt = f"\"{float(precio_unit):,.2f}\""
-                        total_item_fmt = f"\"{float(total_item):,.2f}\""
 
                         cant_num = int(cantidad) if float(cantidad).is_integer() else cantidad
                         item_key_uid = f"{ticket_id}_{idx_item}_{nombre_completo}"
@@ -873,7 +851,7 @@ def renderizar_aplicacion():
                         col_t1, col_t2 = st.columns([0.76, 0.24])
                         
                         with col_t1:
-                            btn_text = f"✅ {cant_num}X {nombre_completo} [Precio: {precio_fmt} | Total: {total_item_fmt}]" if esta_listo else f"⬜ {cant_num}X {nombre_completo} [Precio: {precio_fmt} | Total: {total_item_fmt}]"
+                            btn_text = f"✅ {cant_num}X {nombre_completo}" if esta_listo else f"⬜ {cant_num}X {nombre_completo}"
                             if st.button(btn_text, key=f"btn_toggle_item_{item_key_uid}", use_container_width=True):
                                 if esta_listo:
                                     estado_global["tickets_completados_items"].discard(item_key_uid)
@@ -883,7 +861,7 @@ def renderizar_aplicacion():
                                 st.rerun()
 
                         with col_t2:
-                            urg_label = "🔥 URGENTE" if es_urgente_prod else "⚡ NORMAL"
+                            urg_label = "🔥 URGENTE" if es_urgente_prod else "NORMAL"
                             if st.button(urg_label, key=f"btn_urg_{item_key_uid}", use_container_width=True):
                                 alternar_urgente(nombre_completo)
                                 st.rerun()
@@ -891,42 +869,42 @@ def renderizar_aplicacion():
                     st.markdown("<hr style='border: none; border-top: 1px dashed rgba(255,255,255,0.12); margin: 10px 0;'>", unsafe_allow_html=True)
 
             if tickets_pendientes_lista:
-                st.markdown("#### ⏳ Tickets Pendientes de Producción")
+                st.markdown("#### Pendientes")
                 for idx_recibo, recibo, ticket_id in tickets_pendientes_lista:
                     renderizar_bloque_ticket(idx_recibo, recibo, ticket_id, completado=False)
 
             if tickets_completados_lista:
                 st.markdown("""
                     <div class="divider-completados" style="margin: 20px 0 10px 0;">
-                        <span>TICKETS COMPLETADOS Y CONCRETADOS</span>
+                        <span>COMPLETADOS</span>
                     </div>
                 """, unsafe_allow_html=True)
                 for idx_recibo, recibo, ticket_id in tickets_completados_lista:
                     renderizar_bloque_ticket(idx_recibo, recibo, ticket_id, completado=True)
 
-            st.markdown("#### Agregar Nota al Tablero Principal")
+            st.markdown("#### Agregar Nota")
             with st.form("form_nota_rapida_tickets", clear_on_submit=True):
-                nueva_nota_txt = st.text_input("Escribe una nota rápida para el carrusel:")
-                btn_enviar_nota_ticket = st.form_submit_button("Publicar Nota en Tablero", use_container_width=True)
+                nueva_nota_txt = st.text_input("Nota para el carrusel:")
+                btn_enviar_nota_ticket = st.form_submit_button("Publicar", use_container_width=True)
 
                 if btn_enviar_nota_ticket and nueva_nota_txt.strip():
                     estado_global["notas_tablero"].append(nueva_nota_txt.strip().upper())
                     disparar_sync()
-                    st.toast("¡Nota publicada en el tablero con éxito!")
+                    st.toast("Publicado")
                     st.rerun()
 
         else:
-            st.info("No hay tickets disponibles para mostrar en este periodo.")
+            st.info("Sin tickets en este periodo.")
 
     # ==========================================
-    # SECCIÓN 2: PANEL DE AJUSTES Y CONFIGURACIÓN
+    # SECCIÓN 2: AJUSTES (COLUMNAS ABAJO DE COLABORADORES)
     # ==========================================
     elif st.session_state.vista_local == "AJUSTES":
-        st.markdown("### PANEL DE AJUSTES Y CONFIGURACIÓN")
+        st.markdown("### AJUSTES")
         st.markdown("---")
 
-        # 1. TOP DEL DÍA Y DESGLOSE POR COLABORADOR
-        st.markdown("#### 🏆 Top del día y Desglose por Colaborador")
+        # 1. TOP Y DESGLOSE
+        st.markdown("#### Reporte de Colaboradores")
         conteo_colab = {colab: 0 for colab in estado_global["colaboradores"]}
         desglose_productos_colab = {colab: [] for colab in estado_global["colaboradores"]}
         
@@ -940,84 +918,65 @@ def renderizar_aplicacion():
         ranking_ordenado = sorted(conteo_colab.items(), key=lambda x: x[1], reverse=True)
         for pos, (nombre_colab, total_piezas) in enumerate(ranking_ordenado):
             medalla = "🥇" if pos == 0 else ("🥈" if pos == 1 else ("🥉" if pos == 2 else f"#{pos+1}"))
-            productos_asignados_str = ", ".join(desglose_productos_colab[nombre_colab]) if desglose_productos_colab[nombre_colab] else "Sin asignaciones registradas"
+            productos_asignados_str = ", ".join(desglose_productos_colab[nombre_colab]) if desglose_productos_colab[nombre_colab] else "Sin asignaciones"
             
             st.markdown(f"""
                 <div style='font-size: 12px; font-weight: 800; padding: 8px 10px; background: #121827; border-radius: 6px; margin-bottom: 6px; color: #e2e8f0;'>
                     <div style='display: flex; justify-content: space-between; margin-bottom: 3px;'>
                         <span>{medalla} {nombre_colab}</span>
-                        <span style='color: #38bdf8;'>{total_piezas} pzas total</span>
+                        <span style='color: #38bdf8;'>{total_piezas} pzas</span>
                     </div>
-                    <div style='font-size: 10px; color: #9ca3af; font-weight: 700;'>Productos asignados: {productos_asignados_str}</div>
+                    <div style='font-size: 10px; color: #9ca3af; font-weight: 700;'>Productos: {productos_asignados_str}</div>
                 </div>
             """, unsafe_allow_html=True)
 
         st.markdown("---")
 
-        # 2. CONFIGURACIÓN DE COLUMNAS DE LA CUADRÍCULA
-        st.markdown("#### 📐 Diseño de la Cuadrícula Principal")
-        with st.form("form_config_columnas"):
-            nuevo_num_cols = st.selectbox("Número de columnas de productos en pantalla:", options=[3, 4, 5, 6], index=[3, 4, 5, 6].index(estado_global["num_columnas"]) if estado_global["num_columnas"] in [3, 4, 5, 6] else 2)
-            btn_guardar_cols = st.form_submit_button("Guardar Número de Columnas", use_container_width=True)
-            if btn_guardar_cols:
-                estado_global["num_columnas"] = int(nuevo_num_cols)
-                config_guardada["num_columnas"] = int(nuevo_num_cols)
-                guardar_configuracion_sistema(config_guardada)
-                disparar_sync()
-                st.toast("¡Diseño de columnas actualizado!")
-                st.rerun()
-
-        st.markdown("---")
-
-        # 3. NOTAS DEL TABLERO
-        st.markdown("#### Notas del Tablero")
+        # 2. NOTAS
+        st.markdown("#### Notas")
         with st.form("form_notas_tablero", clear_on_submit=True):
-            nueva_nota_ajustes = st.text_input("Agregar nueva nota al carrusel:")
-            btn_add_nota = st.form_submit_button("Agregar Nota", use_container_width=True)
+            nueva_nota_ajustes = st.text_input("Nueva nota:")
+            btn_add_nota = st.form_submit_button("Agregar", use_container_width=True)
 
             if btn_add_nota and nueva_nota_ajustes.strip():
                 estado_global["notas_tablero"].append(nueva_nota_ajustes.strip().upper())
                 disparar_sync()
-                st.toast("Nota agregada")
+                st.toast("Agregada")
                 st.rerun()
 
         if estado_global["notas_tablero"]:
-            st.markdown("<p style='font-size: 11px; color: #9ca3af;'>Notas actuales en rotación:</p>", unsafe_allow_html=True)
             for idx_n, nota_act in enumerate(estado_global["notas_tablero"]):
                 with st.expander(f"Nota {idx_n + 1}: {nota_act[:30]}..."):
                     with st.form(key=f"form_edit_nota_{idx_n}"):
-                        nota_editada_txt = st.text_input("Editar texto de la nota:", value=nota_act)
+                        nota_editada_txt = st.text_input("Editar:", value=nota_act)
                         col_ne1, col_ne2 = st.columns(2)
                         with col_ne1:
-                            btn_guardar_nota = st.form_submit_button("GUARDAR CAMBIOS", use_container_width=True)
+                            btn_guardar_nota = st.form_submit_button("GUARDAR", use_container_width=True)
                         with col_ne2:
-                            btn_borrar_nota = st.form_submit_button("BORRAR NOTA", use_container_width=True)
+                            btn_borrar_nota = st.form_submit_button("BORRAR", use_container_width=True)
 
-                        if btn_guardar_nota:
-                            if nota_editada_txt.strip():
-                                estado_global["notas_tablero"][idx_n] = nota_editada_txt.strip().upper()
-                                disparar_sync()
-                                st.toast("Nota actualizada")
-                                st.rerun()
+                        if btn_guardar_nota and nota_editada_txt.strip():
+                            estado_global["notas_tablero"][idx_n] = nota_editada_txt.strip().upper()
+                            disparar_sync()
+                            st.rerun()
                         if btn_borrar_nota:
                             estado_global["notas_tablero"].pop(idx_n)
                             disparar_sync()
-                            st.toast("Nota eliminada")
                             st.rerun()
 
         st.markdown("---")
 
-        # 4. AGREGAR PRODUCTOS MANUALES
-        st.markdown("#### Agregar Productos Manuales")
+        # 3. MANUALES
+        st.markdown("#### Manuales")
         with st.form("form_agregar_manual", clear_on_submit=True):
-            nombre_manual = st.text_input("Nombre del producto")
+            nombre_manual = st.text_input("Nombre")
             col_chk1, col_chk2 = st.columns(2)
             with col_chk1:
-                es_infinito_nuevo = st.checkbox("Infinito (Inf)")
+                es_infinito_nuevo = st.checkbox("Infinito")
             with col_chk2:
                 es_urgente_nuevo = st.checkbox("Urgente")
             cantidad_manual = st.number_input("Cantidad", min_value=1, value=1, step=1)
-            submit_manual = st.form_submit_button("Agregar producto")
+            submit_manual = st.form_submit_button("Agregar")
             
             if submit_manual and nombre_manual.strip():
                 prod_key = nombre_manual.strip().upper()
@@ -1030,11 +989,9 @@ def renderizar_aplicacion():
                 if es_urgente_nuevo:
                     estado_global["urgentes_activos"].add(prod_key)
                 disparar_sync()
-                st.toast(f"Agregado: {prod_key}")
                 st.rerun()
 
         if estado_global["productos_manuales_global"]:
-            st.markdown("#### Modificar Manuales")
             for p_nombre, p_datos in list(estado_global["productos_manuales_global"].items()):
                 p_cant = p_datos.get("cantidad", 1) if isinstance(p_datos, dict) else p_datos
                 p_inf = p_datos.get("infinito", False) if isinstance(p_datos, dict) else False
@@ -1043,7 +1000,7 @@ def renderizar_aplicacion():
                 with st.expander(f"Editar {p_nombre}"):
                     with st.form(key=f"form_edit_{p_nombre}"):
                         nuevo_urg_val = st.checkbox("Urgente", value=p_urg, key=f"urg_{p_nombre}")
-                        nuevo_inf_val = st.checkbox("Infinito (Inf)", value=p_inf, key=f"inf_{p_nombre}")
+                        nuevo_inf_val = st.checkbox("Infinito", value=p_inf, key=f"inf_{p_nombre}")
                         nueva_cant_val = st.number_input("Cantidad", min_value=1, value=p_cant, step=1, key=f"cant_{p_nombre}")
                         
                         col_e1, col_e2 = st.columns(2)
@@ -1063,7 +1020,6 @@ def renderizar_aplicacion():
                             else:
                                 estado_global["urgentes_activos"].discard(p_nombre)
                             disparar_sync()
-                            st.toast(f"Actualizado: {p_nombre}")
                             st.rerun()
 
                         if btn_borrar_item:
@@ -1075,13 +1031,12 @@ def renderizar_aplicacion():
                             estado_global["asignaciones_productos"].pop(p_nombre, None)
                             estado_global["urgentes_activos"].discard(p_nombre)
                             disparar_sync()
-                            st.toast(f"Borrado: {p_nombre}")
                             st.rerun()
 
         st.markdown("---")
 
-        # 5. CONFIGURACIÓN PERMANENTE DE COLABORADORES
-        st.markdown("#### Configuración Permanente de Colaboradores")
+        # 4. COLABORADORES
+        st.markdown("#### Colaboradores")
         with st.form("form_colaboradores", clear_on_submit=False):
             colab_inputs = []
             for idx_c in range(st.session_state.num_campos_colab):
@@ -1105,12 +1060,26 @@ def renderizar_aplicacion():
                 config_guardada["colaboradores"] = nombres_limpios
                 guardar_configuracion_sistema(config_guardada)
                 disparar_sync()
-                st.toast("¡Colaboradores guardados permanentemente!")
+                st.toast("Guardado")
                 st.rerun()
 
         st.markdown("---")
 
-        # 6. BOTÓN DE LIMPIAR TABLERO
+        # 5. DISEÑO DE CUADRÍCULA (MOVIDO AQUÍ ABAJO)
+        st.markdown("#### Diseño de Cuadrícula")
+        with st.form("form_config_columnas"):
+            nuevo_num_cols = st.selectbox("Columnas de productos:", options=[3, 4, 5, 6], index=[3, 4, 5, 6].index(estado_global["num_columnas"]) if estado_global["num_columnas"] in [3, 4, 5, 6] else 2)
+            btn_guardar_cols = st.form_submit_button("Guardar Columnas", use_container_width=True)
+            if btn_guardar_cols:
+                estado_global["num_columnas"] = int(nuevo_num_cols)
+                config_guardada["num_columnas"] = int(nuevo_num_cols)
+                guardar_configuracion_sistema(config_guardada)
+                disparar_sync()
+                st.toast("Actualizado")
+                st.rerun()
+
+        st.markdown("---")
+
         col_res1, col_res2 = st.columns(2)
         with col_res1:
             if st.button("Limpiar tablero", use_container_width=True):
@@ -1122,7 +1091,7 @@ def renderizar_aplicacion():
                 st.rerun()
 
     # ==========================================
-    # SECCIÓN 3: TABLA DE PRODUCCIÓN PRINCIPAL (COLUMNAS DINÁMICAS)
+    # SECCIÓN 3: TABLERO PRINCIPAL
     # ==========================================
     else:
         if conteo_productos and piezas_pendientes == 0 and not estado_global["descartar_celebracion"]:
@@ -1150,7 +1119,6 @@ def renderizar_aplicacion():
                     else:
                         activos.append((prod, cant_total))
 
-                # ORDENAMIENTO LIMPIO (Ignorando acentos y mayúsculas, urgentes primero)
                 def clave_ordenamiento(item):
                     producto, _ = item
                     es_urgente = producto in urgentes_activos
@@ -1253,7 +1221,6 @@ def renderizar_aplicacion():
             else:
                 st.info("No hay pedidos registrados en este periodo.")
 
-    # FOOTER SUTIL
     st.markdown(f"""
         <div class="footer-sutil">
             PROCESADAS HOY: <span>{piezas_completadas}</span> DE <span>{piezas_totales}</span> PIEZAS
