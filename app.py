@@ -530,6 +530,31 @@ st.markdown("""
         border-color: #60a5fa !important;
     }
 
+    /* Alineación exacta de filas de botones en Tickets */
+    div.element-container:has(.espejo-anchor-hidden) {
+        display: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 0 !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.espejo-anchor-hidden) {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        margin-bottom: 4px !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.espejo-anchor-hidden) > div[data-testid="column"]:first-child {
+        width: 75% !important;
+        flex: 1 1 75% !important;
+        margin-bottom: 0 !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.espejo-anchor-hidden) > div[data-testid="column"]:last-child {
+        width: 25% !important;
+        flex: 0 0 25% !important;
+        margin-bottom: 0 !important;
+    }
+
     @media (max-width: 768px) {
         .ocultar-en-movil { display: none !important; }
         .block-container { padding-left: 2px !important; padding-right: 2px !important; }
@@ -970,7 +995,7 @@ def renderizar_aplicacion():
                             bg_btn = "#dc2626"
                             border_btn = "1px solid rgba(239, 68, 68, 0.6)"
 
-                        col_t1, col_t2 = st.columns([0.76, 0.24])
+                        col_t1, col_t2 = st.columns([0.76, 0.24], vertical_alignment="center")
                         
                         with col_t1:
                             anchor_cls = f"espejo-btn-{idx_recibo}-{idx_item}"
@@ -983,7 +1008,7 @@ def renderizar_aplicacion():
                                     color: #ffffff !important;
                                 }}
                                 </style>
-                                <div class="{anchor_cls}" style="display:none;"></div>
+                                <div class="espejo-anchor-hidden {anchor_cls}"></div>
                             """, unsafe_allow_html=True)
 
                             if st.button(btn_text, key=f"btn_toggle_item_{item_key_uid}", use_container_width=True):
