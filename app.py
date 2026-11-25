@@ -777,7 +777,7 @@ def renderizar_aplicacion():
     # ==========================================
     if st.session_state.vista_local == "TICKETS":
         st.markdown("### GESTIÓN DE TICKETS")
-        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Control independiente de los pedidos y días de entrega.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Control independiente de los pedidos, días de entrega y estado sincronizado con el tablero.</p>", unsafe_allow_html=True)
         
         if recibos:
             dias_asignados = estado_global["dias_entrega_tickets"]
@@ -837,6 +837,9 @@ def renderizar_aplicacion():
                     tickets_completados_lista.append((idx_recibo, recibo, ticket_id))
                 else:
                     tickets_pendientes_lista.append((idx_recibo, recibo, ticket_id))
+
+            # Lista acumulada de reglas CSS para espejar colores del tablero en los botones de tickets
+            estilos_espejo_botones = []
 
             def renderizar_bloque_ticket(idx_recibo, recibo, ticket_id, completado=False):
                 receipt_number = recibo.get("receipt_number", f"#{idx_recibo + 1}")
@@ -946,21 +949,46 @@ def renderizar_aplicacion():
                         esta_listo = item_key_uid in estado_global["tickets_completados_items"]
                         es_urgente_prod = nombre_completo in estado_global["urgentes_activos"]
                         terminado_en_tablero = nombre_completo in estado_global["completados"]
+                        colab_asignado_tablero = estado_global["asignaciones_productos"].get(nombre_completo)
+                        tiempo_creacion = estado_global["tiempos_creacion_manual"].get(nombre_completo, 0)
+                        es_nuevo_azul = (ahora_epoch - tiempo_creacion < 30) and not terminado_en_tablero
 
-                        # Insignia visible solo en Tickets cuando el producto ya está terminado en el Tablero
-                        if terminado_en_tablero:
-                            st.markdown("""
-                                <div style="display: flex; align-items: center; margin-top: 4px; margin-bottom: 2px;">
-                                    <span style="background: #047857; color: #ffffff; border: 1px solid #34d399; border-radius: 6px; padding: 2px 8px; font-size: 9.5px; font-weight: 900; letter-spacing: 0.4px; box-shadow: 0 0 8px rgba(16, 185, 129, 0.35);">
-                                        ✓ PRODUCTO LISTO EN TABLERO
-                                    </span>
-                                </div>
-                            """, unsafe_allow_html=True)
+                        # Texto del botón (incluye el colaborador si está asignado en el tablero)
+                        prefijo_estado = "✅" if esta_listo else "⬜"
+                        sufijo_colab = f" · {colab_asignado_tablero}" if colab_asignado_tablero else ""
+                        btn_text = f"{prefijo_estado} {cant_num}X {nombre_completo}{sufijo_colab}"
+
+                        # Determinar color espejo igual que en el tablero
+                        if esta_listo or terminado_en_tablero:
+                            bg_btn = "#047857"
+                            border_btn = "1px solid #34d399"
+                        elif es_nuevo_azul:
+                            bg_btn = "#0077ed"
+                            border_btn = "2px solid #ffffff"
+                        elif es_urgente_prod:
+                            bg_btn = "#b91c1c"
+                            border_btn = "2px solid #fbbf24"
+                        elif colab_asignado_tablero:
+                            bg_btn = "#ea580c"
+                            border_btn = "1px solid rgba(251, 146, 60, 0.9)"
+                        else:
+                            bg_btn = "#dc2626"
+                            border_btn = "1px solid rgba(239, 68, 68, 0.6)"
+
+                        btn_text_escaped = btn_text.replace('"', '\\"')
+                        estilos_espejo_botones.append(f"""
+                            div[data-testid="stButton"] button:has(p:contains("{btn_text_escaped}")),
+                            div[data-testid="stButton"] button[aria-label="{btn_text_escaped}"] {{
+                                background-color: {bg_btn} !important;
+                                background: {bg_btn} !important;
+                                border: {border_btn} !important;
+                                color: #ffffff !important;
+                            }}
+                        """)
 
                         col_t1, col_t2 = st.columns([0.76, 0.24])
                         
                         with col_t1:
-                            btn_text = f"✅ {cant_num}X {nombre_completo}" if esta_listo else f"⬜ {cant_num}X {nombre_completo}"
                             if st.button(btn_text, key=f"btn_toggle_item_{item_key_uid}", use_container_width=True):
                                 if esta_listo:
                                     estado_global["tickets_completados_items"].discard(item_key_uid)
@@ -1002,6 +1030,10 @@ def renderizar_aplicacion():
                 st.markdown("#### PEDIDOS COMPLETADOS")
                 for idx_recibo, recibo, ticket_id in tickets_completados_lista:
                     renderizar_bloque_ticket(idx_recibo, recibo, ticket_id, completado=True)
+
+            # Inyectar estilos espejo de colores para los botones de productos en Tickets
+            if estilos_espejo_botones:
+                st.markdown(f"<style>{''.join(estilos_espejo_botones)}</style>", unsafe_allow_html=True)
 
         else:
             st.info("Sin tickets en este periodo.")
