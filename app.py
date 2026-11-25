@@ -92,6 +92,13 @@ if "vista_local" not in st.session_state:
 def disparar_sync():
     estado_global["version_sync"] += 1
 
+def obtener_clave_unica_ticket(recibo, idx_fallback):
+    if recibo.get("id"):
+        return str(recibo["id"])
+    if recibo.get("receipt_number"):
+        return f"num_{recibo['receipt_number']}"
+    return f"idx_{idx_fallback}"
+
 def borrar_todo():
     estado_global["respaldo"] = {
         "completados": estado_global["completados"].copy(),
@@ -832,7 +839,7 @@ def renderizar_aplicacion():
             tickets_completados_lista = []
 
             for idx_recibo, recibo in enumerate(recibos):
-                ticket_id = recibo.get("id", str(idx_recibo))
+                ticket_id = obtener_clave_unica_ticket(recibo, idx_recibo)
                 dia_ticket_actual = estado_global["dias_entrega_tickets"].get(ticket_id, "SIN ASIGNAR")
 
                 if filtro_dia_vista != "TODOS LOS TICKETS" and dia_ticket_actual != filtro_dia_vista:
@@ -859,12 +866,12 @@ def renderizar_aplicacion():
                     todos_listos = False
 
                 if todos_listos and len(line_items) > 0:
-                    tickets_completados_lista.append((idx_recibo, recibo, ticket_id))
+                    tickets_completados_lista.append((recibo, ticket_id))
                 else:
-                    tickets_pendientes_lista.append((idx_recibo, recibo, ticket_id))
+                    tickets_pendientes_lista.append((recibo, ticket_id))
 
-            def renderizar_bloque_ticket(idx_recibo, recibo, ticket_id, completado=False):
-                receipt_number = recibo.get("receipt_number", f"#{idx_recibo + 1}")
+            def renderizar_bloque_ticket(recibo, ticket_id, completado=False):
+                receipt_number = recibo.get("receipt_number", "S/N")
                 created_at_str = recibo.get("receipt_date") or recibo.get("created_at", "")
                 
                 customer_name = None
@@ -896,7 +903,7 @@ def renderizar_aplicacion():
                 try:
                     dt_ticket = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
                     hora_ticket = dt_ticket.astimezone(tz_mexico).strftime("%I:%M:%S %p")
-                except:
+                except Exception:
                     hora_ticket = "---"
 
                 line_items = recibo.get("line_items", [])
@@ -940,7 +947,11 @@ def renderizar_aplicacion():
 
                     with st.expander(f"Editar alias de ticket #{receipt_number}"):
                         with st.form(key=f"form_title_{ticket_id}"):
-                            nuevo_nombre_ticket = st.text_input("Nombre o alias personalizado:", value=titulo_custom if titulo_custom else (customer_name if customer_name else ""))
+                            nuevo_nombre_ticket = st.text_input(
+                                "Nombre o alias personalizado:",
+                                value=titulo_custom if titulo_custom else (customer_name if customer_name else ""),
+                                key=f"input_alias_{ticket_id}"
+                            )
                             btn_guardar_nombre = st.form_submit_button("GUARDAR", use_container_width=True)
 
                             if btn_guardar_nombre:
@@ -949,7 +960,7 @@ def renderizar_aplicacion():
                                 else:
                                     estado_global["titulos_personalizados_tickets"].pop(ticket_id, None)
                                 disparar_sync()
-                                st.toast("Actualizado")
+                                st.toast("Alias actualizado")
                                 st.rerun()
 
                     for idx_item, item in enumerate(line_items):
@@ -998,7 +1009,7 @@ def renderizar_aplicacion():
                         col_t1, col_t2 = st.columns([0.76, 0.24], vertical_alignment="center")
                         
                         with col_t1:
-                            anchor_cls = f"espejo-btn-{idx_recibo}-{idx_item}"
+                            anchor_cls = f"espejo-btn-{ticket_id}-{idx_item}"
                             st.markdown(f"""
                                 <style>
                                 div.element-container:has(.{anchor_cls}) + div.element-container button {{
@@ -1031,8 +1042,8 @@ def renderizar_aplicacion():
 
             if tickets_pendientes_lista:
                 st.markdown("#### Pendientes")
-                for idx_recibo, recibo, ticket_id in tickets_pendientes_lista:
-                    renderizar_bloque_ticket(idx_recibo, recibo, ticket_id, completado=False)
+                for recibo, ticket_id in tickets_pendientes_lista:
+                    renderizar_bloque_ticket(recibo, ticket_id, completado=False)
             elif filtro_dia_vista != "TODOS LOS TICKETS" and not tickets_completados_lista:
                 st.info(f"No hay tickets asignados para: {filtro_dia_vista}.")
 
@@ -1050,8 +1061,8 @@ def renderizar_aplicacion():
             if tickets_completados_lista:
                 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
                 st.markdown("#### PEDIDOS COMPLETADOS")
-                for idx_recibo, recibo, ticket_id in tickets_completados_lista:
-                    renderizar_bloque_ticket(idx_recibo, recibo, ticket_id, completado=True)
+                for recibo, ticket_id in tickets_completados_lista:
+                    renderizar_bloque_ticket(recibo, ticket_id, completado=True)
 
         else:
             st.info("Sin tickets en este periodo.")
