@@ -75,7 +75,7 @@ def obtener_estado_global():
         "urgentes_activos": set(),    
         "tickets_completados_items": set(), 
         "titulos_personalizados_tickets": {},
-        "dias_entrega_tickets": {},  # <-- NUEVO: Guarda el día asignado por ticket_id
+        "dias_entrega_tickets": {},
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False,
@@ -773,14 +773,13 @@ def renderizar_aplicacion():
     """, unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN 1: GESTIÓN DE TICKETS (EXCLUSIVO DÍAS DE ENTREGA)
+    # SECCIÓN 1: GESTIÓN DE TICKETS
     # ==========================================
     if st.session_state.vista_local == "TICKETS":
         st.markdown("### GESTIÓN DE TICKETS")
         st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Control independiente de los pedidos y días de entrega.</p>", unsafe_allow_html=True)
         
         if recibos:
-            # --- FILTRO DE DÍAS DE ENTREGA Y CONTADOR ---
             dias_asignados = estado_global["dias_entrega_tickets"]
             total_mie = sum(1 for d in dias_asignados.values() if d == "MIÉRCOLES")
             total_jue = sum(1 for d in dias_asignados.values() if d == "JUEVES")
@@ -811,7 +810,6 @@ def renderizar_aplicacion():
                 ticket_id = recibo.get("id", str(idx_recibo))
                 dia_ticket_actual = estado_global["dias_entrega_tickets"].get(ticket_id, "SIN ASIGNAR")
 
-                # Aplicar filtro de día seleccionado
                 if filtro_dia_vista != "TODOS LOS TICKETS" and dia_ticket_actual != filtro_dia_vista:
                     continue
 
@@ -856,7 +854,6 @@ def renderizar_aplicacion():
                 titulo_principal = titulo_custom if titulo_custom else (customer_name.upper() if customer_name else f"TICKET {receipt_number}")
                 sub_detalle = f"TICKET {receipt_number} {f'| CLIENTE: {customer_name.upper()}' if customer_name else '| VENTA GENERAL'}"
                 
-                # Distintivo visual de día de entrega
                 dia_asignado = estado_global["dias_entrega_tickets"].get(ticket_id)
                 if dia_asignado == "MIÉRCOLES":
                     badge_dia_html = '<span style="background: #0284c7; color: #ffffff; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 900; letter-spacing: 0.5px; border: 1px solid #38bdf8;">ENTREGA: MIÉRCOLES</span>'
@@ -896,7 +893,6 @@ def renderizar_aplicacion():
                         </div>
                     """, unsafe_allow_html=True)
 
-                    # Selector rápido de día de entrega
                     opciones_dias = ["SIN ASIGNAR", "MIÉRCOLES", "JUEVES", "VIERNES"]
                     idx_dia = opciones_dias.index(dia_asignado) if dia_asignado in opciones_dias else 0
                     
@@ -949,6 +945,17 @@ def renderizar_aplicacion():
                         
                         esta_listo = item_key_uid in estado_global["tickets_completados_items"]
                         es_urgente_prod = nombre_completo in estado_global["urgentes_activos"]
+                        terminado_en_tablero = nombre_completo in estado_global["completados"]
+
+                        # Insignia visible solo en Tickets cuando el producto ya está terminado en el Tablero
+                        if terminado_en_tablero:
+                            st.markdown("""
+                                <div style="display: flex; align-items: center; margin-top: 4px; margin-bottom: 2px;">
+                                    <span style="background: #047857; color: #ffffff; border: 1px solid #34d399; border-radius: 6px; padding: 2px 8px; font-size: 9.5px; font-weight: 900; letter-spacing: 0.4px; box-shadow: 0 0 8px rgba(16, 185, 129, 0.35);">
+                                        ✓ PRODUCTO LISTO EN TABLERO
+                                    </span>
+                                </div>
+                            """, unsafe_allow_html=True)
 
                         col_t1, col_t2 = st.columns([0.76, 0.24])
                         
@@ -1241,7 +1248,7 @@ def renderizar_aplicacion():
                 st.rerun()
 
     # ==========================================
-    # SECCIÓN 3: TABLERO DE PRODUCCIÓN (SIN CAMBIOS)
+    # SECCIÓN 3: TABLERO DE PRODUCCIÓN (INTACTO)
     # ==========================================
     else:
         if conteo_productos and piezas_pendientes == 0 and not estado_global["descartar_celebracion"]:
