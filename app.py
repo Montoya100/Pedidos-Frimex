@@ -21,8 +21,8 @@ def cargar_configuracion_sistema():
         except Exception:
             pass
     return {
-        "colaboradores": ["COLABORADOR 1", "COLABORADOR 2", "COLABORADOR 3", "COLABORADOR 4", "COLABORADOR 5", "COLABORADOR 6"],
-        "num_columnas": 5
+        "colaboradores": ["XOCHITL", "WENDY", "MONICA", "SOCORRO", "MARIA", "FATIMA", "MELISSA"],
+        "num_columnas": 6
     }
 
 def guardar_configuracion_sistema(data):
@@ -74,7 +74,8 @@ def obtener_estado_global():
         "asignaciones_productos": {}, 
         "urgentes_activos": set(),    
         "tickets_completados_items": set(), 
-        "titulos_personalizados_tickets": {}, 
+        "titulos_personalizados_tickets": {},
+        "dias_entrega_tickets": {},  # <-- NUEVO: Guarda el día asignado por ticket_id
         "hora_corte_utc": datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
         "respaldo": None,
         "descartar_celebracion": False,
@@ -103,6 +104,7 @@ def borrar_todo():
         "urgentes_activos": estado_global["urgentes_activos"].copy(),
         "tickets_completados_items": estado_global["tickets_completados_items"].copy(),
         "titulos_personalizados_tickets": estado_global["titulos_personalizados_tickets"].copy(),
+        "dias_entrega_tickets": estado_global["dias_entrega_tickets"].copy(),
         "hora_corte_utc": estado_global["hora_corte_utc"],
         "tiempos_creacion_manual": estado_global["tiempos_creacion_manual"].copy(),
         "cantidades_previas_productos": estado_global["cantidades_previas_productos"].copy()
@@ -115,6 +117,7 @@ def borrar_todo():
     estado_global["urgentes_activos"].clear()
     estado_global["tickets_completados_items"].clear()
     estado_global["titulos_personalizados_tickets"].clear()
+    estado_global["dias_entrega_tickets"].clear()
     estado_global["notas_tablero"].clear()
     estado_global["tiempos_creacion_manual"].clear()
     estado_global["cantidades_previas_productos"].clear()
@@ -134,6 +137,7 @@ def restaurar_estado():
         estado_global["urgentes_activos"] = estado_global["respaldo"]["urgentes_activos"].copy()
         estado_global["tickets_completados_items"] = estado_global["respaldo"]["tickets_completados_items"].copy()
         estado_global["titulos_personalizados_tickets"] = estado_global["respaldo"]["titulos_personalizados_tickets"].copy()
+        estado_global["dias_entrega_tickets"] = estado_global["respaldo"].get("dias_entrega_tickets", {}).copy()
         estado_global["hora_corte_utc"] = estado_global["respaldo"]["hora_corte_utc"]
         estado_global["tiempos_creacion_manual"] = estado_global["respaldo"]["tiempos_creacion_manual"].copy()
         estado_global["cantidades_previas_productos"] = estado_global["respaldo"]["cantidades_previas_productos"].copy()
@@ -160,6 +164,14 @@ def asignar_colaborador_callback(producto):
         estado_global["asignaciones_productos"][producto] = colab_elegido
     else:
         estado_global["asignaciones_productos"].pop(producto, None)
+    disparar_sync()
+
+def asignar_dia_ticket_callback(ticket_id):
+    dia_elegido = st.session_state.get(f"select_dia_ticket_{ticket_id}", "SIN ASIGNAR")
+    if dia_elegido and dia_elegido != "SIN ASIGNAR":
+        estado_global["dias_entrega_tickets"][ticket_id] = dia_elegido
+    else:
+        estado_global["dias_entrega_tickets"].pop(ticket_id, None)
     disparar_sync()
 
 def alternar_urgente(producto):
@@ -453,7 +465,6 @@ st.markdown("""
         padding-top: 2px;
     }
 
-    /* Botón de publicar nota con letras en blanco y negritas */
     div.stFormSubmitButton > button {
         background-color: #0077ed !important;
         background: #0077ed !important;
@@ -594,7 +605,6 @@ def renderizar_aplicacion():
                 nombre = item.get("item_name", "Producto")
                 cantidad = item.get("quantity", 0)
                 
-                # Extracción mejorada de variantes y opciones en Loyverse
                 variante = item.get("variant_name")
                 if not variante or variante == "Default":
                     variante = item.get("option_values") or item.get("variant") or item.get("options") or ""
@@ -763,18 +773,48 @@ def renderizar_aplicacion():
     """, unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN 1: GESTIÓN DE TICKETS
+    # SECCIÓN 1: GESTIÓN DE TICKETS (EXCLUSIVO DÍAS DE ENTREGA)
     # ==========================================
     if st.session_state.vista_local == "TICKETS":
         st.markdown("### GESTIÓN DE TICKETS")
-        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Control independiente de los pedidos.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #9ca3af; font-size: 11px;'>Control independiente de los pedidos y días de entrega.</p>", unsafe_allow_html=True)
         
         if recibos:
+            # --- FILTRO DE DÍAS DE ENTREGA Y CONTADOR ---
+            dias_asignados = estado_global["dias_entrega_tickets"]
+            total_mie = sum(1 for d in dias_asignados.values() if d == "MIÉRCOLES")
+            total_jue = sum(1 for d in dias_asignados.values() if d == "JUEVES")
+            total_vie = sum(1 for d in dias_asignados.values() if d == "VIERNES")
+
+            st.markdown(f"""
+                <div style="background: #121827; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <span style="font-size: 11px; font-weight: 900; color: #ffffff; letter-spacing: 0.5px;">PROGRAMACIÓN DE ENTREGAS:</span>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <span style="background: #0284c7; color: #ffffff; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 900;">MIÉRCOLES: {total_mie}</span>
+                        <span style="background: #7c3aed; color: #ffffff; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 900;">JUEVES: {total_jue}</span>
+                        <span style="background: #d97706; color: #ffffff; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 900;">VIERNES: {total_vie}</span>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+            filtro_dia_vista = st.selectbox(
+                "Filtrar vista por día de entrega:",
+                options=["TODOS LOS TICKETS", "MIÉRCOLES", "JUEVES", "VIERNES", "SIN ASIGNAR"],
+                key="filtro_vista_dias_tickets"
+            )
+            st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
+
             tickets_pendientes_lista = []
             tickets_completados_lista = []
 
             for idx_recibo, recibo in enumerate(recibos):
                 ticket_id = recibo.get("id", str(idx_recibo))
+                dia_ticket_actual = estado_global["dias_entrega_tickets"].get(ticket_id, "SIN ASIGNAR")
+
+                # Aplicar filtro de día seleccionado
+                if filtro_dia_vista != "TODOS LOS TICKETS" and dia_ticket_actual != filtro_dia_vista:
+                    continue
+
                 line_items = recibo.get("line_items", [])
                 
                 todos_listos = True
@@ -804,7 +844,6 @@ def renderizar_aplicacion():
                 receipt_number = recibo.get("receipt_number", f"#{idx_recibo + 1}")
                 created_at_str = recibo.get("receipt_date") or recibo.get("created_at", "")
                 
-                # Extracción robusta de cliente de Loyverse
                 customer_name = None
                 if recibo.get("customer_name"):
                     customer_name = recibo.get("customer_name")
@@ -817,6 +856,21 @@ def renderizar_aplicacion():
                 titulo_principal = titulo_custom if titulo_custom else (customer_name.upper() if customer_name else f"TICKET {receipt_number}")
                 sub_detalle = f"TICKET {receipt_number} {f'| CLIENTE: {customer_name.upper()}' if customer_name else '| VENTA GENERAL'}"
                 
+                # Distintivo visual de día de entrega
+                dia_asignado = estado_global["dias_entrega_tickets"].get(ticket_id)
+                if dia_asignado == "MIÉRCOLES":
+                    badge_dia_html = '<span style="background: #0284c7; color: #ffffff; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 900; letter-spacing: 0.5px; border: 1px solid #38bdf8;">ENTREGA: MIÉRCOLES</span>'
+                    borde_tarjeta = "2px solid #0284c7"
+                elif dia_asignado == "JUEVES":
+                    badge_dia_html = '<span style="background: #7c3aed; color: #ffffff; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 900; letter-spacing: 0.5px; border: 1px solid #c084fc;">ENTREGA: JUEVES</span>'
+                    borde_tarjeta = "2px solid #7c3aed"
+                elif dia_asignado == "VIERNES":
+                    badge_dia_html = '<span style="background: #d97706; color: #ffffff; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 900; letter-spacing: 0.5px; border: 1px solid #fbbf24;">ENTREGA: VIERNES</span>'
+                    borde_tarjeta = "2px solid #d97706"
+                else:
+                    badge_dia_html = '<span style="background: #1f2937; color: #9ca3af; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 800;">SIN DÍA ASIGNADO</span>'
+                    borde_tarjeta = "1px solid rgba(255,255,255,0.1)"
+
                 try:
                     dt_ticket = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
                     hora_ticket = dt_ticket.astimezone(tz_mexico).strftime("%I:%M:%S %p")
@@ -828,19 +882,40 @@ def renderizar_aplicacion():
                 
                 with st.container():
                     st.markdown(f"""
-                        <div style="background: {bg_color}; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 12px; margin-bottom: 14px; box-shadow: 0 3px 10px rgba(0,0,0,0.4);">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">
+                        <div style="background: {bg_color}; border: {borde_tarjeta}; border-radius: 10px; padding: 12px; margin-bottom: 8px; box-shadow: 0 3px 10px rgba(0,0,0,0.4);">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">
                                 <div>
                                     <div style="font-weight: 900; color: {'#34c759' if completado else '#ffffff'}; font-size: 14px; letter-spacing: 0.5px; text-transform: uppercase;">{titulo_principal}</div>
                                     <div style="font-weight: 700; color: #38bdf8; font-size: 10px; margin-top: 2px;">{sub_detalle}</div>
                                 </div>
-                                <span style="font-size: 10px; color: #9ca3af; font-weight: 700; background: #1a2234; padding: 2px 6px; border-radius: 6px;">{hora_ticket}</span>
+                                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                    {badge_dia_html}
+                                    <span style="font-size: 10px; color: #9ca3af; font-weight: 700; background: #1a2234; padding: 3px 6px; border-radius: 6px;">{hora_ticket}</span>
+                                </div>
                             </div>
                         </div>
                     """, unsafe_allow_html=True)
 
+                    # Selector rápido de día de entrega
+                    opciones_dias = ["SIN ASIGNAR", "MIÉRCOLES", "JUEVES", "VIERNES"]
+                    idx_dia = opciones_dias.index(dia_asignado) if dia_asignado in opciones_dias else 0
+                    
+                    col_dia1, col_dia2 = st.columns([0.45, 0.55])
+                    with col_dia1:
+                        st.markdown("<div style='font-size: 11px; font-weight: 800; color: #9ca3af; padding-top: 6px;'>ASIGNAR DÍA DE ENTREGA:</div>", unsafe_allow_html=True)
+                    with col_dia2:
+                        st.selectbox(
+                            f"Día entrega {ticket_id}",
+                            options=opciones_dias,
+                            index=idx_dia,
+                            key=f"select_dia_ticket_{ticket_id}",
+                            label_visibility="collapsed",
+                            on_change=asignar_dia_ticket_callback,
+                            args=(ticket_id,)
+                        )
+
                     if note_recibo:
-                        st.markdown(f"<div style='font-style: italic; color: #fbbf24; font-size: 11px; margin-bottom: 8px;'>Comentario: \"{note_recibo}\"</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='font-style: italic; color: #fbbf24; font-size: 11px; margin-top: 6px; margin-bottom: 8px;'>Comentario: \"{note_recibo}\"</div>", unsafe_allow_html=True)
 
                     with st.expander(f"Editar alias de ticket #{receipt_number}"):
                         with st.form(key=f"form_title_{ticket_id}"):
@@ -893,7 +968,6 @@ def renderizar_aplicacion():
                                 alternar_urgente(nombre_completo)
                                 st.rerun()
 
-                    # Franja divisora ampliada sin texto ni tijeras
                     st.markdown("""
                         <div style="border-bottom: 3px dashed rgba(56, 189, 248, 0.4); margin: 14px 0 16px 0;"></div>
                     """, unsafe_allow_html=True)
@@ -902,6 +976,8 @@ def renderizar_aplicacion():
                 st.markdown("#### Pendientes")
                 for idx_recibo, recibo, ticket_id in tickets_pendientes_lista:
                     renderizar_bloque_ticket(idx_recibo, recibo, ticket_id, completado=False)
+            elif filtro_dia_vista != "TODOS LOS TICKETS" and not tickets_completados_lista:
+                st.info(f"No hay tickets asignados para: {filtro_dia_vista}.")
 
             st.markdown("#### Agregar Nota")
             with st.form("form_nota_rapida_tickets", clear_on_submit=True):
@@ -914,7 +990,6 @@ def renderizar_aplicacion():
                     st.toast("Publicado")
                     st.rerun()
 
-            # SECCIÓN DE PEDIDOS COMPLETADOS ABAJO DEL BOTÓN
             if tickets_completados_lista:
                 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
                 st.markdown("#### PEDIDOS COMPLETADOS")
@@ -1166,7 +1241,7 @@ def renderizar_aplicacion():
                 st.rerun()
 
     # ==========================================
-    # SECCIÓN 3: TABLERO DE PRODUCCIÓN
+    # SECCIÓN 3: TABLERO DE PRODUCCIÓN (SIN CAMBIOS)
     # ==========================================
     else:
         if conteo_productos and piezas_pendientes == 0 and not estado_global["descartar_celebracion"]:
