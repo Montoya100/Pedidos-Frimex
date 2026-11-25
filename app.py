@@ -838,9 +838,6 @@ def renderizar_aplicacion():
                 else:
                     tickets_pendientes_lista.append((idx_recibo, recibo, ticket_id))
 
-            # Lista acumulada de reglas CSS para espejar colores del tablero en los botones de tickets
-            estilos_espejo_botones = []
-
             def renderizar_bloque_ticket(idx_recibo, recibo, ticket_id, completado=False):
                 receipt_number = recibo.get("receipt_number", f"#{idx_recibo + 1}")
                 created_at_str = recibo.get("receipt_date") or recibo.get("created_at", "")
@@ -953,12 +950,10 @@ def renderizar_aplicacion():
                         tiempo_creacion = estado_global["tiempos_creacion_manual"].get(nombre_completo, 0)
                         es_nuevo_azul = (ahora_epoch - tiempo_creacion < 30) and not terminado_en_tablero
 
-                        # Texto del botón (incluye el colaborador si está asignado en el tablero)
                         prefijo_estado = "✅" if esta_listo else "⬜"
                         sufijo_colab = f" · {colab_asignado_tablero}" if colab_asignado_tablero else ""
                         btn_text = f"{prefijo_estado} {cant_num}X {nombre_completo}{sufijo_colab}"
 
-                        # Determinar color espejo igual que en el tablero
                         if esta_listo or terminado_en_tablero:
                             bg_btn = "#047857"
                             border_btn = "1px solid #34d399"
@@ -975,20 +970,22 @@ def renderizar_aplicacion():
                             bg_btn = "#dc2626"
                             border_btn = "1px solid rgba(239, 68, 68, 0.6)"
 
-                        btn_text_escaped = btn_text.replace('"', '\\"')
-                        estilos_espejo_botones.append(f"""
-                            div[data-testid="stButton"] button:has(p:contains("{btn_text_escaped}")),
-                            div[data-testid="stButton"] button[aria-label="{btn_text_escaped}"] {{
-                                background-color: {bg_btn} !important;
-                                background: {bg_btn} !important;
-                                border: {border_btn} !important;
-                                color: #ffffff !important;
-                            }}
-                        """)
-
                         col_t1, col_t2 = st.columns([0.76, 0.24])
                         
                         with col_t1:
+                            anchor_cls = f"espejo-btn-{idx_recibo}-{idx_item}"
+                            st.markdown(f"""
+                                <style>
+                                div.element-container:has(.{anchor_cls}) + div.element-container button {{
+                                    background-color: {bg_btn} !important;
+                                    background: {bg_btn} !important;
+                                    border: {border_btn} !important;
+                                    color: #ffffff !important;
+                                }}
+                                </style>
+                                <div class="{anchor_cls}" style="display:none;"></div>
+                            """, unsafe_allow_html=True)
+
                             if st.button(btn_text, key=f"btn_toggle_item_{item_key_uid}", use_container_width=True):
                                 if esta_listo:
                                     estado_global["tickets_completados_items"].discard(item_key_uid)
@@ -1030,10 +1027,6 @@ def renderizar_aplicacion():
                 st.markdown("#### PEDIDOS COMPLETADOS")
                 for idx_recibo, recibo, ticket_id in tickets_completados_lista:
                     renderizar_bloque_ticket(idx_recibo, recibo, ticket_id, completado=True)
-
-            # Inyectar estilos espejo de colores para los botones de productos en Tickets
-            if estilos_espejo_botones:
-                st.markdown(f"<style>{''.join(estilos_espejo_botones)}</style>", unsafe_allow_html=True)
 
         else:
             st.info("Sin tickets en este periodo.")
